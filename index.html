@@ -848,6 +848,7 @@ const SB_URL="https://zpvmogykgpiacyxmlwpx.supabase.co", SB_KEY=window.OPS_KEY||
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}});
 window.__PHOTO=id=>SB_URL+"/storage/v1/object/public/ops-photos/"+id;
 let ready;const readyP=new Promise(r=>ready=r);
+const IMPORT_KEY=(/(?:^#|&)imp=([A-Za-z0-9_-]+)/.exec(location.hash)||[])[1]||"";if(IMPORT_KEY)history.replaceState(null,"",location.pathname+"#guests");
 const $=s=>document.querySelector(s);
 const T="ops_docs";
 
@@ -930,19 +931,32 @@ async function start(){
   go();
 }
 function go(){closeGate();realtime();ready();addMediaUpload();}
+async function doImport(j,P){
+  if(!j||!j.cols)throw new Error("這不是搬家檔");
+  const ids=Object.keys(j.photos||{});let n=0;
+  for(const id of ids){const blob=await (await fetch(j.photos[id])).blob();const {error}=await sb.storage.from("ops-photos").upload(id,blob,{contentType:blob.type||"image/jpeg",upsert:true,cacheControl:"31536000"});if(error)throw error;n++;P.textContent=`照片 ${n}/${ids.length}`;}
+  if(j.mediaXlsx){const bin=Uint8Array.from(atob(j.mediaXlsx),c=>c.charCodeAt(0));const {error}=await sb.storage.from("ops-files").upload("media.xlsx",new Blob([bin]),{upsert:true,contentType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});if(error)throw error;}
+  const rows=[];for(const [col,docs] of Object.entries(j.cols))for(const d of docs){const {id,...data}=d;rows.push({col,id,data});}
+  if(j.meta&&j.meta.event)rows.push({col:"meta",id:"event",data:j.meta.event});
+  for(let i=0;i<rows.length;i+=200){const {error}=await sb.from(T).upsert(rows.slice(i,i+200));if(error)throw error;P.textContent=`照片 ${n}/${ids.length}\n資料 ${Math.min(i+200,rows.length)}/${rows.length}`;}
+  P.textContent+=`\n完成`;setTimeout(go,600);
+}
+const b64u=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4)),c=>c.charCodeAt(0));
+async function autoImport(P,E){
+  try{
+    P.textContent="讀取搬家資料…";
+    const buf=new Uint8Array(await (await fetch("move.enc",{cache:"no-store"})).arrayBuffer());
+    const key=await crypto.subtle.importKey("raw",b64u(IMPORT_KEY),"AES-GCM",false,["decrypt"]);
+    const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:buf.slice(0,12)},key,buf.slice(12));
+    await doImport(JSON.parse(new TextDecoder().decode(plain)),P);
+  }catch(err){E.textContent="自動匯入失敗："+(err.message||err)+"，可改選檔案匯入";}
+}
 function showImport(){
   const g=gate(`<h2>第一次使用：匯入資料</h2><p>資料庫目前是空的。請選擇從 claude.ai 版按「搬家匯出」下載的 .json 檔。</p><input type="file" id="gFile" accept=".json,application/json"><div class="prog" id="gProg"></div><div class="err" id="gErr"></div>`);
-  g.querySelector("#gFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;const P=$("#gProg"),E=$("#gErr");e.target.disabled=true;
-    try{
-      const j=JSON.parse(await f.text());if(!j||!j.cols)throw new Error("這不是搬家檔");
-      const ids=Object.keys(j.photos||{});let n=0;
-      for(const id of ids){const blob=await (await fetch(j.photos[id])).blob();const {error}=await sb.storage.from("ops-photos").upload(id,blob,{contentType:blob.type||"image/jpeg",upsert:true,cacheControl:"31536000"});if(error)throw error;n++;P.textContent=`照片 ${n}/${ids.length}`;}
-      if(j.mediaXlsx){const bin=Uint8Array.from(atob(j.mediaXlsx),c=>c.charCodeAt(0));const {error}=await sb.storage.from("ops-files").upload("media.xlsx",new Blob([bin]),{upsert:true,contentType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});if(error)throw error;}
-      const rows=[];for(const [col,docs] of Object.entries(j.cols))for(const d of docs){const {id,...data}=d;rows.push({col,id,data});}
-      if(j.meta&&j.meta.event)rows.push({col:"meta",id:"event",data:j.meta.event});
-      for(let i=0;i<rows.length;i+=200){const {error}=await sb.from(T).upsert(rows.slice(i,i+200));if(error)throw error;P.textContent=`照片 ${n}/${ids.length}\n資料 ${Math.min(i+200,rows.length)}/${rows.length}`;}
-      P.textContent+=`\n完成`;setTimeout(go,600);
-    }catch(err){E.textContent="匯入失敗："+(err.message||err);e.target.disabled=false;}
+  const P=$("#gProg"),E=$("#gErr");
+  if(IMPORT_KEY)autoImport(P,E);
+  g.querySelector("#gFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.disabled=true;
+    try{await doImport(JSON.parse(await f.text()),P);}catch(err){E.textContent="匯入失敗："+(err.message||err);e.target.disabled=false;}
   };
 }
 function addMediaUpload(){
