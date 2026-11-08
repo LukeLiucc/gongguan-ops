@@ -495,6 +495,19 @@ table.rt th:first-child{left:0;z-index:3}
 .att th{font-size:12.5px;color:var(--ink-3)}
 .att td.n{white-space:nowrap;font-weight:700}
 @media (max-width:720px){.tk{grid-template-columns:1fr}.tk .row2{grid-template-columns:1fr}.att .hide-m{display:none}}
+
+/* 市長行程大綱 */
+.olcard{padding:18px 18px 14px;margin-bottom:18px}
+.olcard h2{margin:0 0 4px;font-size:18px}
+.olcard .olm{display:flex;gap:6px 18px;flex-wrap:wrap;color:var(--ink-2);font-size:14px;margin-bottom:12px}
+.oltb{width:100%;border-collapse:collapse;font-size:14.5px}
+.oltb th,.oltb td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+.oltb th{background:var(--surface-2);font-size:13px;color:var(--ink-2)}
+.oltb td.t{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;width:110px}
+.oltb td.p{width:120px}
+.oltb ul{margin:4px 0 0;padding-left:1.2em}.oltb li{margin:2px 0}
+.olcard .olr{margin-top:10px;font-size:13.5px;color:var(--ink-2);line-height:1.6}
+@media (max-width:640px){.oltb td.p{width:auto}.oltb td.t{width:auto}}
 /* 新聞稿 */
 .prcard{padding:18px;display:grid;gap:4px}
 .prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -606,6 +619,8 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
 
   <!-- 流程表 -->
   <section class="pane" id="p-flow" hidden>
+    <div id="fOutline"></div>
+    <div class="ttl2" style="margin-top:6px"><h2>工作細流</h2><span class="hint">各組分工與時間，依每段時長自動推算</span></div>
     <div class="bar">
       <label class="chk">開始時間 <input class="inp num" id="fStart" type="time" style="width:110px"></label>
       <span class="pill acc num" id="fTotal">—</span>
@@ -1051,7 +1066,7 @@ const STATUS=["未回覆","出席","代理出席","不出席"];
 const PALETTE=["#C2410C","#1D4ED8","#6D28D9","#047857","#0E7490","#A16207","#BE185D","#475569","#7C3AED","#15803D","#B91C1C","#0369A1"];
 
 /* ---------- state ---------- */
-const S={meta:{},guests:[],zones:[],rundown:[],staff:[],teams:[],media:[],tasks:[],press:[],loaded:new Set()};
+const S={meta:{},guests:[],zones:[],rundown:[],staff:[],teams:[],media:[],tasks:[],press:[],outline:[],loaded:new Set()};
 const UI={tab:"overview",gView:"all",usher:"",q:"",inv:"",st:"",owner:"",noPh:false,role:"",compact:false,seatMode:"seat",selGuest:null,brush:null,seatZone:""};
 let db=null, assets=null, downloads=null, mcp=null, canWrite=true;
 try{const s=JSON.parse(localStorage.getItem("opsUI")||"{}");Object.assign(UI,{role:s.role||"",compact:!!s.compact,usher:s.usher||"",gView:s.gView||"all"});}catch(e){}
@@ -1205,7 +1220,7 @@ function reorder(ids){ids.forEach((id,i)=>{const r=S.rundown.find(x=>x.id===id);
 function moveRow(from,before){const ids=sortedRd().map(r=>r.id).filter(i=>i!==from);const at=ids.indexOf(before);ids.splice(at<0?ids.length:at,0,from);reorder(ids);}
 function nudge(id,d){const ids=sortedRd().map(r=>r.id);const i=ids.indexOf(id),j=i+d;if(j<0||j>=ids.length)return;[ids[i],ids[j]]=[ids[j],ids[i]];reorder(ids);}
 function renderFlow(){
-  initFlow();
+  initFlow();renderOutline();
   const st=$("#fStart");if(document.activeElement!==st)st.value=S.meta.start||"09:00";
   const tl=timeline();
   if(tl.length){const s=tl[0].s,e=tl[tl.length-1].e;$("#fTotal").textContent=`${fmt(s)}–${fmt(e)}｜共 ${e-s} 分鐘`;}else $("#fTotal").textContent="尚無流程";
@@ -2329,6 +2344,27 @@ async function uploadImg(file,max){
   try{const b=await shrink(file,max);return await assets.upload(b);}catch(e){toast(e&&e.code==="not_granted"?"沒有上傳權限":"上傳失敗，請再試一次");return null;}
 }
 
+/* ================= 市長行程大綱 ================= */
+const OL_SEED={title:"「水源新天地與公館運動館開箱活動」市長行程",date:"115 年 11 月 11 日（星期三）",time:"上午 10 時 00 分至 10 時 45 分",place:"公館大樓國際會議廳、臺北市公館運動館",
+rows:[
+ {t:"10:00–10:05",p:"公館大樓 A 棟門口",h:"市長到場及媒體聯訪",li:[]},
+ {t:"10:05–10:20",p:"國際會議廳",h:"國際會議廳活動典禮",li:["播放北水處、體育局影片","來賓介紹","市長致詞","來賓致詞","開箱啟動儀式","大合照"]},
+ {t:"10:20–10:25",p:"—",h:"移動至公館運動館",li:[]},
+ {t:"10:25–10:45",p:"公館運動館",h:"體育局運動館參觀",li:["10:25–10:27 搭電梯直上 4 樓，導覽人員沿途簡介場館特色","10:27–10:35 4 樓電競區：熊讚電競選手示範對戰，市長觀看後與選手合照","10:35–10:40 3 樓滑雪練習區：冬奧國家隊滑雪教練李永德示範滑雪機","10:40–10:45 3 樓媒體補訪，市長離館"]}
+],
+remark:"市長不親自體驗設施，各項目由選手及教練示範；媒體由工作人員先行引導至 4 樓、3 樓就位拍攝。"};
+let olSeeded=false;
+function renderOutline(){
+  if(S.loaded.has("outline")&&!olSeeded){olSeeded=true;if(!S.outline.find(x=>x.id==="main")){S.outline.push({id:"main",...OL_SEED});put("outline","main",OL_SEED);}}
+  const d=S.outline.find(x=>x.id==="main");const el=$("#fOutline");
+  if(!d){el.innerHTML="";return;}
+  el.innerHTML=`<section class="card olcard"><h2>${esc(d.title)}</h2>
+   <div class="olm"><span>日期：${esc(d.date)}</span><span>時間：${esc(d.time)}</span><span>地點：${esc(d.place)}</span></div>
+   <div class="tblw"><table class="oltb"><thead><tr><th>時間</th><th>地點</th><th>流程</th></tr></thead><tbody>
+   ${(d.rows||[]).map(r=>`<tr><td class="t">${esc(r.t)}</td><td class="p">${esc(r.p)}</td><td><b>${esc(r.h)}</b>${(r.li||[]).length?`<ul>${r.li.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</td></tr>`).join("")}
+   </tbody></table></div>${d.remark?`<div class="olr">備註：${esc(d.remark)}</div>`:""}</section>`;
+}
+
 /* ================= 交辦事項 ================= */
 const TK_SEED=[
  {id:"t1",no:1,title:"新聞稿要出來",ask:"副座指示：新聞稿要出來。",note:"草稿已放在「新聞稿」分頁，可直接修改、複製或下載 Word 檔。",owner:"",status:"處理中",go:"press"},
@@ -2482,7 +2518,7 @@ setTab(location.hash.slice(1)||"guests");
   assets=as;downloads=dl;
   try{if(user&&user.isOwner()&&downloads)$("#moveOut").hidden=false;}catch(e){}
   if(user){try{const c=await user.can("data.write");if(c===false){canWrite=false;$("#banner").innerHTML=`<div class="banner">你目前是檢視權限，可以查看但無法修改</div>`;}}catch(e){}}
-  ["guests","zones","rundown","staff","teams","media","tasks","press"].forEach(sub);
+  ["guests","zones","rundown","staff","teams","media","tasks","press","outline"].forEach(sub);
   mcp=await window.claude.use("mcp");startMediaWatch();
   db.doc("meta/event").onSnapshot(s=>{S.meta=s.exists?{...s.data()}:{};syncOff();S.loaded.add("meta");schedule();},()=>setSync("off","連線中斷，請重新整理"));
 })();
