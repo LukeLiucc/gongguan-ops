@@ -476,7 +476,37 @@ table.rt td.del{padding:0 6px;text-align:left;white-space:nowrap}
 table.rt th:first-child{left:0;z-index:3}
 .rt-del{border:1px solid var(--line);background:var(--card,transparent);color:var(--ink-3);border-radius:6px;padding:4px 9px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .rt-del:hover{color:var(--bad);border-color:var(--bad)}
-#rtDelSel[hidden]{display:none}#moveOut[hidden]{display:none}table.rt td.rt-drag{white-space:nowrap;min-width:64px}
+#rtDelSel[hidden]{display:none}#moveOut[hidden]{display:none}
+/* 交辦事項 */
+.tklist{display:grid;gap:14px}
+.tk{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:16px;border-left:5px solid var(--line)}
+.tk.s-done{border-left-color:var(--ok)}.tk.s-doing{border-left-color:var(--warn)}.tk.s-todo{border-left-color:var(--bad)}
+.tk>.no{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:700 20px/44px var(--f-num,inherit);text-align:center}
+.tk h3{margin:0 0 4px;font-size:17px}.tk .ask{color:var(--ink-2);font-size:14px;margin-bottom:10px}
+.tk .row2{display:grid;grid-template-columns:minmax(0,1fr) 180px 140px;gap:10px;align-items:start}
+.tk .row2 label{display:block;font-size:12.5px;color:var(--ink-3);font-weight:700;margin-bottom:3px}
+.tk .go{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.tk .att{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.att .kp{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.att .kp span{padding:4px 12px;border-radius:20px;font-weight:700;font-size:13.5px;background:var(--surface-2)}
+.att .kp .kok{background:var(--ok-soft);color:var(--ok)}.att .kp .kno{background:var(--bad-soft);color:var(--bad)}
+.att table{width:100%;border-collapse:collapse;font-size:14px}
+.att th,.att td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.att th{font-size:12.5px;color:var(--ink-3)}
+.att td.n{white-space:nowrap;font-weight:700}
+@media (max-width:720px){.tk{grid-template-columns:1fr}.tk .row2{grid-template-columns:1fr}.att .hide-m{display:none}}
+/* 新聞稿 */
+.prcard{padding:18px;display:grid;gap:4px}
+.prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
+.prtitle{font-size:18px;font-weight:700}
+.prbody{min-height:520px;font-size:15px;line-height:1.85}
+/* 展示座位圖 */
+body.showseat header.top,body.showseat nav.tabs,body.showseat #banner,body.showseat #p-seats>.bar,body.showseat #side,body.showseat #blkWarn{display:none!important}
+body.showseat .seatwrap{display:block}
+body.showseat main.wrap{max-width:none}
+#showBar{position:fixed;right:16px;top:12px;z-index:60;display:flex;gap:8px}
+@media print{#showBar{display:none}body.showseat .card.map{border:0}}
+table.rt td.rt-drag{white-space:nowrap;min-width:64px}
 .rt-zs{display:flex;align-items:center;gap:6px;padding-left:8px}.rt-zs i{width:9px;height:9px;border-radius:50%;flex:none}.rt-zs select{font-weight:400}
 .rt-ck{width:16px;height:16px;vertical-align:middle;cursor:pointer}.rt-ckl{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .rt-del[data-armed]{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:700}
@@ -541,10 +571,13 @@ table.rt th:first-child{left:0;z-index:3}
 </header>
 <nav class="tabs" aria-label="功能">
   <div class="wrap">
+    <a href="#tasks" data-tab="tasks">交辦事項 <span class="ct" id="ctTasks">–</span></a>
     <a href="#guests" data-tab="guests">貴賓名單 <span class="ct" id="ctGuests">0</span></a>
     <a href="#roster" data-tab="roster">名單表</a>
     <a href="#media" data-tab="media">媒體名單 <span class="ct" id="ctMedia">–</span></a>
+    <a href="#flow" data-tab="flow">行程細流</a>
     <a href="#seats" data-tab="seats">座位分區</a>
+    <a href="#press" data-tab="press">新聞稿</a>
     <a href="#staff" data-tab="staff">人力分工</a>
     <a href="#howto" data-tab="howto">帶位作法</a>
   </div>
@@ -583,6 +616,33 @@ table.rt th:first-child{left:0;z-index:3}
       <button class="btn pri" id="fAdd" type="button">＋ 新增流程</button>
     </div>
     <div class="rd" id="fList"></div>
+  </section>
+
+  <!-- 交辦事項 -->
+  <section class="pane" id="p-tasks" hidden>
+    <div class="ttl2"><h2>副座交辦事項</h2><span class="hint">每項可改處理說明、負責人與狀態，大家看到的是同一份</span></div>
+    <div id="tkList" class="tklist"></div>
+  </section>
+
+  <!-- 新聞稿 -->
+  <section class="pane" id="p-press" hidden>
+    <div class="bar">
+      <span class="muted" id="prMeta" style="font-size:13.5px"></span>
+      <span class="sp"></span>
+      <button class="btn" id="prCopy" type="button">複製全文</button>
+      <button class="btn pri" id="prDoc" type="button">下載 Word 檔</button>
+    </div>
+    <div class="card prcard">
+      <label class="prl" for="prTitle">標題</label>
+      <input class="inp prtitle" id="prTitle" type="text">
+      <label class="prl" for="prSub">副標</label>
+      <input class="inp" id="prSub" type="text">
+      <label class="prl" for="prBody">內文</label>
+      <textarea class="inp prbody" id="prBody"></textarea>
+      <label class="prl" for="prContact">新聞聯絡人</label>
+      <textarea class="inp" id="prContact" style="min-height:70px"></textarea>
+      <div class="muted" style="font-size:13px;margin-top:8px">打字後離開欄位就會自動存檔；同時有人在改時，以最後存檔的版本為準。</div>
+    </div>
   </section>
 
   <!-- 貴賓名單 -->
@@ -657,6 +717,7 @@ table.rt th:first-child{left:0;z-index:3}
       <div class="seg" role="group" aria-label="座位顯示"><button type="button" id="sdDetail" aria-pressed="true">顯示單位職稱</button></div>
       <span class="muted" id="smHint" style="font-size:13.5px"></span>
       <span class="sp"></span>
+      <button class="btn" id="smShow" type="button">展示座位圖</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
     </div>
     <div class="seatwrap">
@@ -990,7 +1051,7 @@ const STATUS=["未回覆","出席","代理出席","不出席"];
 const PALETTE=["#C2410C","#1D4ED8","#6D28D9","#047857","#0E7490","#A16207","#BE185D","#475569","#7C3AED","#15803D","#B91C1C","#0369A1"];
 
 /* ---------- state ---------- */
-const S={meta:{},guests:[],zones:[],rundown:[],staff:[],teams:[],media:[],loaded:new Set()};
+const S={meta:{},guests:[],zones:[],rundown:[],staff:[],teams:[],media:[],tasks:[],press:[],loaded:new Set()};
 const UI={tab:"overview",gView:"all",usher:"",q:"",inv:"",st:"",owner:"",noPh:false,role:"",compact:false,seatMode:"seat",selGuest:null,brush:null,seatZone:""};
 let db=null, assets=null, downloads=null, mcp=null, canWrite=true;
 try{const s=JSON.parse(localStorage.getItem("opsUI")||"{}");Object.assign(UI,{role:s.role||"",compact:!!s.compact,usher:s.usher||"",gView:s.gView||"all"});}catch(e){}
@@ -1058,14 +1119,15 @@ function schedule(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=fal
 function renderAll(){
   
   $("#ctGuests").textContent=S.guests.length;
+  {const open=S.tasks.filter(t=>t.status!=="已完成").length;$("#ctTasks").textContent=S.loaded.has("tasks")?open:"–";}
   if(S.meta.name)$("#evName").textContent=S.meta.name;
   if(S.meta.sub)$("#evSub").textContent=S.meta.sub;
-  ({overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
+  ({tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
 }
 
 /* ---------- tabs ---------- */
 function setTab(t){if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
-  if(!["guests","roster","media","seats","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
+  if(!["tasks","guests","roster","media","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   document.querySelectorAll("section.pane").forEach(p=>p.hidden=p.id!=="p-"+t);
@@ -2267,6 +2329,124 @@ async function uploadImg(file,max){
   try{const b=await shrink(file,max);return await assets.upload(b);}catch(e){toast(e&&e.code==="not_granted"?"沒有上傳權限":"上傳失敗，請再試一次");return null;}
 }
 
+/* ================= 交辦事項 ================= */
+const TK_SEED=[
+ {id:"t1",no:1,title:"新聞稿要出來",ask:"副座指示：新聞稿要出來。",note:"草稿已放在「新聞稿」分頁，可直接修改、複製或下載 Word 檔。",owner:"",status:"處理中",go:"press"},
+ {id:"t2",no:2,title:"來賓聯繫是否到場",ask:"副座指示：來賓要聯繫是否到。可否有已知確認到場名單？",note:"已依出席回覆表單更新；下方是目前確認到場名單，可匯出 Excel 回覆副座。",owner:"",status:"處理中",go:"roster",att:true},
+ {id:"t3",no:3,title:"行程細流",ask:"副座指示：行程的細流要出來。",note:"細流在「行程細流」分頁，時間會依每段時長自動推算。",owner:"",status:"處理中",go:"flow"},
+ {id:"t4",no:4,title:"貴賓座位區要顯示",ask:"副座指示：貴賓座位區要顯示。",note:"「座位分區」分頁按「展示座位圖」可全螢幕顯示或列印。",owner:"",status:"處理中",go:"seats"},
+ {id:"t5",no:5,title:"公館運動館 3 樓茶水點心",ask:"副座指示：公館館 3 樓要請聯新放茶及咖啡各一桶，並放一些點心。（聯新這部分你們有安排嗎？）",note:"由聯新國際體育準備：茶一桶、咖啡一桶、點心，放公館運動館 3 樓。",owner:"",status:"未處理",go:""}
+];
+const TK_ST=["未處理","處理中","已完成"];
+const TK_CLS={"未處理":"s-todo","處理中":"s-doing","已完成":"s-done"};
+const TAB_NAME={press:"新聞稿",roster:"名單表",flow:"行程細流",seats:"座位分區",guests:"貴賓名單"};
+let tkSeeded=false;
+function attGroups(){
+  const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.category!=="媒體");
+  const by=st=>gs.filter(g=>(g.status||"未回覆")===st);
+  return {all:gs,yes:[...by("出席"),...by("代理出席")],no:by("不出席"),wait:by("未回覆")};
+}
+function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
+function renderTasks(){
+  if(S.loaded.has("tasks")&&!tkSeeded){tkSeeded=true;for(const t of TK_SEED){if(!S.tasks.find(x=>x.id===t.id)){const {id,...d}=t;S.tasks.push(t);put("tasks",id,d);}}}
+  const L=$("#tkList");
+  if(!S.loaded.has("tasks")){L.innerHTML=`<div class="empty">交辦事項讀取中</div>`;return;}
+  if(L.contains(document.activeElement)&&document.activeElement.matches("input,textarea"))return;
+  const A=attGroups();
+  L.innerHTML=[...S.tasks].sort((a,b)=>(a.no||0)-(b.no||0)).map(t=>{
+    const st=t.status||"未處理";
+    let att="";
+    if(t.att){
+      const rows=attSorted(A.yes).map(g=>{const z=zoneById(g.zone);return `<tr><td class="n">${esc(g.name||"單位代表")}</td><td>${esc(g.title)}</td><td>${esc(g.unit)}</td><td class="hide-m">${z?esc(z.name.split("｜").pop()):""}</td><td class="hide-m">${esc(seatLabel(g.seat))}</td><td class="hide-m">${g.status==="代理出席"?"代理出席"+(g.proxy?"："+esc(g.proxy):""):""}</td></tr>`;}).join("");
+      att=`<div class="att"><div class="kp"><span class="kok">確認到場 ${A.yes.length} 位</span><span class="kno">不克出席 ${A.no.length} 位</span><span>尚未回覆 ${A.wait.length} 位</span><span>名單共 ${A.all.length} 位（不含媒體）</span></div>
+      ${A.yes.length?`<div class="tblw"><table><thead><tr><th>姓名</th><th>職稱</th><th>單位／機關</th><th class="hide-m">座位區</th><th class="hide-m">座位</th><th class="hide-m">備註</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty" style="padding:16px">目前還沒有確認到場的貴賓</div>`}
+      <div class="go"><button class="btn" type="button" data-attx>匯出確認到場名單 Excel</button><button class="btn ghost" type="button" data-attw>匯出尚未回覆名單（聯繫用）</button></div></div>`;
+    }
+    return `<article class="card tk ${TK_CLS[st]||""}" data-tk="${esc(t.id)}"><div class="no">${esc(t.no||"")}</div><div>
+      <h3>${esc(t.title)}</h3><div class="ask">${esc(t.ask)}</div>
+      <div class="row2"><div><label for="tkn-${esc(t.id)}">處理說明</label><textarea class="inp" id="tkn-${esc(t.id)}" data-f="note" style="min-height:56px">${esc(t.note||"")}</textarea></div>
+      <div><label for="tko-${esc(t.id)}">負責人</label><input class="inp" id="tko-${esc(t.id)}" data-f="owner" value="${esc(t.owner||"")}"></div>
+      <div><label for="tks-${esc(t.id)}">狀態</label><select class="sel" id="tks-${esc(t.id)}" data-f="status" style="width:100%">${TK_ST.map(x=>`<option${x===st?" selected":""}>${x}</option>`).join("")}</select></div></div>
+      ${t.go?`<div class="go"><a class="btn" href="#${esc(t.go)}">前往「${esc(TAB_NAME[t.go]||t.go)}」</a></div>`:""}
+      ${att}</div></article>`;
+  }).join("");
+}
+function tkSave(el){const c=el.closest("[data-tk]");if(!c)return;const id=c.dataset.tk,f=el.dataset.f,v=el.value.trim();const t=S.tasks.find(x=>x.id===id);if(!t||(t[f]||"")===v)return;t[f]=v;upd("tasks",id,{[f]:v});if(f==="status")renderAll();}
+$("#tkList").addEventListener("change",e=>{if(e.target.matches("[data-f]"))tkSave(e.target);});
+$("#tkList").addEventListener("focusout",e=>{if(e.target.matches("input[data-f],textarea[data-f]"))tkSave(e.target);});
+$("#tkList").addEventListener("click",async e=>{
+  const x=e.target.closest("[data-attx],[data-attw]");if(!x)return;
+  if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再按");return;}
+  const A=attGroups();const yes=!!x.dataset.attx;const list=attSorted(yes?A.yes:A.wait);
+  const head=yes?["編號","姓名","職稱","單位／機關","座位區","座位","出席狀態","代理人","邀約單位"]:["編號","姓名","職稱","單位／機關","邀約單位","電話／聯絡方式","Email","座位區","座位"];
+  const rows=list.map((g,i)=>{const z=zoneById(g.zone);const zn=z?z.name:"";return yes?[i+1,g.name||"單位代表",g.title||"",g.unit||"",zn,seatLabel(g.seat),g.status||"",g.proxy||"",invLabel(g.inviter||"")]:[i+1,g.name||"單位代表",g.title||"",g.unit||"",invLabel(g.inviter||""),g.contact||"",g.email||"",zn,seatLabel(g.seat)];});
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);ws["!cols"]=head.map((h,i)=>({wch:[6,10,16,40,22,8,10,10,14][i]||14}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,yes?"確認到場":"尚未回覆");
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});const d=new Date();const stamp=`${d.getMonth()+1}${String(d.getDate()).padStart(2,"0")}`;
+  try{await downloads.save({filename:`公館開箱活動_${yes?"確認到場名單":"尚未回覆名單"}_${stamp}.xlsx`,data:new Blob([buf])});}catch(err){if(!(err&&err.code==="declined"))toast("下載沒有完成");}
+});
+
+/* ================= 新聞稿 ================= */
+const PR_SEED={
+title:"台北南區新生從水源新天地出發　公館運動館以「科技運動館」之姿正式開箱",
+sub:"水源新天地與公館運動館開箱活動 11 月 11 日登場　市長蔣萬安出席見證",
+body:`臺北市政府推動「台北南區新生計畫」，以臺北自來水事業處水源園區為起點，打造兼具親水、文化與運動的「水源新天地」。繼親水樂園與供水三大中心陸續啟用後，由聯新國際體育股份有限公司營運的公館運動館，11 月 11 日（三）上午於公館大樓 A 棟國際會議廳舉辦開箱活動，臺北市長蔣萬安、臺北市政府體育局、臺北自來水事業處及多位市議員、地方里長與運動界代表出席，共同見證南區運動新地標啟動。
+
+活動以 K-POP 舞蹈演出揭開序幕，透過影片帶領來賓認識水源新天地、親水樂園、供水三大中心與公館運動館。現場由長官貴賓共同按下啟動按鈕，LED 牆同步呈現倒數與正式啟用畫面，象徵公館運動館正式開箱。典禮後，市長一行移步公館運動館，參訪 3 樓運動特訓場的滑雪練習區，觀看教練示範，再前往 4 樓虛擬賽場，由電競選手陳又綱、林俊希示範對戰。
+
+公館運動館前身為自來水園區的洛德城堡，經整體改造後定位為「科技運動館」，以科技與虛擬運動為主軸，結合數位科技與多元運動設施，提供市民全新的運動模式。館內依「練體能、特訓技術、上場比賽」的運動歷程規劃三個樓層：
+
+2 樓 POWER BASE 體能基地：設有科技體適能檢測區、健身中心與室內溫水游泳池，由專業體適能教練操作檢測設備，協助民眾了解自身體能狀況並規劃訓練。
+
+3 樓 TRAINING GROUND 運動特訓場：設置滑雪練習區、虛擬高爾夫球區等設施，讓民眾在城市中也能練習原本受場地與季節限制的運動項目。
+
+4 樓 V-ARENA 虛擬賽場：設有虛擬賽車區、電競區與虛擬運動互動區，結合競技與娛樂，吸引年輕族群走進運動場館。
+
+聯新國際體育表示，公館運動館鄰近捷運公館站及臺大、師大生活圈，期盼透過科技運動降低運動門檻，讓學生、上班族與親子家庭都能找到適合自己的運動方式，並與水源新天地的親水、文化設施相互串連，成為台北南區新的生活與運動據點。
+
+公館運動館主入口位於汀州路三段 160 巷底，試營運日期將於設施確認完成後另行公告，相關資訊請關注公館運動館官方社群。`,
+contact:`聯新國際體育股份有限公司　行銷部
+劉傳將　經理
+Email：luke.liu@landseedsports.com`
+};
+let prSeeded=false;
+function prDoc(){return S.press.find(x=>x.id==="main");}
+function renderPress(){
+  if(S.loaded.has("press")&&!prSeeded){prSeeded=true;if(!prDoc()){const d={...PR_SEED,updatedAt:new Date().toISOString()};S.press.push({id:"main",...d});put("press","main",d);}}
+  const d=prDoc()||{};
+  for(const [k,id] of [["title","#prTitle"],["sub","#prSub"],["body","#prBody"],["contact","#prContact"]]){const el=$(id);if(document.activeElement!==el)el.value=d[k]||"";}
+  $("#prMeta").textContent=d.updatedAt?`最後存檔：${new Date(d.updatedAt).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}　全文 ${(d.body||"").replace(/\s/g,"").length} 字`:"";
+}
+for(const [k,id] of [["title","#prTitle"],["sub","#prSub"],["body","#prBody"],["contact","#prContact"]]){
+  $(id).addEventListener("change",e=>{const d=prDoc();const v=e.target.value;if(d&&d[k]===v)return;const patch={[k]:v,updatedAt:new Date().toISOString()};if(d)Object.assign(d,patch);else S.press.push({id:"main",...patch});upd("press","main",patch);renderPress();toast("新聞稿已存檔");});
+}
+function prText(){const d=prDoc()||{};return `${d.title||""}\n${d.sub||""}\n\n${d.body||""}\n\n新聞聯絡人\n${d.contact||""}`;}
+$("#prCopy").onclick=async()=>{try{await navigator.clipboard.writeText(prText());toast("已複製新聞稿全文");}catch(e){const t=$("#prBody");t.select();toast("請按 Ctrl+C 複製");}};
+$("#prDoc").onclick=async()=>{
+  const d=prDoc()||{};const P=t=>esc(t).replace(/\n/g,"<br>");
+  const paras=(d.body||"").split(/\n\s*\n/).map(x=>`<p style="text-indent:2em;line-height:1.8;margin:0 0 10pt">${P(x.trim())}</p>`).join("");
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>新聞稿</title><style>body{font-family:"微軟正黑體","Microsoft JhengHei",sans-serif;font-size:12pt}</style></head><body>
+  <p style="text-align:center;font-size:11pt;color:#555">新聞稿　${esc(S.meta.dateText||"")}</p>
+  <h1 style="font-size:18pt;text-align:center;margin:6pt 0">${P(d.title||"")}</h1>
+  <h2 style="font-size:13pt;text-align:center;font-weight:normal;margin:0 0 16pt">${P(d.sub||"")}</h2>${paras}
+  <p style="margin-top:18pt"><b>新聞聯絡人</b><br>${P(d.contact||"")}</p></body></html>`;
+  try{await downloads.save({filename:"公館開箱活動_新聞稿.doc",data:new Blob(["﻿"+html],{type:"application/msword"})});}catch(e){if(!(e&&e.code==="declined"))toast("下載沒有完成");}
+};
+
+/* ================= 展示座位圖 ================= */
+function seatShow(on){
+  document.body.classList.toggle("showseat",on);
+  let b=document.getElementById("showBar");
+  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
+    $("#showPrint").onclick=()=>window.print();$("#showExit").onclick=()=>seatShow(false);}
+  if(!on&&b)b.remove();
+  if(on){UI.seatDetail=true;}
+  renderAll();
+}
+$("#smShow").onclick=()=>seatShow(true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("showseat"))seatShow(false);});
+window.addEventListener("hashchange",()=>{if(document.body.classList.contains("showseat")&&location.hash!=="#seats")seatShow(false);});
+
 /* ---------- 搬家匯出（一次性，給 GitHub 版匯入） ---------- */
 async function moveOut(){
   const btn=$("#moveOut");btn.disabled=true;btn.textContent="打包中…";
@@ -2302,7 +2482,7 @@ setTab(location.hash.slice(1)||"guests");
   assets=as;downloads=dl;
   try{if(user&&user.isOwner()&&downloads)$("#moveOut").hidden=false;}catch(e){}
   if(user){try{const c=await user.can("data.write");if(c===false){canWrite=false;$("#banner").innerHTML=`<div class="banner">你目前是檢視權限，可以查看但無法修改</div>`;}}catch(e){}}
-  ["guests","zones","rundown","staff","teams","media"].forEach(sub);
+  ["guests","zones","rundown","staff","teams","media","tasks","press"].forEach(sub);
   mcp=await window.claude.use("mcp");startMediaWatch();
   db.doc("meta/event").onSnapshot(s=>{S.meta=s.exists?{...s.data()}:{};syncOff();S.loaded.add("meta");schedule();},()=>setSync("off","連線中斷，請重新整理"));
 })();
