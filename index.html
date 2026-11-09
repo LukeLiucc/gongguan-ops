@@ -519,6 +519,28 @@ table.rt th:first-child{left:0;z-index:3}
 .lmv{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;width:24px;height:24px;font-size:16px;line-height:1;cursor:pointer;padding:0}.lmv:disabled{opacity:.3;cursor:default}
 .lc b{font-size:16px}.lc .lt{font-size:13px;color:var(--ink-2)}.lc .lu{font-size:12px;color:var(--ink-3);line-height:1.35}.lc .ls{font-size:12px;color:var(--accent);font-weight:700;margin-top:2px}
 @media (max-width:760px){.lrow{grid-template-columns:1fr}.lc{flex-direction:row;flex-wrap:wrap;text-align:left;gap:4px 10px;padding:8px 10px}.lc img,.lc .li{width:40px;height:40px;margin:0}}
+
+/* 座位搜尋 */
+.st.hit{outline:3px solid #F59E0B;outline-offset:1px;z-index:3}
+.smfound{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.smfound .fd{background:var(--surface-2);border-radius:14px;padding:2px 9px;white-space:nowrap}
+.smfound .fd.warn{background:var(--warn-soft);color:var(--warn);white-space:normal}
+/* 貼上文字新增 */
+.pi-ta{min-height:160px;font-size:14px;line-height:1.6}
+.pi-tb{width:100%;border-collapse:collapse;font-size:13.5px}
+.pi-tb th,.pi-tb td{border-bottom:1px solid var(--line);padding:4px;text-align:left;vertical-align:middle}
+.pi-tb th{font-size:12px;color:var(--ink-3)}
+.pi-tb .inp,.pi-tb .sel{padding:5px 7px;font-size:13.5px}
+.md.wide{width:min(1000px,100%)}
+.pi-wrap{max-height:52vh;overflow:auto}
+
+.cmp h4{margin:12px 0 6px;font-size:15px}
+.cmp .cnt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.cmp .cnt span{background:var(--surface-2);border-radius:14px;padding:3px 10px;font-weight:700;font-size:13px}
+.cmp table{width:100%;border-collapse:collapse;font-size:13.5px}
+.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+.cmp th{font-size:12px;color:var(--ink-3)}
+.cmp .old{color:var(--ink-3);text-decoration:line-through}.cmp .new{color:var(--ok);font-weight:700}
 /* 新聞稿 */
 .prcard{padding:18px;display:grid;gap:4px}
 .prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -700,11 +722,14 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <span class="sp"></span>
       <span class="rt-save"><small id="rtSaved" aria-live="polite"></small><button class="btn pri" id="rtSaveBtn" type="button">儲存更新</button></span>
       <button class="btn danger" id="rtDelSel" type="button" hidden>刪除勾選（0）</button>
+      <button class="btn pri" id="rtPaste" type="button">貼上文字新增</button>
       <button class="btn" id="rtAdd" type="button">＋ 新增貴賓</button>
       <button class="btn" id="rtXlsx" type="button">匯出 Excel</button>
+      <button class="btn" id="rtCmp" type="button">匯入 Excel 比對</button><input type="file" id="rtCmpFile" accept=".xlsx,.xls,.csv" hidden>
     </div>
     <div class="bar">
       <input class="inp grow" id="rtQ" type="search" placeholder="搜尋姓名、單位、職稱、備註">
+      <select class="sel" id="rtUnit" aria-label="單位"></select>
       <select class="sel" id="rtZone"></select>
       <select class="sel" id="rtSt"></select>
       <select class="sel" id="rtInv"></select>
@@ -743,11 +768,14 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
         <button type="button" id="smBlock" aria-pressed="false">標不可排</button>
       </div>
       <div class="seg" role="group" aria-label="座位顯示"><button type="button" id="sdDetail" aria-pressed="true">顯示單位職稱</button></div>
+      <input class="inp" id="smQ" type="search" list="smUnits" placeholder="找人或單位" style="width:200px">
+      <datalist id="smUnits"></datalist>
       <span class="muted" id="smHint" style="font-size:13.5px"></span>
       <span class="sp"></span>
       <button class="btn" id="smShow" type="button">展示座位圖</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
     </div>
+    <div class="smfound" id="smFound" hidden></div>
     <div class="seatwrap">
       <div class="card map">
         <div class="mapscroll"><div class="hall" id="hall"></div></div>
@@ -1464,6 +1492,8 @@ async function exportCsv(){
 /* ================= SEATS ================= */
 let sInit=false, painting=null;
 function initSeats(){
+  if(!window.__smQ){window.__smQ=1;$("#smQ").addEventListener("input",e=>{UI.seatQ=e.target.value;renderSeats();});}
+  {const us=[...new Set(S.guests.map(unitKey).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"zh-Hant"));const h=us.map(u=>`<option value="${esc(u)}">`).join("");const dl=$("#smUnits");if(dl.dataset.h!==h){dl.innerHTML=h;dl.dataset.h=h;}}
   if(sInit)return;sInit=true;
   $("#smSeat").onclick=()=>{UI.seatMode="seat";renderSeats();};
   $("#smPaint").onclick=()=>{UI.seatMode="paint";if(!UI.brush&&S.zones[0])UI.brush=sortedZones()[0].id;UI.selGuest=null;renderSeats();};
@@ -1618,6 +1648,8 @@ function openBlockReason(sid,g){
 function renderSeats(){
   initSeats();
   $("#smSeat").setAttribute("aria-pressed",UI.seatMode==="seat");$("#smPaint").setAttribute("aria-pressed",UI.seatMode==="paint");$("#smBlock").setAttribute("aria-pressed",UI.seatMode==="block");$("#smBlock").hidden=!canWrite;
+  {const sq=(UI.seatQ||"").trim().toLowerCase();if(sq){const hs=S.guests.filter(g=>g.seat&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq)).sort((a,b)=>seatKey(a.seat)-seatKey(b.seat));const ns=S.guests.filter(g=>!g.seat&&g.zone!=="z-media"&&[g.name,g.unit,g.title].join(" ").toLowerCase().includes(sq));
+    $("#smFound").innerHTML=`<b>找到 ${hs.length} 位</b>${hs.length?"："+hs.slice(0,30).map(g=>`<span class="fd">${esc(seatLabel(g.seat))} ${esc(g.name||"單位代表")}</span>`).join(""):""}${ns.length?`<span class="fd warn">尚未排座位：${ns.map(g=>esc(g.name||g.unit)).join("、")}</span>`:""}`;$("#smFound").hidden=false;}else $("#smFound").hidden=true;}
   $("#smHint").textContent=UI.seatMode==="block"?"點座位標成不可排（會請你寫原因），再點一次取消；斜線格就是不可排的位子":UI.seatMode==="paint"?"選一個座位區後，在座位上點或拖曳來畫區；在同色座位上拖曳會清除":"拖曳換位（拖到畫面上下緣會自動捲動）；跨很多排時，點一下貴賓、捲到目標排再點座位，有人會互換";
   const zm=zoneOfSeatMap();const occ={};const dup=new Set();
   for(const g of S.guests){if(!g.seat)continue;if(occ[g.seat])dup.add(g.seat);else occ[g.seat]=g;}
@@ -1634,7 +1666,8 @@ function renderSeats(){
         h+=`<div class="st off${bn?" blk":""}" style="grid-row:${GR(r)};grid-column:${gc}" title="${esc(bn?seatLabel(sid)+"｜不可排："+bn:"不可入座")}">${bn?'<span class="no">✕</span>':""}</div>`;continue;}
       const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
       const cls=["st"];if(z)cls.push("z");if(g)cls.push("taken");if(g&&g.id===UI.selGuest)cls.push("sel");if(dup.has(sid))cls.push("dup");
-      const dim=UI.seatMode==="seat"&&UI.seatZone&&zm[sid]!==UI.seatZone;
+      const sq=(UI.seatQ||"").trim().toLowerCase();const hit=!!(sq&&g&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq));if(hit)cls.push("hit");
+      const dim=(UI.seatMode==="seat"&&UI.seatZone&&zm[sid]!==UI.seatZone)||(sq&&!hit);
       const nm=g?(g.name||g.unit||"").replace(/[（(].*$/,"").trim():"";
       const label=g?(UI.seatDetail!==false?`<span class="nmx">${esc(g.name||"單位代表")}</span><span class="tt2">${esc(g.title||"")}</span><span class="un2">${esc((g.unit||"").replace(/[（(].*$/,"").trim())}</span>`:`<span class="nmx${nm.length>3?" sm":""}">${esc(nm.slice(0,4))}</span>`):`<span class="no">${c}</span>`;
       const tip=`${seatLabel(sid)}${z?"｜"+z.name:""}${g?"｜"+(g.name||"")+" "+(g.title||"")+"｜"+(g.unit||""):""}`;
@@ -2069,12 +2102,16 @@ function rtDrop(dragId,targetId,after){
 }
 function rtFiltered(){
   const q=(UI.rtQ||"").trim().toLowerCase();
-  return rtRows().filter(g=>(!UI.rtZone||(UI.rtZone==="__none"?!zoneById(g.zone):g.zone===UI.rtZone))&&(!UI.rtSt||(g.status||"未回覆")===UI.rtSt)&&(!UI.rtInv||invKey(g.inviter)===UI.rtInv)&&(!UI.rtNoMail||(!g.email&&g.status!=="不出席"))&&(!q||[g.name,g.unit,g.title,g.note,g.category,g.email].join(" ").toLowerCase().includes(q)));
+  return rtRows().filter(g=>(!UI.rtZone||(UI.rtZone==="__none"?!zoneById(g.zone):g.zone===UI.rtZone))&&(!UI.rtSt||(g.status||"未回覆")===UI.rtSt)&&(!UI.rtInv||invKey(g.inviter)===UI.rtInv)&&(!UI.rtNoMail||(!g.email&&g.status!=="不出席"))&&(!UI.rtUnit||unitKey(g)===UI.rtUnit)&&(!q||[g.name,g.unit,g.title,g.note,g.category,g.email].join(" ").toLowerCase().includes(q)));
 }
 function renderRoster(){
   if(!rtInit){rtInit=true;
     $("#rtQ").oninput=e=>{UI.rtQ=e.target.value;drawRoster2();};
     $("#rtZone").onchange=e=>{UI.rtZone=e.target.value;drawRoster2();};
+    $("#rtUnit").onchange=e=>{UI.rtUnit=e.target.value;drawRoster2();};
+    $("#rtPaste").onclick=openPasteImport;
+    $("#rtCmp").onclick=()=>{if(!canWrite){toast("你目前是檢視權限，無法修改");return;}const f=$("#rtCmpFile");f.value="";f.click();};
+    $("#rtCmpFile").onchange=e=>{const f=e.target.files[0];if(f)xlsxCompare(f);};
     $("#rtSt").onchange=e=>{UI.rtSt=e.target.value;drawRoster2();};
     $("#rtInv").onchange=e=>{UI.rtInv=e.target.value;drawRoster2();};
     $("#rtNoMail").onchange=e=>{UI.rtNoMail=e.target.checked;drawRoster2();};
@@ -2118,6 +2155,7 @@ function renderRoster(){
       if(e.key==="Escape"){const g=S.guests.find(x=>x.id===el.dataset.id);el.value=g?(g[el.dataset.f]||""):"";el.blur();}});
   }
   const zs=sortedZones();
+  {const cnt={};rtRows().forEach(g=>{const k=unitKey(g);if(k)cnt[k]=(cnt[k]||0)+1;});const us=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,"zh-Hant"));setOpts($("#rtUnit"),[["","全部單位"],...us.map(u=>[u,`${u}（${cnt[u]}）`])],UI.rtUnit||"");}
   setOpts($("#rtZone"),[["","全部座位區"],...zs.map(z=>[z.id,z.name]),["__none","未分區"]],UI.rtZone||"");
   setOpts($("#rtSt"),[["","全部出席狀態"],...STATUS.map(s=>[s,s])],UI.rtSt||"");
   setOpts($("#rtInv"),[["","全部邀約分組"],...invGroups().filter(G=>G.k!=="other"||S.guests.some(g=>invKey(g.inviter)==="other")).map(G=>[G.k,G.label])],UI.rtInv||"");
@@ -2358,6 +2396,137 @@ async function uploadImg(file,max){
   if(!canWrite){toast("你目前是檢視權限");return null;}
   toast("上傳中…");
   try{const b=await shrink(file,max);return await assets.upload(b);}catch(e){toast(e&&e.code==="not_granted"?"沒有上傳權限":"上傳失敗，請再試一次");return null;}
+}
+
+/* ================= Excel 匯入比對 ================= */
+const CMP_F={unit:"單位／機關",name:"姓名",title:"職稱",status:"出席狀態",zone:"座位區",seat:"座位",category:"分類",proxy:"代理人",note:"備註",inviter:"邀約"};
+const nkey=v=>String(v||"").replace(/[（(].*?[）)]/g,"").replace(/\s+/g,"").trim();
+function seatFromLabel(v){const m=String(v||"").trim().toUpperCase().match(/^([A-P])\s*[-－]?\s*(\d{1,2})$/);if(!m)return null;const r=Object.keys(ROW_LETTER).find(k=>ROW_LETTER[k]===m[1]);return r?`${r}-${+m[2]}`:null;}
+function zoneFromName(v){v=String(v||"").trim();if(!v||v==="未分區")return "";const z=S.zones.find(z=>z.name===v||z.name.split("｜").pop()===v||z.code===v||z.name.includes(v));return z?z.id:null;}
+function normStatus(v){v=String(v||"").trim();if(!v)return "";if(/不克|不出席|請假|婉謝|無法/.test(v))return "不出席";if(/代理/.test(v))return "代理出席";if(/出席|參加|會到/.test(v))return "出席";if(/未回|待/.test(v))return "未回覆";return STATUS.includes(v)?v:"";}
+async function xlsxCompare(file){
+  if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再試");return;}
+  let rows;try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});rows=[];for(const n of wb.SheetNames)rows.push(...XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:false}));}catch(e){toast("讀不到這個檔案，請確認是 Excel 檔");return;}
+  let H=null,inv=null;const recs=[];
+  for(const r of rows){const cells=r.map(c=>String(c).trim());if(!cells.some(Boolean))continue;
+    const gi=cells[0].match(/^(.+?)｜\s*\d+\s*位/);if(gi&&cells.slice(1).every(c=>!c)){const G=INV_G.find(x=>x.label===gi[1].trim());inv=G?G.val:null;continue;}
+    if(cells.includes("姓名")){H={};cells.forEach((c,i)=>{for(const [k,lab] of Object.entries(CMP_F)){if(c===lab||(k==="unit"&&/^(單位|機關|單位\/機關|單位／機關)$/.test(c))||(k==="status"&&/^出席/.test(c))||(k==="inviter"&&/邀約/.test(c)))H[k]=i;}});continue;}
+    if(!H)continue;const g=k=>H[k]==null?undefined:cells[H[k]];
+    const rec={name:g("name")||"",unit:g("unit")||"",title:g("title")||""};if(!rec.name&&!rec.unit)continue;
+    for(const k of ["status","zone","seat","category","proxy","note"])if(H[k]!=null)rec[k]=g(k)||"";
+    if(H.inviter!=null&&g("inviter")){const G=INV_G.find(x=>x.label===g("inviter")||x.val===g("inviter"));rec.inviter=G?G.val:g("inviter");}else if(inv)rec.inviter=inv;
+    recs.push(rec);}
+  if(!H){toast("找不到「姓名」欄，請用平台匯出的 Excel 格式");return;}
+  if(!recs.length){toast("Excel 裡沒有讀到任何貴賓");return;}
+  const pool=S.guests.filter(g=>g.zone!=="z-media"&&g.category!=="媒體");const used=new Set();
+  const find=r=>{const nk=nkey(r.name);let c=nk?pool.filter(g=>!used.has(g.id)&&nkey(g.name)===nk):[];if(c.length>1)c=c.filter(g=>unitKey(g)===nkey(r.unit)||nkey(g.unit)===nkey(r.unit));
+    if(!c.length&&!nk)c=pool.filter(g=>!used.has(g.id)&&!nkey(g.name)&&nkey(g.unit)===nkey(r.unit)&&nkey(g.title)===nkey(r.title));return c[0]||null;};
+  const adds=[],chg=[];
+  for(const r of recs){const g=find(r);
+    if(!g){adds.push({r,on:true});continue;}used.add(g.id);
+    const d={};
+    for(const k of ["unit","title","category","proxy","note"])if(r[k]!==undefined&&String(r[k]).trim()!==String(g[k]||"").trim())d[k]=String(r[k]).trim();
+    if(r.name&&r.name.trim()!==(g.name||"").trim())d.name=r.name.trim();
+    if(r.status!==undefined){const st=normStatus(r.status);if(st&&st!==(g.status||"未回覆"))d.status=st;}
+    if(r.zone){const z=zoneFromName(r.zone);if(z!==null&&z!==(g.zone||""))d.zone=z;}
+    if(r.seat){const sid=seatFromLabel(r.seat);if(sid&&sid!==(g.seat||""))d.seat=sid;}
+    if(r.inviter&&invKey(r.inviter)!==invKey(g.inviter||""))d.inviter=r.inviter;
+    if(Object.keys(d).length)chg.push({g,d,on:true});}
+  const miss=pool.filter(g=>!used.has(g.id)).map(g=>({g,on:false}));
+  const lab={unit:"單位",name:"姓名",title:"職稱",status:"出席",zone:"座位區",seat:"座位",category:"分類",proxy:"代理人",note:"備註",inviter:"邀約"};
+  const show=(k,v)=>k==="zone"?(zoneById(v)||{}).name||"未分區":k==="seat"?seatLabel(v)||"未排":k==="inviter"?invLabel(v):v||"（空白）";
+  const md=modal(`<h3>Excel 比對結果</h3><div class="cmp">
+    <div class="cnt"><span>Excel 共 ${recs.length} 位</span><span>新增 ${adds.length}</span><span>有異動 ${chg.length}</span><span>Excel 沒有 ${miss.length}</span></div>
+    <div class="muted" style="font-size:13px">勾選要套用的項目再按「套用」。「Excel 沒有」的人預設不刪除，確定要刪才勾。</div>
+    <div class="pi-wrap">
+    ${chg.length?`<h4>有異動（${chg.length}）</h4><table><thead><tr><th>套用</th><th>貴賓</th><th>平台 → Excel</th></tr></thead><tbody>${chg.map((c,i)=>`<tr><td><input type="checkbox" data-c="${i}" checked aria-label="套用"></td><td><b>${esc(c.g.name||"單位代表")}</b><br><span class="muted">${esc(unitKey(c.g))}</span></td><td>${Object.entries(c.d).map(([k,v])=>`<div>${lab[k]}：<span class="old">${esc(show(k,c.g[k]||""))}</span> → <span class="new">${esc(show(k,v))}</span></div>`).join("")}</td></tr>`).join("")}</tbody></table>`:""}
+    ${adds.length?`<h4>新增（${adds.length}）</h4><table><thead><tr><th>新增</th><th>姓名</th><th>職稱</th><th>單位</th><th>出席</th><th>座位</th></tr></thead><tbody>${adds.map((a,i)=>`<tr><td><input type="checkbox" data-a="${i}" checked aria-label="新增"></td><td>${esc(a.r.name||"單位代表")}</td><td>${esc(a.r.title)}</td><td>${esc(a.r.unit)}</td><td>${esc(normStatus(a.r.status)||"未回覆")}</td><td>${esc(a.r.seat||"")}</td></tr>`).join("")}</tbody></table>`:""}
+    ${miss.length?`<h4>平台有、Excel 沒有（${miss.length}）</h4><table><thead><tr><th>刪除</th><th>姓名</th><th>職稱</th><th>單位</th><th>座位</th></tr></thead><tbody>${miss.map((m,i)=>`<tr><td><input type="checkbox" data-m="${i}" aria-label="刪除"></td><td>${esc(m.g.name||"單位代表")}</td><td>${esc(m.g.title||"")}</td><td>${esc(unitKey(m.g))}</td><td>${esc(seatLabel(m.g.seat))}</td></tr>`).join("")}</tbody></table>`:""}
+    ${!chg.length&&!adds.length&&!miss.length?`<div class="empty" style="padding:16px">Excel 跟平台完全一樣，沒有要更新的</div>`:""}
+    </div></div><div class="ft"><button class="btn" type="button" data-close>取消</button><button class="btn pri" type="button" id="cmpGo"${!chg.length&&!adds.length&&!miss.length?" disabled":""}>套用</button></div>`,"wide");
+  md.addEventListener("change",e=>{const t=e.target;if(t.dataset.c!=null)chg[+t.dataset.c].on=t.checked;if(t.dataset.a!=null)adds[+t.dataset.a].on=t.checked;if(t.dataset.m!=null)miss[+t.dataset.m].on=t.checked;});
+  md.querySelector("#cmpGo").onclick=()=>{
+    let nc=0,na=0,nd=0;
+    for(const c of chg.filter(x=>x.on)){const g=c.g;const old=g.seat||"";Object.assign(g,c.d);upd("guests",g.id,c.d);if(c.d.seat!==undefined||c.d.zone!==undefined){if(g.seat)claimSeat(g,g.seat);if(old&&old!==g.seat)releaseSeat(old);}nc++;}
+    let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
+    for(const a of adds.filter(x=>x.on)){const r=a.r;const id=newId("g");const zone=zoneFromName(r.zone)||"";const seat=r.seat?seatFromLabel(r.seat)||"":"";const d={address:"",arrived:false,assist:"",category:r.category||"",inviter:r.inviter||"聯新國際體育",name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:r.note||"",photo:"",proxy:r.proxy||"",seat:seat&&!S.guests.some(g=>g.seat===seat)?seat:"",source:"Excel 匯入",status:normStatus(r.status)||"未回覆",zone,order:o};o+=10;const g={id,...d};S.guests.push(g);put("guests",id,d);if(g.seat)claimSeat(g,g.seat);na++;}
+    for(const m of miss.filter(x=>x.on)){const sid=m.g.seat;S.guests=S.guests.filter(x=>x.id!==m.g.id);del("guests",m.g.id);if(sid)releaseSeat(sid);nd++;}
+    closeModal();renderAll();toast(`已套用：異動 ${nc}、新增 ${na}、刪除 ${nd}`);
+  };
+}
+
+/* ================= 貼上文字新增 ================= */
+const unitKey=g=>(g.unit||"").replace(/[（(].*$/,"").trim();
+const PI_TITLE=/(創辦人兼執行長|董事總經理|榮譽理事長|副董事長|董事長|副總經理|總經理|副執行長|執行長|資深[^\s｜|，,、]{0,4}總監|[^\s｜|，,、]{0,4}總監|副總|協理|特助|[^\s｜|，,、]{0,3}經理|主任委員|主委|理事長|副理事長|秘書長|總幹事|副主任|主任|副處長|處長|副局長|局長|副區長|區長|副市長|市長|議長|副議長|議員|立法委員|里長|校長|院長|教授|老師|總教練|教練|[^\s｜|，,、]{0,3}選手|顧問|代表|委員|董事|監事|理事|研究員|專員|組長|課長|科長|股長)$/;
+const PI_UNIT=/(股份有限公司|有限公司|公司|協會|總會|基金會|大學|學院|EMBA|中心|運動館|游泳池|醫院|集團|事業群|事務所|研究院|策進會|處|局|署|部|會|廣告|AI|Team|Gaming|銀行|學校|國小|國中|高中)/i;
+function piLine(l){
+  const toks=l.replace(/[｜|]/g," ").split(/\s+/).filter(Boolean);
+  let name="",title="",u=[];
+  for(let i=0;i<toks.length;i++){const t=toks[i];const m=t.match(PI_TITLE);if(!m)continue;
+    let pre=t.slice(0,t.length-m[0].length),tt=m[0];
+    const ub=pre.match(/^(.*(?:股份有限公司|有限公司|公司|協會|總會|基金會|大學|學院|中心|集團|事業群|事務所|策進會|EMBA\s*\S*))(.*)$/i);
+    if(ub){u.push(ub[1]);pre=ub[2];}
+    if(pre){if(/^[一-鿿]{2,3}$/.test(pre)&&!PI_UNIT.test(pre)&&!/[部組處課科室]$/.test(pre))name=pre;else tt=pre+tt;}
+    title=tt;toks[i]=null;break;}
+  const rest=toks.filter(Boolean);
+  for(const t of rest){
+    if(!name&&/^[一-鿿]{2,3}$/.test(t)&&!PI_UNIT.test(t)&&!PI_TITLE.test(t)){name=t;continue;}
+    const nm=t.match(/^(.*(?:股份有限公司|有限公司|公司|協會|總會|基金會|大學|學院|中心|集團|事業群|事務所|策進會))([一-鿿]{2,3})$/);
+    if(!name&&nm){u.push(nm[1]);name=nm[2];continue;}
+    u.push(t);}
+  if(!name){const lat=u.filter(t=>/^[A-Za-z][A-Za-z.\-]{1,20}$/.test(t));if(lat.length===1&&u.length===1){name=lat[0];u=[];}}
+  return {name,title,unit:u.join(" ")};
+}
+function piParse(text){
+  const out=[];let unit="";
+  const isName=t=>(/^[一-鿿]{2,3}$/.test(t)||/^[A-Za-z][A-Za-z.\-]{1,20}$/.test(t))&&!PI_TITLE.test(t)&&!PI_UNIT.test(t);
+  for(let raw of String(text).split(/\r?\n/)){
+    let l=raw.replace(/^[\s•·\-－—*＊●○◎▪►>]+/,"").replace(/^\d+[.、)）]\s*/,"").replace(/[，,。]?\s*(謝謝|感謝|敬請|麻煩)[^]*$/,"").replace(/[【】\[\]]/g," ").trim();
+    if(!l)continue;
+    let m=l.match(/回報\s*(.+?)\s*(?:的)?出席/);if(m){unit=m[1].trim();continue;}
+    l=l.replace(/^(加報名貴賓參加|加報名貴賓|加報名|報名|新增|另外|補充)[，,：:\s]*/,"").trim();if(!l)continue;
+    m=l.match(/^(.+?)(?:\s*代表)?\s*[：:]\s*(.*)$/);
+    if(m&&!m[2]){unit=m[1].trim();continue;}
+    if(m&&m[2]){unit=m[1].trim();l=m[2].trim();}
+    m=l.match(/^(.+?)\s*目前\s*\S*\s*位?出席/);if(m){unit=m[1].trim();continue;}
+    const parts=l.split(/[｜|、，,]+/).map(x=>x.trim()).filter(Boolean);
+    if(parts.length>1&&parts.every(isName)){parts.forEach(n=>out.push({unit,name:n,title:""}));continue;}
+    const r=piLine(l);
+    if(!r.name&&!r.title){if(!/活動|開幕|開箱/.test(l))unit=r.unit;continue;}
+    out.push({unit:r.unit||unit,name:r.name,title:r.title});
+  }
+  return out;
+}
+function openPasteImport(){
+  if(!canWrite){toast("你目前是檢視權限，無法修改");return;}
+  const zs=sortedZones();
+  const md=modal(`<h3>貼上文字新增貴賓</h3>
+    <div class="muted" style="font-size:13.5px">把群組裡的出席回覆整段貼進來，按「整理」會自動拆成單位、姓名、職稱；下面表格可以先改，確認後再匯入。</div>
+    <textarea class="inp pi-ta" id="piText" placeholder="例如：&#10;奧美廣告目前兩位出席&#10;－董事總經理 Zoe&#10;－資深業務總監 Liping&#10;&#10;台大EMBA 103B 代表：&#10;王定乾&#10;汪家玗"></textarea>
+    <div class="fg">
+      <label>邀約單位<select class="sel" id="piInv" style="width:100%">${INV_G.map(x=>`<option value="${esc(x.val)}"${x.val==="聯新國際體育"?" selected":""}>${esc(x.label)}</option>`).join("")}</select></label>
+      <label>出席狀態<select class="sel" id="piSt" style="width:100%">${STATUS.map(x=>`<option${x==="出席"?" selected":""}>${x}</option>`).join("")}</select></label>
+    </div>
+    <div class="ft" style="justify-content:flex-start"><button class="btn" type="button" id="piGo">整理</button><span class="muted" id="piMsg" style="font-size:13px"></span></div>
+    <div class="pi-wrap" id="piOut"></div>
+    <div class="ft"><button class="btn" type="button" data-close>取消</button><button class="btn pri" type="button" id="piSave" disabled>匯入</button></div>`,"wide");
+  const zopt=v=>`<option value="">未分區（之後再排）</option>`+zs.map(z=>`<option value="${esc(z.id)}"${z.id===v?" selected":""}>${esc(z.name)}</option>`).join("");
+  let rows=[];
+  const draw=()=>{
+    if(!rows.length){$("#piOut").innerHTML="";$("#piSave").disabled=true;return;}
+    $("#piOut").innerHTML=`<table class="pi-tb"><thead><tr><th>匯入</th><th>單位／機關</th><th>姓名</th><th>職稱</th><th>座位區</th></tr></thead><tbody>${rows.map((r,i)=>{const dupe=S.guests.find(g=>r.name&&(g.name||"").replace(/[（(].*$/,"")===r.name.replace(/[（(].*$/,""));return `<tr data-i="${i}"><td><input type="checkbox" data-k="on"${r.on?" checked":""} aria-label="匯入第 ${i+1} 筆"></td><td><input class="inp" data-k="unit" value="${esc(r.unit)}"></td><td><input class="inp" data-k="name" value="${esc(r.name)}">${dupe?`<div style="color:var(--warn);font-size:12px">名單已有同名：${esc(dupe.unit||"")}</div>`:""}</td><td><input class="inp" data-k="title" value="${esc(r.title)}"></td><td><select class="sel" data-k="zone" style="width:100%">${zopt(r.zone)}</select></td></tr>`;}).join("")}</tbody></table>`;
+    const n=rows.filter(r=>r.on).length;$("#piSave").disabled=!n;$("#piSave").textContent=`匯入 ${n} 位`;
+  };
+  const guessZone=u=>{const g=S.guests.find(x=>u&&unitKey(x)&&(unitKey(x)===u||unitKey(x).includes(u)||u.includes(unitKey(x))));return g?g.zone||"":"";};
+  md.querySelector("#piGo").onclick=()=>{rows=piParse($("#piText").value).map(r=>({...r,on:true,zone:guessZone(r.unit)}));$("#piMsg").textContent=rows.length?`整理出 ${rows.length} 位，請確認下表`:"沒有整理出姓名，請檢查貼上的內容";draw();};
+  md.querySelector("#piOut").addEventListener("input",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;if(k==="on")draw();});
+  md.querySelector("#piOut").addEventListener("change",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;draw();});
+  md.querySelector("#piSave").onclick=async()=>{
+    const list=rows.filter(r=>r.on&&(r.name||r.title||r.unit));if(!list.length)return;
+    const inv=$("#piInv").value,st=$("#piSt").value;let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
+    for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:st,zone:r.zone||"",order:o};o+=10;S.guests.push({id,...d});put("guests",id,d);}
+    closeModal();renderAll();toast(`已新增 ${list.length} 位，到「座位分區」點名字就能排座位`);
+  };
 }
 
 /* ================= 市長行程大綱 ================= */
