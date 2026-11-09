@@ -2460,7 +2460,7 @@ function importSeat(list){
     if(zoneId){
       for(const g of group){const ref=[...S.guests.filter(x=>x.seat&&x.id!==g.id&&((unitKey(x)&&unitKey(x)===unitKey(g))||x.zone===zoneId)).map(x=>x.seat),...taken];
         if(!ref.length){ok=false;break;}
-        const {sid,d}=asNear(g,ref,asFree(zoneId,taken));if(!sid||d>4){ok=false;break;}taken.push(sid);plan.push([g,sid]);}
+        const {sid}=asNear(g,ref,asFree(zoneId,taken));if(!sid){ok=false;break;}taken.push(sid);plan.push([g,sid]);}
     }
     if(ok){plan.forEach(([g,sid])=>asSave(g,sid));placed+=plan.length;}
     else placed+=asNewZone(unit,group);
@@ -2586,7 +2586,7 @@ function openPasteImport(){
       <label>邀約單位<select class="sel" id="piInv" style="width:100%">${INV_G.map(x=>`<option value="${esc(x.val)}"${x.val==="聯新國際體育"?" selected":""}>${esc(x.label)}</option>`).join("")}</select></label>
       <label>出席狀態<select class="sel" id="piSt" style="width:100%">${STATUS.map(x=>`<option${x==="出席"?" selected":""}>${x}</option>`).join("")}</select></label>
     </div>
-    <label class="chk"><input type="checkbox" id="piSeat" checked> 匯入後自動排座位：同單位或同座位區旁邊有空位就排在旁邊；旁邊沒位子，就為這個單位開一個新座位區</label>
+    <label class="chk"><input type="checkbox" id="piSeat" checked> 匯入後自動排座位：有對應座位區（同單位、媒體）就排在那一區最近的空位；找不到對應的區，就為這個單位開一個新座位區</label>
     <div class="ft" style="justify-content:flex-start"><button class="btn" type="button" id="piGo">整理</button><span class="muted" id="piMsg" style="font-size:13px"></span></div>
     <div class="pi-wrap" id="piOut"></div>
     <div class="ft"><button class="btn" type="button" data-close>取消</button><button class="btn pri" type="button" id="piSave" disabled>匯入</button></div>`,"wide");
