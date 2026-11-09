@@ -786,6 +786,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <span class="sp"></span>
       <button class="btn" id="smShow" type="button">展示座位圖</button>
       <button class="btn" id="smDl" type="button">下載座位圖</button>
+      <button class="btn" id="smPdf" type="button">匯出 PDF</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
     </div>
     <div class="smfound" id="smFound" hidden></div>
@@ -2857,15 +2858,18 @@ $("#prDoc").onclick=async()=>{
 function seatShow(on){
   document.body.classList.toggle("showseat",on);
   let b=document.getElementById("showBar");
-  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showDl">下載圖檔</button><button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
-    $("#showPrint").onclick=()=>window.print();$("#showDl").onclick=e=>seatDownload(e.currentTarget);$("#showExit").onclick=()=>seatShow(false);}
+  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showDl">下載圖檔</button><button class="btn" type="button" id="showPdf">匯出 PDF</button><button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
+    $("#showPrint").onclick=()=>window.print();$("#showDl").onclick=e=>seatDownload(e.currentTarget);$("#showPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");$("#showExit").onclick=()=>seatShow(false);}
   if(!on&&b)b.remove();
   if(on){UI.seatDetail=true;}
   renderAll();
 }
 $("#smShow").onclick=()=>seatShow(true);
 $("#smDl").onclick=e=>seatDownload(e.currentTarget);
-async function seatDownload(btn){
+$("#smPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");
+function loadJsPDF(){if(window.jspdf)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc);});}
+async function seatDownload(btn,fmt){
+  const oldT=btn?btn.textContent:"";if(btn){btn.disabled=true;btn.textContent="產生中…";}
   try{
     const now=new Date();const pad=n=>String(n).padStart(2,"0");
     const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
@@ -2910,10 +2914,15 @@ async function seatDownload(btn){
     let lx=M+RL,ly=legendY+14;x.font=`600 15px ${F}`;
     zs.forEach(z=>{const t=z.name;const w=x.measureText(t).width+40;if(lx+w>W-M){lx=M+RL;ly+=34;}x.fillStyle=z.color;x.beginPath();x.arc(lx+9,ly,7,0,7);x.fill();x.fillStyle="#374151";x.fillText(t,lx+22,ly+5);lx+=w+12;});
     x.fillStyle="#9CA3AF";x.font=`500 15px ${F}`;x.textAlign="center";x.fillText("後方入口",W/2,H-22);x.textAlign="left";
-    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("empty");
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_座位圖_${stamp}.png`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
-    toast("座位圖已下載");
+    let blob,ext="png";
+    if(fmt==="pdf"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);const w=W*k,h=H*k;
+      pdf.addImage(cv.toDataURL("image/jpeg",0.93),"JPEG",(PW-w)/2,(PH-h)/2,w,h);blob=pdf.output("blob");ext="pdf";}
+    else blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    if(!blob)throw new Error("empty");
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_座位圖_${stamp}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast(ext==="pdf"?"座位圖 PDF 已匯出":"座位圖已下載");
   }catch(e){console.error("seatDownload",e);toast("座位圖產生失敗，請改用「展示座位圖」→ 列印另存 PDF");}
+  finally{if(btn){btn.disabled=false;btn.textContent=oldT;}}
 }
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("showseat"))seatShow(false);});
