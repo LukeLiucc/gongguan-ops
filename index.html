@@ -1180,7 +1180,19 @@ function conflicts(){
 /* ---------- render scheduling ---------- */
 let pend=false;
 function schedule(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;renderAll();});}
+let zcT=null;
+function zoneCodeOf(z){
+  const seats=S.guests.filter(g=>g.zone===z.id&&g.seat).map(g=>g.seat);const src=seats.length?seats:(z.seats||[]);
+  const rows=[...new Set(src.map(s=>+String(s).split("-")[0]))].filter(r=>ROW_LETTER[r]).sort((a,b)=>ROW_ORDER.indexOf(a)-ROW_ORDER.indexOf(b));
+  if(!rows.length)return null;const a=ROW_LETTER[rows[0]],b=ROW_LETTER[rows[rows.length-1]];return a===b?a:a+"–"+b;
+}
+function syncZoneCodes(){
+  if(!db||!canWrite||!S.loaded.has("zones")||!S.loaded.has("guests"))return;
+  for(const z of S.zones){const code=zoneCodeOf(z);if(!code)continue;const label=String(z.name||"").includes("｜")?z.name.split("｜").slice(1).join("｜"):(z.name||"");const name=code+"｜"+label;
+    if(z.code!==code||z.name!==name){z.code=code;z.name=name;upd("zones",z.id,{code,name});}}
+}
 function renderAll(){
+  clearTimeout(zcT);zcT=setTimeout(syncZoneCodes,1500);
   
   $("#ctGuests").textContent=S.guests.length;
   {const open=S.tasks.filter(t=>t.status!=="已完成").length;$("#ctTasks").textContent=S.loaded.has("tasks")?open:"–";}
