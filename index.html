@@ -980,7 +980,8 @@ async function uploadMedia(file){
 }
 const user={can:async()=>true,canEdit:()=>true,isOwner:()=>false};
 
-window.claude={use:async n=>{await readyP;return({db,assets,downloads,mcp,user})[n]||null;}};
+window.OPS_HIDE=["media","press"];
+window.claude={use:async n=>{await readyP;return({db,assets,downloads,user})[n]||null;}};
 
 /* ---- 登入與首次匯入 ---- */
 const css=`#gate{position:fixed;inset:0;z-index:9999;background:var(--bg,#F3F6FA);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -1006,7 +1007,7 @@ async function start(){
   if(!count){showImport();return;}
   go();
 }
-function go(){closeGate();realtime();ready();addMediaUpload();}
+function go(){closeGate();realtime();ready();}
 async function doImport(j,P){
   if(!j||!j.cols)throw new Error("這不是搬家檔");
   const ids=Object.keys(j.photos||{});let n=0;
@@ -1141,7 +1142,9 @@ function renderAll(){
 }
 
 /* ---------- tabs ---------- */
-function setTab(t){if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
+const HIDE_TABS=window.OPS_HIDE||[];
+document.querySelectorAll("nav.tabs a").forEach(a=>{if(HIDE_TABS.includes(a.dataset.tab))a.remove();});
+function setTab(t){if(HIDE_TABS.includes(t))t="tasks";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
   if(!["tasks","guests","roster","media","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
@@ -2269,7 +2272,7 @@ function drawMedia(){
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#mdTable"))return;
   $("#mdUpd").textContent=MD.at?`試算表同步 ${new Date(MD.at).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"})}`:"";
   $("#mdMsg").innerHTML=MD.err?`<div class="banner">${esc(MD.err)}</div>`:"";
-  const rows=MD.rows||[];$("#ctMedia").textContent=MD.rows?rows.length:"–";
+  const rows=MD.rows||[];{const c=$("#ctMedia");if(c)c.textContent=MD.rows?rows.length:"–";}
   const cats=[...new Set(rows.map(r=>r.cat))];
   setOpts($("#mdCat"),[["","全部類別"],...cats.map(c=>[c,c])],UI.mdCat||"");
   setOpts($("#mdSt"),[["","全部出席狀態"],...STATUS.map(x=>[x,x])],UI.mdSt||"");
@@ -2403,7 +2406,7 @@ function renderTasks(){
       <div class="row2"><div><label for="tkn-${esc(t.id)}">處理說明</label><textarea class="inp" id="tkn-${esc(t.id)}" data-f="note" style="min-height:56px">${esc(t.note||"")}</textarea></div>
       <div><label for="tko-${esc(t.id)}">負責人</label><input class="inp" id="tko-${esc(t.id)}" data-f="owner" value="${esc(t.owner||"")}"></div>
       <div><label for="tks-${esc(t.id)}">狀態</label><select class="sel" id="tks-${esc(t.id)}" data-f="status" style="width:100%">${TK_ST.map(x=>`<option${x===st?" selected":""}>${x}</option>`).join("")}</select></div></div>
-      ${t.go?`<div class="go"><a class="btn" href="#${esc(t.go)}">前往「${esc(TAB_NAME[t.go]||t.go)}」</a></div>`:""}
+      ${t.go&&!HIDE_TABS.includes(t.go)?`<div class="go"><a class="btn" href="#${esc(t.go)}">前往「${esc(TAB_NAME[t.go]||t.go)}」</a></div>`:""}
       ${att}</div></article>`;
   }).join("");
 }
