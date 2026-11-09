@@ -508,6 +508,15 @@ table.rt th:first-child{left:0;z-index:3}
 .oltb ul{margin:4px 0 0;padding-left:1.2em}.oltb li{margin:2px 0}
 .olcard .olr{margin-top:10px;font-size:13.5px;color:var(--ink-2);line-height:1.6}
 @media (max-width:640px){.oltb td.p{width:auto}.oltb td.t{width:auto}}
+
+.lstage{background:var(--night);color:var(--night-ink);text-align:center;font-weight:700;padding:8px;border-radius:8px;margin-bottom:10px}
+.lrow{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px}
+.lc{border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface)}
+.lc.mid{border:2px solid var(--accent);background:var(--accent-soft)}
+.lc img,.lc .li{width:56px;height:56px;border-radius:50%;object-fit:cover;margin:4px 0;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink-2)}
+.lc .lp{font-size:12px;color:var(--ink-3);font-weight:700}
+.lc b{font-size:16px}.lc .lt{font-size:13px;color:var(--ink-2)}.lc .lu{font-size:12px;color:var(--ink-3);line-height:1.35}.lc .ls{font-size:12px;color:var(--accent);font-weight:700;margin-top:2px}
+@media (max-width:760px){.lrow{grid-template-columns:1fr}.lc{flex-direction:row;flex-wrap:wrap;text-align:left;gap:4px 10px;padding:8px 10px}.lc img,.lc .li{width:40px;height:40px;margin:0}}
 /* 新聞稿 */
 .prcard{padding:18px;display:grid;gap:4px}
 .prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -2365,7 +2374,16 @@ function renderOutline(){
    <div class="olm"><span>日期：${esc(d.date)}</span><span>時間：${esc(d.time)}</span><span>地點：${esc(d.place)}</span></div>
    <div class="tblw"><table class="oltb"><thead><tr><th>時間</th><th>地點</th><th>流程</th></tr></thead><tbody>
    ${(d.rows||[]).map(r=>`<tr><td class="t">${esc(r.t)}</td><td class="p">${esc(r.p)}</td><td><b>${esc(r.h)}</b>${(r.li||[]).length?`<ul>${r.li.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</td></tr>`).join("")}
-   </tbody></table></div>${d.remark?`<div class="olr">備註：${esc(d.remark)}</div>`:""}</section>`;
+   </tbody></table></div>${d.remark?`<div class="olr">備註：${esc(d.remark)}</div>`:""}</section>${launchHtml(d)}`;
+}
+function launchHtml(d){
+  const ids=d.launch||[];if(!ids.length)return "";
+  const mid=Math.floor(ids.length/2);
+  const cells=ids.map((id,i)=>{const g=S.guests.find(x=>x.id===id)||{};const unit=(g.unit||"").replace(/[（(].*$/,"").trim();
+    return `<div class="lc${i===mid?" mid":""}"><div class="lp">左 ${i+1}</div>${g.photo?`<img src="${esc(imgSrc(g.photo))}" alt="">`:`<span class="li">${esc(initials(g))}</span>`}<b>${esc(g.name||"")}</b><span class="lt">${esc(g.title||"")}</span><span class="lu">${esc(unit)}</span>${g.seat?`<span class="ls">座位 ${esc(seatLabel(g.seat))}</span>`:""}</div>`;}).join("");
+  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>面向舞台由左至右，共 ${ids.length} 人，市長站中間</span></div>
+   <div class="lstage">舞台／LED 大螢幕</div><div class="lrow" style="--n:${ids.length}">${cells}</div>
+   <div class="olr">主持人唱名後上台，手放在前方光柱，倒數三二一一起按下啟動開關並轉向大螢幕；先拍啟動代表合照，再依主持人引導拍主要貴賓合照。</div></section>`;
 }
 
 /* ================= 交辦事項 ================= */
