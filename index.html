@@ -966,7 +966,7 @@ const db={
     onSnapshot(f,e){const st=store(col);st.cbs.push({f,e});if(st.loaded)emit(st);return()=>{st.cbs=st.cbs.filter(c=>c.f!==f);};},
     doc(id){return{
       async set(data){const {error}=await sb.from(T).upsert({col,id,data,updated_at:new Date().toISOString()});if(error)fail(error);local(col,id,{...data});},
-      async update(patch){const {error}=await sb.rpc("ops_merge",{p_col:col,p_id:id,p_patch:patch});if(error)fail(error);const st=stores[col];if(st)local(col,id,{...(st.map.get(id)||{}),...patch});},
+      async update(patch){const st0=stores[col];if(st0&&st0.loaded&&!st0.map.has(id))throw Object.assign(new Error("這筆資料已被刪除"),{code:"not_found"});const {error}=await sb.rpc("ops_merge",{p_col:col,p_id:id,p_patch:patch});if(error)fail(error);const st=stores[col];if(st)local(col,id,{...(st.map.get(id)||{}),...patch});},
       async delete(){const {error}=await sb.from(T).delete().eq("col",col).eq("id",id);if(error)fail(error);local(col,id,null);}
     };}
   };},
