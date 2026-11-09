@@ -548,6 +548,7 @@ table.rt th:first-child{left:0;z-index:3}
 .sedit .se-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sedit .se-a{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .sedit .sp{flex:1}
+.zlab .zcnt{margin-left:6px;padding:0 6px;border-radius:9px;background:rgba(255,255,255,.25);font-weight:700}
 /* 新聞稿 */
 .prcard{padding:18px;display:grid;gap:4px}
 .prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -1722,12 +1723,12 @@ function renderSeats(){
   for(const z of S.zones){
     const parts=[[],[],[]];
     (z.seats||[]).forEach(s=>{const [r,c]=s.split("-").map(Number);parts[c<=6?0:c<=18?1:2].push([r,c]);});
-    const o={name:zOwnerNames(z)};
+    const zg=S.guests.filter(g=>g.zone===z.id&&g.status!=="不出席");const o={name:zOwnerNames(z),n:zg.length,a:zg.filter(g=>g.status==="出席"||g.status==="代理出席").length};
     const big=Math.max(...parts.map(p=>p.length));let labeled=false;
     parts.forEach(p=>{if(!p.length)return;const showLab=!labeled&&p.length===big;if(showLab)labeled=true;
       const rs=p.map(x=>x[0]),cs=p.map(x=>x[1]);
       const r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
-      h+=`<div class="zbox" style="--zc:${esc(z.color)};grid-row:${Math.min(GR(r0),GR(r1))}/${Math.max(GR(r0),GR(r1))+1};grid-column:${gcol(c0)}/${gcol(c1)+1}" aria-hidden="true">${showLab?`<div class="zlab" title="${esc(z.note||"")}">${esc(z.name)}${o.name?`<span>｜管理 ${esc(o.name)}</span>`:""}</div>`:""}</div>`;});
+      h+=`<div class="zbox" style="--zc:${esc(z.color)};grid-row:${Math.min(GR(r0),GR(r1))}/${Math.max(GR(r0),GR(r1))+1};grid-column:${gcol(c0)}/${gcol(c1)+1}" aria-hidden="true">${showLab?`<div class="zlab" title="${esc(z.note||"")}">${esc(z.name)}<b class="zcnt">${o.n} 位${o.a?`・出席 ${o.a}`:""}</b>${o.name?`<span>｜管理 ${esc(o.name)}</span>`:""}</div>`:""}</div>`;});
   }
   $("#hall").innerHTML=h;
   $("#hall").classList.toggle("nolab",UI.seatMode==="paint");
