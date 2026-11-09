@@ -2398,6 +2398,57 @@ async function uploadImg(file,max){
   try{const b=await shrink(file,max);return await assets.upload(b);}catch(e){toast(e&&e.code==="not_granted"?"沒有上傳權限":"上傳失敗，請再試一次");return null;}
 }
 
+/* ================= 自動排座位 ================= */
+const AS_ROWS=()=>ROW_ORDER.filter(r=>r!==AISLE_ROW);
+const asRi=r=>ROW_ORDER.indexOf(+r);const asBlk=c=>c<=6?0:c<=18?1:2;
+function asBoxes(exceptZone){
+  // 其他座位區在每個區塊佔用的矩形範圍，避免排進別區中間
+  const boxes=[];
+  for(const z of S.zones){if(z.id===exceptZone)continue;
+    const seats=[...new Set([...(z.seats||[]),...S.guests.filter(g=>g.zone===z.id&&g.seat).map(g=>g.seat)])];
+    const by=[[],[],[]];seats.forEach(s=>{const [r,c]=s.split("-").map(Number);by[asBlk(c)].push([asRi(r),c]);});
+    by.forEach(p=>{if(!p.length)return;boxes.push({r0:Math.min(...p.map(x=>x[0])),r1:Math.max(...p.map(x=>x[0])),c0:Math.min(...p.map(x=>x[1])),c1:Math.max(...p.map(x=>x[1]))});});}
+  return boxes;
+}
+function asFree(zoneId,taken){
+  const occ=new Set([...S.guests.map(x=>x.seat).filter(Boolean),...taken]);const boxes=asBoxes(zoneId);const out=[];
+  for(const r of AS_ROWS())for(let c=1;c<=24;c++){const sid=`${r}-${c}`;if(OFF.has(sid)||occ.has(sid))continue;const i=asRi(r);if(boxes.some(b=>i>=b.r0&&i<=b.r1&&c>=b.c0&&c<=b.c1))continue;out.push(sid);}
+  return out;
+}
+function asNear(g,ref,free){let best=null,bs=1e9;for(const sid of free){const [r,c]=sid.split("-").map(Number);let d=1e9;for(const t of ref){const [tr,tc]=t.split("-").map(Number);const v=Math.abs(asRi(r)-asRi(tr))*3+Math.abs(c-tc)+(asBlk(c)!==asBlk(tc)?8:0);if(v<d)d=v;}if(d<bs){bs=d;best=sid;}}return {sid:best,d:bs};}
+function asSave(g,sid){g.seat=sid;const live=S.guests.find(x=>x.id===g.id);if(live){live.seat=sid;live.zone=g.zone;}upd("guests",g.id,{seat:sid,zone:g.zone});claimSeat(live||g,sid);}
+function asNewZone(unit,group){
+  // 為這個單位開新座位區：從前排往後找連續空位，同一區塊內排滿
+  const free=new Set(asFree(null,[]));const n=group.length;let pick=null;const R=AS_ROWS();
+  for(const [c0,c1] of [[7,18],[1,6],[19,24]]){
+    for(let k=0;k<R.length&&!pick;k++){const seats=[];
+      for(let j=k;j<R.length&&seats.length<n;j++){let row=[],cur=[];for(let c=c0;c<=c1;c++){const sid=`${R[j]}-${c}`;if(free.has(sid)||VOID.has(sid)){if(free.has(sid))cur.push(sid);}else{if(cur.length>row.length)row=cur;cur=[];}}if(cur.length>row.length)row=cur;if(row.length<Math.min(3,n-seats.length))break;seats.push(...row.slice(0,n-seats.length));}
+      if(seats.length>=n)pick=seats;}
+    if(pick)break;}
+  if(!pick)return 0;
+  const used=new Set(S.zones.map(z=>z.color));const color=PALETTE.find(c=>!used.has(c))||PALETTE[S.zones.length%PALETTE.length];
+  const rows=[...new Set(pick.map(s=>+s.split("-")[0]))].sort((a,b)=>asRi(a)-asRi(b));const code=rows.length===1?ROW_LETTER[rows[0]]:ROW_LETTER[rows[0]]+"–"+ROW_LETTER[rows[rows.length-1]];
+  const id=newId("z");const z={name:`${code}｜${unit}`,code,color,order:Math.max(0,...S.zones.map(z=>+z.order||0))+5,owner:"",owner2:"",ratio:10,est:0,note:"",desc:"",seats:pick};
+  S.zones.push({id,...z});put("zones",id,z);
+  group.forEach((g,i)=>{g.zone=id;asSave(g,pick[i]);});
+  return group.length;
+}
+function autoSeat(list){
+  let placed=0;const groups={};
+  list.filter(g=>!g.seat).forEach(g=>{const k=unitKey(g)||g.id;(groups[k]=groups[k]||[]).push(g);});
+  for(const [unit,group] of Object.entries(groups)){
+    const zoneId=group[0].zone;const taken=[];const plan=[];let ok=!!zoneId;
+    if(zoneId){
+      for(const g of group){const ref=[...S.guests.filter(x=>x.seat&&x.id!==g.id&&((unitKey(x)&&unitKey(x)===unitKey(g))||x.zone===zoneId)).map(x=>x.seat),...taken];
+        if(!ref.length){ok=false;break;}
+        const {sid,d}=asNear(g,ref,asFree(zoneId,taken));if(!sid||d>4){ok=false;break;}taken.push(sid);plan.push([g,sid]);}
+    }
+    if(ok){plan.forEach(([g,sid])=>asSave(g,sid));placed+=plan.length;}
+    else placed+=asNewZone(unit,group);
+  }
+  return placed;
+}
+
 /* ================= Excel 匯入比對 ================= */
 const CMP_F={unit:"單位／機關",name:"姓名",title:"職稱",status:"出席狀態",zone:"座位區",seat:"座位",category:"分類",proxy:"代理人",note:"備註",inviter:"邀約"};
 const nkey=v=>String(v||"").replace(/[（(].*?[）)]/g,"").replace(/\s+/g,"").trim();
@@ -2450,6 +2501,7 @@ async function xlsxCompare(file){
     for(const c of chg.filter(x=>x.on)){const g=c.g;const old=g.seat||"";Object.assign(g,c.d);upd("guests",g.id,c.d);if(c.d.seat!==undefined||c.d.zone!==undefined){if(g.seat)claimSeat(g,g.seat);if(old&&old!==g.seat)releaseSeat(old);}nc++;}
     let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
     for(const a of adds.filter(x=>x.on)){const r=a.r;const id=newId("g");const zone=zoneFromName(r.zone)||"";const seat=r.seat?seatFromLabel(r.seat)||"":"";const d={address:"",arrived:false,assist:"",category:r.category||"",inviter:r.inviter||"聯新國際體育",name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:r.note||"",photo:"",proxy:r.proxy||"",seat:seat&&!S.guests.some(g=>g.seat===seat)?seat:"",source:"Excel 匯入",status:normStatus(r.status)||"未回覆",zone,order:o};o+=10;const g={id,...d};S.guests.push(g);put("guests",id,d);if(g.seat)claimSeat(g,g.seat);na++;}
+    autoSeat(S.guests.filter(g=>g.source==="Excel 匯入"&&!g.seat&&g.zone));
     for(const m of miss.filter(x=>x.on)){const sid=m.g.seat;S.guests=S.guests.filter(x=>x.id!==m.g.id);del("guests",m.g.id);if(sid)releaseSeat(sid);nd++;}
     closeModal();renderAll();toast(`已套用：異動 ${nc}、新增 ${na}、刪除 ${nd}`);
   };
@@ -2513,6 +2565,7 @@ function openPasteImport(){
       <label>邀約單位<select class="sel" id="piInv" style="width:100%">${INV_G.map(x=>`<option value="${esc(x.val)}"${x.val==="聯新國際體育"?" selected":""}>${esc(x.label)}</option>`).join("")}</select></label>
       <label>出席狀態<select class="sel" id="piSt" style="width:100%">${STATUS.map(x=>`<option${x==="出席"?" selected":""}>${x}</option>`).join("")}</select></label>
     </div>
+    <label class="chk"><input type="checkbox" id="piSeat" checked> 匯入後自動排座位：同單位或同座位區旁邊有空位就排在旁邊；旁邊沒位子，就為這個單位開一個新座位區</label>
     <div class="ft" style="justify-content:flex-start"><button class="btn" type="button" id="piGo">整理</button><span class="muted" id="piMsg" style="font-size:13px"></span></div>
     <div class="pi-wrap" id="piOut"></div>
     <div class="ft"><button class="btn" type="button" data-close>取消</button><button class="btn pri" type="button" id="piSave" disabled>匯入</button></div>`,"wide");
@@ -2530,8 +2583,10 @@ function openPasteImport(){
   md.querySelector("#piSave").onclick=async()=>{
     const list=rows.filter(r=>r.on&&(r.name||r.title||r.unit));if(!list.length)return;
     const inv=$("#piInv").value,st=$("#piSt").value;let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
-    for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:st,zone:r.zone||"",order:o};o+=10;S.guests.push({id,...d});put("guests",id,d);}
-    closeModal();renderAll();toast(`已新增 ${list.length} 位，到「座位分區」點名字就能排座位`);
+    const created=[];const auto=$("#piSeat").checked;
+    for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:st,zone:r.zone||"",order:o};o+=10;const g={id,...d};S.guests.push(g);created.push(g);await put("guests",id,d);}
+    const placed=auto?autoSeat(created):0;const noz=created.filter(g=>!g.zone).length;
+    closeModal();renderAll();toast(`已新增 ${list.length} 位${auto?`，自動排好 ${placed} 個座位`:""}${noz?`；${noz} 位沒選座位區，到「座位分區」再排`:""}`);
   };
 }
 
