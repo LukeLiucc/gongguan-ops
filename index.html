@@ -1625,6 +1625,16 @@ function sdEnd(){
 window.addEventListener("pointermove",sdMove,{passive:false});
 window.addEventListener("pointerup",sdEnd);
 window.addEventListener("pointercancel",sdEnd);
+// 移動後的分區：換位就交換分區；放到某區登記的座位 → 該區；夾在同一區兩人中間 → 該區；其他情況保留自己原本的分區
+function moveZone(sid,exc,zm,own,other){
+  if(other&&other.zone)return other.zone;
+  const ex=new Set([].concat(exc||[]));const z0=zm[sid];
+  if(z0&&!S.guests.some(g=>g.zone===z0&&g.seat===sid&&!ex.has(g.id))){const zz=zoneById(z0);if(zz&&(zz.seats||[]).includes(sid)&&S.guests.some(g=>g.zone===z0&&g.seat&&!ex.has(g.id)))return z0;}
+  const [r,c]=sid.split("-").map(Number);const blk=x=>x<=6?0:x<=18?1:2;
+  const L=S.guests.find(g=>!ex.has(g.id)&&g.seat===`${r}-${c-1}`&&blk(c-1)===blk(c)),R=S.guests.find(g=>!ex.has(g.id)&&g.seat===`${r}-${c+1}`&&blk(c+1)===blk(c));
+  if(L&&R&&L.zone&&L.zone===R.zone)return L.zone;
+  return own||(L&&L.zone)||(R&&R.zone)||"";
+}
 function zoneAtSeat(sid,exceptId){const exc=new Set([].concat(exceptId||[]));
   // 空位屬於哪一區：先看同一排左右鄰座，再看落在哪一區的範圍內（同一個左／中／右區塊）
   const [r,c]=sid.split("-").map(Number);const ri=ROW_ORDER.indexOf(r);const blk=x=>x<=6?0:x<=18?1:2;
@@ -1688,7 +1698,7 @@ function placeGuest(gid,sid){
   const occ=S.guests.find(g=>g.seat===sid&&g.id!==gid);
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=zoneAtSeat(sid,ex)||(occ?occ.zone:"")||zm[sid]||"";const oz=(old&&zoneAtSeat(old,ex))||sel.zone||"";
+  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=moveZone(sid,ex,zm,sel.zone,occ);const oz=old?moveZone(old,ex,zm,occ?occ.zone:"",sel):"";
   if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
   sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
@@ -1703,7 +1713,7 @@ function seatClick(sid){
   if(occ&&occ.id===sel.id){UI.selGuest=null;renderSeats();return;}
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=zoneAtSeat(sid,ex)||(occ?occ.zone:"")||zm[sid]||"";const oz=(old&&zoneAtSeat(old,ex))||sel.zone||"";
+  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=moveZone(sid,ex,zm,sel.zone,occ);const oz=old?moveZone(old,ex,zm,occ?occ.zone:"",sel):"";
   if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
   sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
