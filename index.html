@@ -1112,6 +1112,21 @@ const VOID=new Set(BASE_OFF);
 const OFF=new Set([...BASE_OFF,...Object.keys(GRAY)]);
 function syncOff(){OFF.clear();BASE_OFF.forEach(x=>OFF.add(x));Object.keys(GRAY).forEach(x=>OFF.add(x));blockedList().forEach(b=>OFF.add(b.s));}
 function blockedList(){const b=S.meta&&S.meta.blocked;return Array.isArray(b)?b.filter(x=>x&&x.s):[];}
+// 區塊外框：整塊框起來會蓋到別區時，改成逐排框（同寬的相鄰排再合併）
+function zoneRects(z){
+  const own=new Set(z.seats||[]);const foreign=new Set();
+  S.zones.forEach(o=>{if(o.id!==z.id)(o.seats||[]).forEach(s=>{if(!own.has(s))foreign.add(s);});});
+  S.guests.forEach(g=>{if(g.seat&&g.zone!==z.id&&!own.has(g.seat))foreign.add(g.seat);});
+  const ri=r=>ROW_ORDER.indexOf(r);const blk=c=>c<=6?0:c<=18?1:2;const out=[];
+  const clean=(a,b,c0,c1)=>{for(let i=a;i<=b;i++){const r=ROW_ORDER[i];if(r===AISLE_ROW)continue;for(let c=c0;c<=c1;c++)if(foreign.has(r+"-"+c))return false;}return true;};
+  for(let bi=0;bi<3;bi++){const p=[...own].map(s=>s.split("-").map(Number)).filter(([r,c])=>blk(c)===bi&&ri(r)>=0);if(!p.length)continue;
+    const is=p.map(q=>ri(q[0])),cs=p.map(q=>q[1]);const a=Math.min(...is),b=Math.max(...is),c0=Math.min(...cs),c1=Math.max(...cs);
+    if(clean(a,b,c0,c1)){out.push({a,b,c0,c1,n:p.length});continue;}
+    const spans=[];[...new Set(is)].sort((x,y)=>x-y).forEach(i=>{const row=p.filter(q=>ri(q[0])===i).map(q=>q[1]).sort((x,y)=>x-y);let st=row[0],pv=row[0],cnt=1;
+      for(let k=1;k<=row.length;k++){const c=row[k];if(c!==undefined&&clean(i,i,pv,c)){pv=c;cnt++;continue;}spans.push({a:i,b:i,c0:st,c1:pv,n:cnt});if(c!==undefined){st=c;pv=c;cnt=1;}}});
+    spans.forEach(sp=>{const L=out.length?out[out.length-1]:null;if(L&&L.bi===bi&&L.c0===sp.c0&&L.c1===sp.c1&&L.b+1>=sp.a-1&&clean(L.a,sp.b,sp.c0,sp.c1)){L.b=sp.b;L.n+=sp.n;}else out.push({...sp,bi});});}
+  return out.map(o=>({r0:ROW_ORDER[o.a],r1:ROW_ORDER[o.b],c0:o.c0,c1:o.c1,n:o.n}));
+}
 function isRsv(sid){const b=blockedList().find(x=>x.s===sid);return !!(b&&/保留/.test(b.why||""));}
 function blockedNote(sid){if(GRAY[sid])return GRAY[sid];const b=blockedList().find(x=>x.s===sid);return b?(b.why||"不可排位"):"";}
 const AISLE_ROW="aisle";
@@ -1792,13 +1807,11 @@ function renderSeats(){
   h+=`<div class="aud" style="grid-row:${ROW_ORDER.length+2}">後方入口</div>`;
   const gcol=c=>c<=6?c+1:c<=18?c+2:c+3;
   for(const z of S.zones){
-    const parts=[[],[],[]];
-    (z.seats||[]).forEach(s=>{const [r,c]=s.split("-").map(Number);parts[c<=6?0:c<=18?1:2].push([r,c]);});
+    const rects=zoneRects(z);
     const zg=S.guests.filter(g=>g.zone===z.id&&g.status!=="不出席"&&(g.seat||!(z.seats||[]).some(isRsv)));const nr=(z.seats||[]).filter(isRsv).length;const o={name:zOwnerNames(z),n:zg.length,r:nr,a:zg.filter(g=>g.status==="出席"||g.status==="代理出席").length};
-    const big=Math.max(...parts.map(p=>p.length));let labeled=false;
-    parts.forEach(p=>{if(!p.length)return;const showLab=!labeled&&p.length===big;if(showLab)labeled=true;
-      const rs=p.map(x=>x[0]),cs=p.map(x=>x[1]);
-      const r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
+    const big=Math.max(0,...rects.map(q=>q.n));let labeled=false;
+    rects.forEach(q=>{const showLab=!labeled&&q.n===big;if(showLab)labeled=true;
+      const {r0,r1,c0,c1}=q;
       h+=`<div class="zbox" style="--zc:${esc(z.color)};grid-row:${Math.min(GR(r0),GR(r1))}/${Math.max(GR(r0),GR(r1))+1};grid-column:${gcol(c0)}/${gcol(c1)+1}" aria-hidden="true">${showLab?`<div class="zlab" title="${esc(z.note||"")}">${esc(z.name)}<b class="zcnt">${o.n} 位${o.r?`＋保留 ${o.r} 席`:""}${o.a?`・出席 ${o.a}`:""}</b>${o.name?`<span>｜管理 ${esc(o.name)}</span>`:""}</div>`:""}</div>`;});
   }
   $("#hall").innerHTML=h;
@@ -2921,10 +2934,10 @@ async function seatDownload(btn,fmt){
           const un=(g.unit||"").replace(/[（(].*$/,"").trim();const ls=wrap2(un,CW-8,`400 11px ${F}`);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+52+i*13));x.textAlign="left";}
         else{x.fillStyle=z?tint(z.color,.12):"#ffffff";rr(X,Y,CW,CH,6);x.fill();x.strokeStyle=z?tint(z.color,.45):"#D1D5DB";x.lineWidth=1;x.stroke();x.fillStyle="#9CA3AF";x.font=`500 14px ${F}`;x.textAlign="center";x.fillText(String(c),X+CW/2,Y+CH/2+5);x.textAlign="left";}
       }}
-    for(const z of S.zones){const parts=[[],[],[]];(z.seats||[]).forEach(s=>{const [r,c]=s.split("-").map(Number);if(rowY[r]==null)return;parts[c<=6?0:c<=18?1:2].push([r,c]);});
+    for(const z of S.zones){const rects=zoneRects(z);
       const hasR=(z.seats||[]).some(isRsv);const zg=S.guests.filter(g=>g.zone===z.id&&g.status!=="不出席"&&(g.seat||!hasR));const nr=(z.seats||[]).filter(isRsv).length;const n=zg.length,a=zg.filter(g=>g.status==="出席"||g.status==="代理出席").length;const own=zOwnerNames(z);
-      const big=Math.max(...parts.map(p=>p.length));let lab=false;
-      parts.forEach(p=>{if(!p.length)return;const ys=p.map(q=>rowY[q[0]]),xs=p.map(q=>colX(q[1]));const X0=Math.min(...xs)-4,Y0=Math.min(...ys)-4,X1=Math.max(...xs)+CW+4,Y1=Math.max(...ys)+CH+4;
+      const big=Math.max(0,...rects.map(q=>q.n));let lab=false;
+      rects.forEach(q=>{const p={length:q.n};const Ya=rowY[q.r0],Yb=rowY[q.r1];const X0=colX(q.c0)-4,Y0=Math.min(Ya,Yb)-4,X1=colX(q.c1)+CW+4,Y1=Math.max(Ya,Yb)+CH+4;
         x.strokeStyle=z.color;x.lineWidth=2.5;rr(X0,Y0,X1-X0,Y1-Y0,9);x.stroke();
         if(!lab&&p.length===big){lab=true;const t=`${z.name}  ${n} 位${nr?`＋保留 ${nr} 席`:""}${a?`・出席 ${a}`:""}${own?`｜管理 ${own}`:""}`;x.font=`700 14px ${F}`;const tw=Math.min(x.measureText(t).width+18,X1-X0+200);x.fillStyle=z.color;rr(X0,Y0-24,tw,22,6);x.fill();x.fillStyle="#fff";x.fillText(fit(t,tw-14,x.font),X0+8,Y0-8);}});}
     let lx=M+RL,ly=legendY+14;x.font=`600 15px ${F}`;
