@@ -541,6 +541,13 @@ table.rt th:first-child{left:0;z-index:3}
 .cmp th,.cmp td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
 .cmp th{font-size:12px;color:var(--ink-3)}
 .cmp .old{color:var(--ink-3);text-decoration:line-through}.cmp .new{color:var(--ok);font-weight:700}
+
+.sedit{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
+.sedit label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--ink-3);font-weight:700}
+.sedit .full,.sedit .se-h,.sedit .se-a{grid-column:1/-1}
+.sedit .se-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sedit .se-a{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sedit .sp{flex:1}
 /* 新聞稿 */
 .prcard{padding:18px;display:grid;gap:4px}
 .prl{font-size:12.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -1501,7 +1508,9 @@ function initSeats(){
   try{if(localStorage.getItem("seatDetail")==="0")UI.seatDetail=false;}catch(e){}
   $("#sdDetail").onclick=()=>{UI.seatDetail=UI.seatDetail===false;try{localStorage.setItem("seatDetail",UI.seatDetail?"1":"0");}catch(e){}renderSeats();};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-selbar]");if(!b)return;const g=S.guests.find(x=>x.id===UI.selGuest);
-    if(b.dataset.selbar==="unseat"&&g&&g.seat){g.seat="";upd("guests",g.id,{seat:""});toast("已移出座位");}
+    if(b.dataset.selbar==="edit"&&g){openGuest(g.id);return;}
+    if(b.dataset.selbar==="del"&&g){confirmIn(b,"確定刪除",()=>{const sid=g.seat;UI.selGuest=null;rtDelIds([g.id]);if(sid)releaseSeat(sid);renderAll();});return;}
+    if(b.dataset.selbar==="unseat"&&g&&g.seat){const sid=g.seat;g.seat="";upd("guests",g.id,{seat:""});releaseSeat(sid);toast("已移出座位");}
     UI.selGuest=null;schedule();});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&UI.selGuest&&UI.seatMode==="seat"){UI.selGuest=null;renderSeats();}});
   $("#zAdd").onclick=()=>openZone(null);
@@ -1518,11 +1527,15 @@ function initSeats(){
   $("#side").addEventListener("pointerdown",e=>{if(UI.seatMode!=="seat")return;const si=e.target.closest("[data-pick]");if(si)sdStart(e,si.dataset.pick);});
   $("#legend").addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(!b)return;
     if(UI.seatMode==="paint"){UI.brush=b.dataset.z;}else{UI.seatZone=UI.seatZone===b.dataset.z?"":b.dataset.z;}renderSeats();});
+  $("#side").addEventListener("change",e=>{const el=e.target.closest("[data-se]");if(!el)return;const g=S.guests.find(x=>x.id===UI.selGuest);if(!g)return;const k=el.dataset.se;const v=el.value.trim();if((g[k]||"")===v)return;
+    const old=g.seat;g[k]=v;upd("guests",g.id,{[k]:v});if(k==="zone"&&g.seat){claimSeat(g,g.seat);}toast("已存檔");renderAll();});
+  $("#side").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input[data-se]")){e.preventDefault();e.target.blur();}});
   $("#side").addEventListener("click",e=>{
     const si=e.target.closest("[data-pick]");if(si&&Date.now()<ignoreClickUntil)return;if(si){UI.selGuest=UI.selGuest===si.dataset.pick?null:si.dataset.pick;renderSeats();return;}
     const a=e.target.closest("[data-sact]");if(!a)return;const act=a.dataset.sact;
     if(act==="unseat"){const g=S.guests.find(x=>x.id===UI.selGuest);if(g){g.seat="";upd("guests",g.id,{seat:""});UI.selGuest=null;schedule();}}
     else if(act==="cancel"){UI.selGuest=null;renderSeats();}
+    else if(act==="delg"){const g=S.guests.find(x=>x.id===UI.selGuest);if(g)confirmIn(a,"確定刪除",()=>{const sid=g.seat;UI.selGuest=null;rtDelIds([g.id]);if(sid)releaseSeat(sid);renderAll();});}
     else if(act==="auto")autoSeat(a.dataset.z);
     else if(act==="clear")confirmIn(a,"確定清除",()=>{S.guests.filter(g=>g.zone===a.dataset.z&&g.seat).forEach(g=>{g.seat="";upd("guests",g.id,{seat:""});});schedule();});
     else if(act==="editz")openZone(a.dataset.z);
@@ -1692,7 +1705,7 @@ function renderSeats(){
   $("#sdDetail").setAttribute("aria-pressed",UI.seatDetail!==false);
   {let sb=document.getElementById("selbar");const sg=UI.seatMode==="seat"&&S.guests.find(g=>g.id===UI.selGuest);
    if(sg){if(!sb){sb=document.createElement("div");sb.id="selbar";sb.className="selbar";document.body.appendChild(sb);}
-     sb.innerHTML=`<span>已選 <b>${esc(sg.name||sg.unit)}</b>${sg.seat?`（${esc(seatLabel(sg.seat))}）`:""}，捲到任一排點座位放入，有人會互換</span>${sg.seat?`<button type="button" data-selbar="unseat">移出座位</button>`:""}<button type="button" data-selbar="cancel">取消</button>`;}
+     sb.innerHTML=`<span>已選 <b>${esc(sg.name||sg.unit)}</b>${sg.seat?`（${esc(seatLabel(sg.seat))}）`:""}，捲到任一排點座位放入，有人會互換</span>${sg.seat?`<button type="button" data-selbar="unseat">移出座位</button>`:""}<button type="button" data-selbar="edit">改資料</button><button type="button" data-selbar="del">刪除</button><button type="button" data-selbar="cancel">取消</button>`;}
    else if(sb)sb.remove();}
   const zs=sortedZones();
   $("#legend").innerHTML=zs.map(z=>{const st=zoneStats(z);const pressed=UI.seatMode==="paint"?UI.brush===z.id:UI.seatZone===z.id;return `<button class="lg" type="button" data-z="${esc(z.id)}" aria-pressed="${pressed}"><i class="zdot" style="background:${esc(z.color)}"></i>${esc(z.name)}<span>${st.seated}/${st.cap}</span></button>`;}).join("")+(UI.seatMode==="paint"?`<button class="lg" type="button" data-z="__erase" aria-pressed="${UI.brush==="__erase"}"><i class="zdot" style="background:var(--surface-3)"></i>清除分區</button>`:"")+`<span class="lg" style="cursor:default"><i class="zdot" style="background:var(--surface-3)"></i>不可入座</span>`;
@@ -1713,7 +1726,13 @@ function renderSide(zs){
   let gs=sortedGuests().filter(g=>g.status!=="不出席");
   gs=zf?gs.filter(g=>g.zone===zf):gs.filter(g=>!g.seat);
   gs.sort((a,b)=>(a.seat?1:0)-(b.seat?1:0));
-  side.innerHTML=`${sel?`<div class="selinfo"><span>已選：</span><b>${esc(sel.name||sel.unit)}</b><span>${esc(sel.title)}</span>${sel.seat?`<span class="seatb">${esc(seatLabel(sel.seat))}</span>`:""}<span style="flex-basis:100%;font-size:12.5px">點座位入座（有人的座位會互換）</span>${sel.seat?`<button class="btn sm" type="button" data-sact="unseat">移出座位</button>`:""}<button class="btn sm ghost" type="button" data-sact="cancel">取消</button></div>`:""}
+  side.innerHTML=`${sel?`<div class="selinfo sedit"><div class="se-h"><span>已選</span>${sel.seat?`<span class="seatb">${esc(seatLabel(sel.seat))}</span>`:`<span class="muted">未入座</span>`}<span class="muted" style="font-size:12.5px">點座位入座（有人的座位會互換）</span></div>
+    <label>姓名<input class="inp" data-se="name" value="${esc(sel.name||"")}" placeholder="單位代表"></label>
+    <label>職稱<input class="inp" data-se="title" value="${esc(sel.title||"")}"></label>
+    <label class="full">單位／機關<input class="inp" data-se="unit" value="${esc(sel.unit||"")}"></label>
+    <label>出席<select class="sel" data-se="status" style="width:100%">${STATUS.map(x=>`<option${x===(sel.status||"未回覆")?" selected":""}>${x}</option>`).join("")}</select></label>
+    <label>座位區<select class="sel" data-se="zone" style="width:100%"><option value="">未分區</option>${sortedZones().map(z=>`<option value="${esc(z.id)}"${z.id===sel.zone?" selected":""}>${esc(z.name)}</option>`).join("")}</select></label>
+    <div class="se-a">${sel.seat?`<button class="btn sm" type="button" data-sact="unseat">移出座位</button>`:""}<button class="btn sm danger" type="button" data-sact="delg">刪除這位</button><span class="sp"></span><button class="btn sm pri" type="button" data-sact="cancel">完成</button></div></div>`:""}
   <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm${zf?"":" pri"}" type="button" data-sact="zf" data-z="">全部未入座</button>${zs.map(x=>`<button class="btn sm${zf===x.id?" pri":""}" type="button" data-sact="zf" data-z="${esc(x.id)}"><i class="zdot" style="background:${esc(x.color)}"></i>${esc(x.name)}</button>`).join("")}</div>
   ${z?(()=>{const st=zoneStats(z);const on=zOwnerNames(z);return `<div class="zrow" style="grid-template-columns:12px minmax(0,1fr)"><i class="zdot" style="background:${esc(z.color)}"></i><div><b>${esc(z.name)}</b><small>帶位 ${on?esc(on):"未指派"}｜${st.seated}/${st.cap} 席已入座｜指名 ${st.named} 位${+z.est?`＋預估 ${+z.est} 位`:""}</small></div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm pri" type="button" data-sact="auto" data-z="${esc(z.id)}">依名單順序自動入座</button><button class="btn sm" type="button" data-sact="clear" data-z="${esc(z.id)}">清空本區座位</button><button class="btn sm ghost" type="button" data-sact="editz" data-z="${esc(z.id)}">設定</button></div>`;})():""}
   <div class="slist">${gs.length?gs.map(g=>{const gz=zoneById(g.zone);return `<button type="button" class="si${g.id===UI.selGuest?" on":""}${g.seat?" seated":""}" data-pick="${esc(g.id)}">${photoBoxSpan(g)}<span style="min-width:0"><b>${esc(g.name||"單位代表")}</b><small>${esc(g.title)}｜${esc(g.unit)}</small></span>${g.seat?`<span class="seatb">${esc(seatLabel(g.seat))}</span>`:(gz&&!zf?`<i class="zdot" style="background:${esc(gz.color)}" title="${esc(gz.name)}"></i>`:"")}</button>`;}).join(""):`<div class="muted" style="font-size:13.5px;padding:8px">${zf?"這區沒有貴賓":"所有預計出席的貴賓都已入座"}</div>`}</div>`;
@@ -2433,7 +2452,7 @@ function asNewZone(unit,group){
   group.forEach((g,i)=>{g.zone=id;asSave(g,pick[i]);});
   return group.length;
 }
-function autoSeat(list){
+function importSeat(list){
   let placed=0;const groups={};
   list.filter(g=>!g.seat).forEach(g=>{const k=unitKey(g)||g.id;(groups[k]=groups[k]||[]).push(g);});
   for(const [unit,group] of Object.entries(groups)){
@@ -2501,7 +2520,7 @@ async function xlsxCompare(file){
     for(const c of chg.filter(x=>x.on)){const g=c.g;const old=g.seat||"";Object.assign(g,c.d);upd("guests",g.id,c.d);if(c.d.seat!==undefined||c.d.zone!==undefined){if(g.seat)claimSeat(g,g.seat);if(old&&old!==g.seat)releaseSeat(old);}nc++;}
     let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
     for(const a of adds.filter(x=>x.on)){const r=a.r;const id=newId("g");const zone=zoneFromName(r.zone)||"";const seat=r.seat?seatFromLabel(r.seat)||"":"";const d={address:"",arrived:false,assist:"",category:r.category||"",inviter:r.inviter||"聯新國際體育",name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:r.note||"",photo:"",proxy:r.proxy||"",seat:seat&&!S.guests.some(g=>g.seat===seat)?seat:"",source:"Excel 匯入",status:normStatus(r.status)||"未回覆",zone,order:o};o+=10;const g={id,...d};S.guests.push(g);put("guests",id,d);if(g.seat)claimSeat(g,g.seat);na++;}
-    autoSeat(S.guests.filter(g=>g.source==="Excel 匯入"&&!g.seat&&g.zone));
+    importSeat(S.guests.filter(g=>g.source==="Excel 匯入"&&!g.seat&&g.zone));
     for(const m of miss.filter(x=>x.on)){const sid=m.g.seat;S.guests=S.guests.filter(x=>x.id!==m.g.id);del("guests",m.g.id);if(sid)releaseSeat(sid);nd++;}
     closeModal();renderAll();toast(`已套用：異動 ${nc}、新增 ${na}、刪除 ${nd}`);
   };
@@ -2585,7 +2604,7 @@ function openPasteImport(){
     const inv=$("#piInv").value,st=$("#piSt").value;let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
     const created=[];const auto=$("#piSeat").checked;
     for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:st,zone:r.zone||"",order:o};o+=10;const g={id,...d};S.guests.push(g);created.push(g);await put("guests",id,d);}
-    const placed=auto?autoSeat(created):0;const noz=created.filter(g=>!g.zone).length;
+    const placed=auto?importSeat(created):0;const noz=created.filter(g=>!g.zone).length;
     closeModal();renderAll();toast(`已新增 ${list.length} 位${auto?`，自動排好 ${placed} 個座位`:""}${noz?`；${noz} 位沒選座位區，到「座位分區」再排`:""}`);
   };
 }
