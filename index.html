@@ -2566,10 +2566,12 @@ function piParse(text){
     m=l.match(/^(.+?)\s*目前\s*\S*\s*位?出席/);if(m){unit=m[1].trim();continue;}
     const parts=l.split(/[｜|、，,]+/).map(x=>x.trim()).filter(Boolean);
     if(parts.length>1&&parts.every(isName)){parts.forEach(n=>out.push({unit,name:n,title:""}));continue;}
+    let st="";if(/不克|不出席|無法出席|請假/.test(l))st="不出席";else if(/代理/.test(l))st="代理出席";else if(/出席|會到|參加/.test(l))st="出席";
+    l=l.replace(/(已回覆|未回覆|不克出席|不克參加|無法出席|不出席|代理出席|出席|會到|參加)/g," ").replace(/\s+/g," ").trim();if(!l)continue;
     const r=piLine(l);
     if(!r.name&&!r.title){if(!/活動|開幕|開箱/.test(l)){flush();unit=r.unit;}continue;}
     if(r.unit&&want&&r.unit!==want.unit&&!r.unit.includes(want.unit))flush();
-    out.push({unit:r.unit||unit,name:r.name,title:r.title});
+    out.push({unit:r.unit||unit,name:r.name,title:r.title,status:st});
   }
   flush();
   return out;
@@ -2592,18 +2594,19 @@ function openPasteImport(){
   let rows=[];
   const draw=()=>{
     if(!rows.length){$("#piOut").innerHTML="";$("#piSave").disabled=true;return;}
-    $("#piOut").innerHTML=`<table class="pi-tb"><thead><tr><th>匯入</th><th>單位／機關</th><th>姓名</th><th>職稱</th><th>座位區</th></tr></thead><tbody>${rows.map((r,i)=>{const dupe=S.guests.find(g=>r.name&&(g.name||"").replace(/[（(].*$/,"")===r.name.replace(/[（(].*$/,""));return `<tr data-i="${i}"><td><input type="checkbox" data-k="on"${r.on?" checked":""} aria-label="匯入第 ${i+1} 筆"></td><td><input class="inp" data-k="unit" value="${esc(r.unit)}"></td><td><input class="inp" data-k="name" value="${esc(r.name)}" placeholder="單位代表（姓名可之後補）">${dupe?`<div style="color:var(--warn);font-size:12px">名單已有同名：${esc(dupe.unit||"")}</div>`:""}</td><td><input class="inp" data-k="title" value="${esc(r.title)}"></td><td><select class="sel" data-k="zone" style="width:100%">${zopt(r.zone)}</select></td></tr>`;}).join("")}</tbody></table>`;
+    $("#piOut").innerHTML=`<table class="pi-tb"><thead><tr><th>匯入</th><th>單位／機關</th><th>姓名</th><th>職稱</th><th>座位區</th></tr></thead><tbody>${rows.map((r,i)=>{const dupe=S.guests.find(g=>r.name&&(g.name||"").replace(/[（(].*$/,"")===r.name.replace(/[（(].*$/,""));return `<tr data-i="${i}"><td><input type="checkbox" data-k="on"${r.on?" checked":""} aria-label="匯入第 ${i+1} 筆"></td><td><input class="inp" data-k="unit" value="${esc(r.unit)}"></td><td><input class="inp" data-k="name" value="${esc(r.name)}" placeholder="單位代表（姓名可之後補）">${dupe?`<div style="color:var(--warn);font-size:12px">名單已有同名：${esc(dupe.unit||"")}，預設不匯入</div>`:""}</td><td><input class="inp" data-k="title" value="${esc(r.title)}"></td><td><select class="sel" data-k="zone" style="width:100%">${zopt(r.zone)}</select></td></tr>`;}).join("")}</tbody></table>`;
     const n=rows.filter(r=>r.on).length;$("#piSave").disabled=!n;$("#piSave").textContent=`匯入 ${n} 位`;
   };
-  const guessZone=u=>{const g=S.guests.find(x=>u&&x.zone&&x.zone!=="z-vip"&&x.seat&&unitKey(x)&&(unitKey(x)===u||unitKey(x).includes(u)||u.includes(unitKey(x))));return g?g.zone:"";};
-  md.querySelector("#piGo").onclick=()=>{rows=piParse($("#piText").value).map(r=>({...r,on:true,zone:guessZone(r.unit)}));{const blank=rows.filter(r=>!r.name).length;$("#piMsg").textContent=rows.length?`整理出 ${rows.length} 位${blank?`（其中 ${blank} 位還沒有姓名，先以單位代表新增，名額會算進人數）`:""}，請確認下表`:"沒有整理出內容。可以寫「大魯閣 8 位」，或一行一位「單位 姓名 職稱」";}draw();};
+  const isMedia=u=>/(新聞|日報|晚報|時報|報社|新生報|聯合報|周刊|週刊|雜誌|電視|電台|廣播|媒體|通訊社|中央社|TVBS|ETtoday|NOWnews|DAZN|Yahoo|LINE TODAY|三立|東森|民視|公視|華視|中視|台視|緯來|愛爾達|Focus|鏡|今周刊|商周|天下|遠見|體育台)/i.test(u||"");
+  const guessZone=u=>{if(isMedia(u)&&zoneById("z-media"))return "z-media";const g=S.guests.find(x=>u&&x.zone&&x.zone!=="z-vip"&&x.seat&&unitKey(x)&&(unitKey(x)===u||unitKey(x).includes(u)||u.includes(unitKey(x))));return g?g.zone:"";};
+  md.querySelector("#piGo").onclick=()=>{rows=piParse($("#piText").value).map(r=>{const zone=guessZone(r.unit);const dup=!!(r.name&&S.guests.some(g=>nkey(g.name)===nkey(r.name)));return {...r,on:!dup,zone,title:r.title||(zone==="z-media"?"記者":"")};});{const blank=rows.filter(r=>!r.name).length;$("#piMsg").textContent=rows.length?`整理出 ${rows.length} 位${blank?`（其中 ${blank} 位還沒有姓名，先以單位代表新增，名額會算進人數）`:""}，請確認下表`:"沒有整理出內容。可以寫「大魯閣 8 位」，或一行一位「單位 姓名 職稱」";}draw();};
   md.querySelector("#piOut").addEventListener("input",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;if(k==="on")draw();});
   md.querySelector("#piOut").addEventListener("change",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;draw();});
   md.querySelector("#piSave").onclick=async()=>{
     const list=rows.filter(r=>r.on&&(r.name||r.title||r.unit));if(!list.length)return;
     const inv=$("#piInv").value,st=$("#piSt").value;let o=Math.max(0,...S.guests.map(g=>+g.order||0))+10;
     const created=[];const auto=$("#piSeat").checked;
-    for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:st,zone:r.zone||"",order:o};o+=10;const g={id,...d};S.guests.push(g);created.push(g);await put("guests",id,d);}
+    for(const r of list){const id=newId("g");const d={address:"",arrived:false,assist:"",category:r.zone==="z-media"?"媒體":"",inviter:inv,name:r.name.trim(),title:r.title.trim(),unit:r.unit.trim(),note:"",photo:"",proxy:"",seat:"",source:"貼上文字新增",status:r.status||st,zone:r.zone||"",order:o};o+=10;const g={id,...d};S.guests.push(g);created.push(g);await put("guests",id,d);}
     const placed=auto?importSeat(created):0;const noz=created.filter(g=>!g.zone).length;
     closeModal();renderAll();toast(`已新增 ${list.length} 位${auto?`，自動排好 ${placed} 個座位`:""}${noz?`；${noz} 位沒選座位區，到「座位分區」再排`:""}`);
   };
