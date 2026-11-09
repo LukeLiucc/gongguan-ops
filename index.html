@@ -785,6 +785,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <span class="muted" id="smHint" style="font-size:13.5px"></span>
       <span class="sp"></span>
       <button class="btn" id="smShow" type="button">展示座位圖</button>
+      <button class="btn" id="smDl" type="button">下載座位圖</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
     </div>
     <div class="smfound" id="smFound" hidden></div>
@@ -2856,13 +2857,65 @@ $("#prDoc").onclick=async()=>{
 function seatShow(on){
   document.body.classList.toggle("showseat",on);
   let b=document.getElementById("showBar");
-  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
-    $("#showPrint").onclick=()=>window.print();$("#showExit").onclick=()=>seatShow(false);}
+  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showDl">下載圖檔</button><button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
+    $("#showPrint").onclick=()=>window.print();$("#showDl").onclick=e=>seatDownload(e.currentTarget);$("#showExit").onclick=()=>seatShow(false);}
   if(!on&&b)b.remove();
   if(on){UI.seatDetail=true;}
   renderAll();
 }
 $("#smShow").onclick=()=>seatShow(true);
+$("#smDl").onclick=e=>seatDownload(e.currentTarget);
+async function seatDownload(btn){
+  try{
+    const now=new Date();const pad=n=>String(n).padStart(2,"0");
+    const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const CW=96,CH=68,GX=4,BG=26,RL=34,M=44,RG=34,TOP=150;
+    const occ={};S.guests.forEach(g=>{if(g.seat&&!occ[g.seat])occ[g.seat]=g;});
+    const zm=zoneOfSeatMap();
+    const colX=c=>{const bi=c<=6?0:c<=18?1:2;return M+RL+(c-1)*(CW+GX)+bi*(BG-GX);};
+    const W=colX(24)+CW+M;
+    const rowY={};let y=TOP+70;for(const r of ROW_ORDER){rowY[r]=y;y+=CH+RG;}
+    const legendY=y+10;const zs=sortedZones();
+    const cv=document.createElement("canvas");const SC=2;const H=legendY+40+Math.ceil(zs.length/5)*34+50;
+    cv.width=W*SC;cv.height=H*SC;const x=cv.getContext("2d");x.scale(SC,SC);
+    const F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+    const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
+    const tint=(hex,a)=>{const m=String(hex||"#888").replace("#","");const v=m.length===3?m.split("").map(c=>c+c).join(""):m;const n=parseInt(v,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
+    const fit=(t,w,font)=>{x.font=font;if(x.measureText(t).width<=w)return t;let s=t;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…";};
+    const wrap2=(t,w,font)=>{x.font=font;const out=[];let cur="";for(const ch of t){if(x.measureText(cur+ch).width>w){out.push(cur);cur=ch;if(out.length===2)break;}else cur+=ch;}if(out.length<2&&cur)out.push(cur);else if(out.length===2&&cur&&out.join("").length<t.length){out[1]=fit(out[1]+t.slice(out.join("").length),w,font);}return out.slice(0,2);};
+    x.fillStyle="#ffffff";x.fillRect(0,0,W,H);
+    x.fillStyle="#111827";x.font=`800 30px ${F}`;x.textBaseline="alphabetic";x.fillText("水源新天地與公館運動館開箱活動｜座位圖",M,M+30);
+    x.fillStyle="#4B5563";x.font=`400 17px ${F}`;x.fillText("2026/11/11（三）｜公館大樓 A 棟國際會議廳",M,M+60);
+    const seated=S.guests.filter(g=>g.seat&&!OFF.has(g.seat)).length;
+    x.textAlign="right";x.font=`400 15px ${F}`;x.fillText(`已排座位 ${seated} 位`,W-M,M+34);x.fillText(`${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,W-M,M+58);x.textAlign="left";
+    x.fillStyle="#111827";rr(M+RL,TOP,W-2*M-RL,46,8);x.fill();x.fillStyle="#fff";x.font=`700 20px ${F}`;x.textAlign="center";x.fillText("舞台",(M+RL+W-M)/2,TOP+30);x.textAlign="left";
+    for(const r of ROW_ORDER){const Y=rowY[r];
+      if(r===AISLE_ROW){x.fillStyle="#FDF2F8";rr(M+RL,Y+8,W-2*M-RL,CH-16,8);x.fill();x.strokeStyle="#EC4899";x.setLineDash([8,6]);x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle="#9D174D";x.font=`700 17px ${F}`;x.textAlign="center";x.fillText("橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋",(M+RL+W-M)/2,Y+CH/2+6);x.textAlign="left";continue;}
+      x.fillStyle="#6B7280";x.font=`700 18px ${F}`;x.textAlign="center";x.fillText(ROW_LETTER[r],M+RL/2-4,Y+CH/2+6);x.textAlign="left";
+      for(let c=1;c<=24;c++){const sid=r+"-"+c;if(VOID.has(sid))continue;const X=colX(c);
+        if(OFF.has(sid)){x.fillStyle="#F3F4F6";rr(X,Y,CW,CH,6);x.fill();x.save();x.clip();x.strokeStyle="#D1D5DB";x.lineWidth=2;for(let d=-CH;d<CW;d+=12){x.beginPath();x.moveTo(X+d,Y+CH);x.lineTo(X+d+CH,Y);x.stroke();}x.restore();continue;}
+        const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
+        if(g){x.fillStyle=z?z.color:"#6B7280";rr(X,Y,CW,CH,6);x.fill();x.fillStyle="#fff";x.textAlign="center";
+          x.font=`800 17px ${F}`;x.fillText(fit(g.name||"單位代表",CW-8,x.font),X+CW/2,Y+21);
+          x.font=`500 11px ${F}`;x.fillText(fit(g.title||"",CW-8,x.font),X+CW/2,Y+37);
+          const un=(g.unit||"").replace(/[（(].*$/,"").trim();const ls=wrap2(un,CW-8,`400 11px ${F}`);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+52+i*13));x.textAlign="left";}
+        else{x.fillStyle=z?tint(z.color,.12):"#ffffff";rr(X,Y,CW,CH,6);x.fill();x.strokeStyle=z?tint(z.color,.45):"#D1D5DB";x.lineWidth=1;x.stroke();x.fillStyle="#9CA3AF";x.font=`500 14px ${F}`;x.textAlign="center";x.fillText(String(c),X+CW/2,Y+CH/2+5);x.textAlign="left";}
+      }}
+    for(const z of S.zones){const parts=[[],[],[]];(z.seats||[]).forEach(s=>{const [r,c]=s.split("-").map(Number);if(rowY[r]==null)return;parts[c<=6?0:c<=18?1:2].push([r,c]);});
+      const zg=S.guests.filter(g=>g.zone===z.id&&g.status!=="不出席");const n=zg.length,a=zg.filter(g=>g.status==="出席"||g.status==="代理出席").length;const own=zOwnerNames(z);
+      const big=Math.max(...parts.map(p=>p.length));let lab=false;
+      parts.forEach(p=>{if(!p.length)return;const ys=p.map(q=>rowY[q[0]]),xs=p.map(q=>colX(q[1]));const X0=Math.min(...xs)-4,Y0=Math.min(...ys)-4,X1=Math.max(...xs)+CW+4,Y1=Math.max(...ys)+CH+4;
+        x.strokeStyle=z.color;x.lineWidth=2.5;rr(X0,Y0,X1-X0,Y1-Y0,9);x.stroke();
+        if(!lab&&p.length===big){lab=true;const t=`${z.name}  ${n} 位${a?`・出席 ${a}`:""}${own?`｜管理 ${own}`:""}`;x.font=`700 14px ${F}`;const tw=Math.min(x.measureText(t).width+18,X1-X0+200);x.fillStyle=z.color;rr(X0,Y0-24,tw,22,6);x.fill();x.fillStyle="#fff";x.fillText(fit(t,tw-14,x.font),X0+8,Y0-8);}});}
+    let lx=M+RL,ly=legendY+14;x.font=`600 15px ${F}`;
+    zs.forEach(z=>{const t=z.name;const w=x.measureText(t).width+40;if(lx+w>W-M){lx=M+RL;ly+=34;}x.fillStyle=z.color;x.beginPath();x.arc(lx+9,ly,7,0,7);x.fill();x.fillStyle="#374151";x.fillText(t,lx+22,ly+5);lx+=w+12;});
+    x.fillStyle="#9CA3AF";x.font=`500 15px ${F}`;x.textAlign="center";x.fillText("後方入口",W/2,H-22);x.textAlign="left";
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("empty");
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_座位圖_${stamp}.png`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast("座位圖已下載");
+  }catch(e){console.error("seatDownload",e);toast("座位圖產生失敗，請改用「展示座位圖」→ 列印另存 PDF");}
+}
+
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("showseat"))seatShow(false);});
 window.addEventListener("hashchange",()=>{if(document.body.classList.contains("showseat")&&location.hash!=="#seats")seatShow(false);});
 
