@@ -1601,8 +1601,9 @@ function placeGuest(gid,sid){
   const occ=S.guests.find(g=>g.seat===sid&&g.id!==gid);
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  if(occ){occ.seat=old;upd("guests",occ.id,{seat:occ.seat});}
-  sel.seat=sid;upd("guests",sel.id,{seat:sid});
+  const tz=occ?(occ.zone||""):(zm[sid]||"");const oz=sel.zone||"";
+  if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
+  sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
   UI.selGuest=null;schedule();
   toast(`${sel.name||sel.unit} → ${seatLabel(sid)}${occ?`（與 ${occ.name||occ.unit} 互換）`:""}`);
@@ -1615,8 +1616,9 @@ function seatClick(sid){
   if(occ&&occ.id===sel.id){UI.selGuest=null;renderSeats();return;}
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  if(occ){occ.seat=old;upd("guests",occ.id,{seat:occ.seat});}
-  sel.seat=sid;upd("guests",sel.id,{seat:sid});
+  const tz=occ?(occ.zone||""):(zm[sid]||"");const oz=sel.zone||"";
+  if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
+  sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
   UI.selGuest=null;schedule();
 }
