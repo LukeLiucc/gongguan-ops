@@ -766,7 +766,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <div id="tTeams"></div>
     <div class="bar" style="margin-top:18px"><div class="ttl2" style="margin:0"><h2 style="font-size:18px">人員名單</h2><span class="hint">點上方數字可篩選已確認／建議分工／待指派／衝突</span></div><span class="sp"></span><button class="btn pri" id="sAdd" type="button">＋ 新增人員</button></div>
     <div class="tblw" style="margin-bottom:22px"><table class="t staffT" id="sTable"></table></div>
-    <div class="ttl2"><h2 style="font-size:18px">外部協力</h2><span class="hint">主持、攝影、硬體、示範，不計入聯新編制</span></div>
+    <div class="ttl2"><h2 style="font-size:18px">外部協力</h2><span class="hint">主持、攝影、硬體、示範，不計入聯新國際體育編制</span></div>
     <div class="extl" id="tExt"></div>
     <div class="bar" style="margin-top:20px">
       <div class="ttl2" style="margin:0"><h2 style="font-size:18px">工作項目</h2><span class="hint">活動前準備與當日執行，每項列出說明、開始與完成時間、主責單位、當責人、所需人力</span></div>
@@ -1952,7 +1952,7 @@ function renderTour(){
 // [類別, 編號, 項目, 說明, 開始, 完成, 主責單位, 當責人, 所需人力]
 const U1="聯新國際體育總公司",U2="南區青少年活動中心",U3="公館運動館",U5="外部協力";
 const DUTY=[
- ["公關","1","聯新邀約名單","聯新國際體育邀約名單發送、出席回覆整理\n名單更新到工作台「貴賓名單」","即日起","11/6",U1,"Luke","1"],
+ ["公關","1","聯新國際體育邀約名單","聯新國際體育邀約名單發送、出席回覆整理\n名單更新到工作台「貴賓名單」","即日起","11/6",U1,"Luke","1"],
  ["公關","2","媒體邀約","媒體名冊邀約，出席媒體、記者姓名回覆確認\nSNG 車輛資訊提供北水處停車引導","即日起","11/9",U1,"Luke","1"],
  ["公關","3","協會邀約與動員","高爾夫球協會、賽車協會、電競協會、虛擬運動總會、其他運動協會\n各協會出席人員姓名收齊","即日起","11/9",U1,"婷宜","1"],
  ["公關","5","新聞稿與文稿回復","聯合新聞稿、市長致詞稿、主持人稿中營運團隊名稱與場館內容回復","即日起","活動前1日",U1,"Luke","1"],
@@ -1961,7 +1961,7 @@ const DUTY=[
  ["公關","5-1","報到組","【門廳聯新報到桌】組長 Alice\n1.08:30 架設報到桌、核對出席名單\n2.確認來賓身分與出席狀態（Alice：VIP、民意代表；簡愛：一般來賓）\n3.簽到表兩份、發放伴手禮與座位卡（蔡秀蓁）；媒體報到（林于暄）\n4.09:55 最終出席名單送舞台婷宜，晚到者登記後遞便條紙","活動當日","活動當日",U1+"\n"+U2,"Alice","總公司2（Alice、簡愛）\n南區青少年活動中心2（林于暄、蔡秀蓁）"],
  ["公關","6","攝影組｜媒體引導","【配戴工作證】\n1.08:45 確認媒體區、攝影站位\n2.引導文字記者坐H 排中間、攝影記者到橫向走道\n3.10:00 聯訪位置引導\n4.10:30 帶媒體隨行導覽，2F 入口大廳補訪","活動當日","活動當日",U1,"唐瑋","總公司1（唐瑋）"],
  ["公關","7","帶位組","【配戴工作證、手持區塊牌與該區名單】組長 偉嘉\n1.一區一人舉牌帶位：09:15 起在報到桌旁舉該區區塊牌，貴賓報到後由同區舉牌人員直接帶到座位\n2.對號區（P–L 排中）照座位卡編號帶位；其他座位區由前往後、由走道往內安排\n3.運動協會由徐碧雪帶位，電競・賽車獨立一區由黃薪哲帶位，大魯閣併入貴賓席（P-21、P-22），由王振洋帶位；媒體區由攝影組長唐瑋管理\n4.10:40 散場引導，指引參觀人員前往運動館","活動當日","活動當日",U2,"偉嘉","總公司1（偉嘉，組長）\n南區青少年活動中心9、總公司1（徐碧雪）（舉牌帶位 9 區，媒體區另由攝影組長唐瑋管理）"],
- ["場地","7-2","場地組｜交通與出入口","【配戴工作證、手持車號名單】\n1.08:45 前與北水處職安室對接車道口崗位（思源街、會議廳、地下停車場）\n2.09:00 起駐思源街車道口：聯新邀約貴賓、協會、SNG 車輛確認與分流、A 棟落客區巡視\n3.市長車快到時通知貴賓組許總\n4.10:30 導覽移動路口指引，控制長官隊伍與媒體間距","活動當日","活動當日",U2,"呂旻翰","南區青少年活動中心1（呂旻翰）"],
+ ["場地","7-2","場地組｜交通與出入口","【配戴工作證、手持車號名單】\n1.08:45 前與北水處職安室對接車道口崗位（思源街、會議廳、地下停車場）\n2.09:00 起駐思源街車道口：聯新國際體育邀約貴賓、協會、SNG 車輛確認與分流、A 棟落客區巡視\n3.市長車快到時通知貴賓組許總\n4.10:30 導覽移動路口指引，控制長官隊伍與媒體間距","活動當日","活動當日",U2,"呂旻翰","南區青少年活動中心1（呂旻翰）"],
  ["公關","8","貴賓組","1.市府長官、重要貴賓接待與禮賓協調\n2.A 棟大門口迎接市長，陪同進門廳、入座貴賓席\n3.啟動儀式引導 7 位啟動代表上台就位\n4.10:30 陪同市長步行至公館運動館，入口由李偉志接手講解（李偉志全程在運動館準備，不到典禮區）","活動當日","活動當日",U1,"許總","總公司1（許總）"],
  ["場地","9","設計物總管","主視覺、背板、LED 畫面、啟動動畫素材定稿審核\n邀請函後續一律提供電子檔","即日起","11/9",U1,"唐瑋","1"],
  ["場地","10","現場設計物","指引牌（B1 電梯口、門廳、會議廳、運動館各樓層）\n座位區標示與名牌、簽到表、各組帶位名單、貴賓名條版型","即日起","11/9",U1,"簡愛","1"],
@@ -2014,7 +2014,7 @@ function drawRoster(){
   $("#usherRules").innerHTML=`<b>報到與帶位分工</b><br>
   <b>A. 報到人員</b>｜${chk?names(teamMembers(chk)):"—"}：門廳聯新報到桌，確認來賓身分與出席狀態、簽到、伴手禮；09:55 最終出席名單送舞台婷宜。<br>
   <b>B. 舉牌帶位（一區一人）</b>｜${names(own)||"—"}：09:15 起在報到桌旁舉該區區塊牌，貴賓報到後直接帶到座位，入座後回報到桌旁接下一位；09:55 前回報該區空位。<br>
-  市府局處・區長・中央部會（L 排中）、設計施工・受邀單位（右區M、L 排）由北水處邀約，聯新舉牌人員帶位入席。晚到貴賓由報到組登記後遞便條紙給舞台婷宜。`;
+  市府局處・區長・中央部會（L 排中）、設計施工・受邀單位（右區M、L 排）由北水處邀約，聯新國際體育舉牌人員帶位入席。晚到貴賓由報到組登記後遞便條紙給舞台婷宜。`;
   $("#usherTable").innerHTML=`<thead><tr><th>座位區</th><th>預計到場</th><th>舉牌帶位（一區一人）</th><th>協助</th></tr></thead><tbody>`+sortedZones().map(z=>{const st=zoneStats(z);return `<tr><td><span style="display:inline-flex;gap:7px;align-items:center"><i class="zdot" style="background:${esc(z.color)}"></i><b>${esc(z.name)}</b></span>${z.desc?`<div class="muted" style="font-size:12px">${esc(z.desc)}</div>`:""}</td><td class="no">${st.expected}</td><td class="who">${esc(pname(z.owner)||(z.ext?"主辦單位接待":"—"))}</td><td class="who">${esc(pname(z.owner2)||"—")}</td></tr>`;}).join("")+`</tbody>`;
   $("#rosterTable").innerHTML=`<thead><tr><th>組別</th><th>組長</th><th>成員</th><th>負責工作</th><th>工作位置</th><th>執勤時間</th><th>支援人員</th></tr></thead><tbody>`+sortedTeams().map(t=>{const L=teamLeads(t),M=teamMembers(t).filter(m=>!(t.lead||[]).includes(m.id)),SP=teamSupport(t);return `<tr><td style="white-space:nowrap"><b>${esc(t.name)}</b></td><td class="who">${names(L)||"—"}</td><td class="who">${M.map(p=>esc(p.name)+(stOf(p)==="建議分工"?'<sup class="sg">建議</sup>':"")).join("、")||"—"}</td><td>${esc(t.work||"")}</td><td>${esc(t.place||"")}</td><td class="no">${esc(teamTime(t))}</td><td class="who">${SP.map(x=>`${esc(x.p.name)}（${esc(x.d.s)}–${esc(x.d.e)}）`).join("、")||esc(t.support||"—")}</td></tr>`;}).join("")+`</tbody>`;
 }
@@ -2036,7 +2036,7 @@ function drawDuty(){
 
 
 /* ================= ROSTER TABLE ================= */
-const INV_G=[{k:"water",label:"水處邀約",val:"北水處"},{k:"ls",label:"聯新邀約",val:"聯新國際體育"},{k:"req",label:"體育局要求聯新邀約",val:"體育局"},{k:"sb",label:"體育局負責",val:"體育局負責"}];
+const INV_G=[{k:"water",label:"水處邀約",val:"北水處"},{k:"ls",label:"聯新國際體育邀約",val:"聯新國際體育"},{k:"req",label:"體育局要求聯新國際體育邀約",val:"體育局"},{k:"sb",label:"體育局負責",val:"體育局負責"}];
 function invKey(v){v=v||"";if(v==="主辦單位"||v==="體育局負責")return"sb";if(v==="體育局"||v.includes("要求"))return"req";if(v.includes("水處")||v.includes("自來水"))return"water";if(v.includes("聯新"))return"ls";return"other";}
 function invLabel(v){const k=invKey(v);const g=INV_G.find(x=>x.k===k);return g?g.label:(v||"未填邀約單位");}
 function invGroups(){return [...INV_G,{k:"other",label:"其他／未填邀約單位",val:""}];}
@@ -2392,7 +2392,7 @@ const TK_SEED=[
  {id:"t2",no:2,title:"來賓聯繫是否到場",ask:"副座指示：來賓要聯繫是否到。可否有已知確認到場名單？",note:"已依出席回覆表單更新；下方是目前確認到場名單，可匯出 Excel 回覆副座。",owner:"",status:"處理中",go:"roster",att:true},
  {id:"t3",no:3,title:"行程細流",ask:"副座指示：行程的細流要出來。",note:"細流在「行程細流」分頁，時間會依每段時長自動推算。",owner:"",status:"處理中",go:"flow"},
  {id:"t4",no:4,title:"貴賓座位區要顯示",ask:"副座指示：貴賓座位區要顯示。",note:"「座位分區」分頁按「展示座位圖」可全螢幕顯示或列印。",owner:"",status:"處理中",go:"seats"},
- {id:"t5",no:5,title:"公館運動館 3 樓茶水點心",ask:"副座指示：公館館 3 樓要請聯新放茶及咖啡各一桶，並放一些點心。（聯新這部分你們有安排嗎？）",note:"由聯新國際體育準備：茶一桶、咖啡一桶、點心，放公館運動館 3 樓。",owner:"",status:"未處理",go:""}
+ {id:"t5",no:5,title:"公館運動館 3 樓茶水點心",ask:"副座指示：公館館 3 樓要請聯新國際體育放茶及咖啡各一桶，並放一些點心。（聯新國際體育這部分你們有安排嗎？）",note:"由聯新國際體育準備：茶一桶、咖啡一桶、點心，放公館運動館 3 樓。",owner:"",status:"未處理",go:""}
 ];
 const TK_ST=["未處理","處理中","已完成"];
 const TK_CLS={"未處理":"s-todo","處理中":"s-doing","已完成":"s-done"};
