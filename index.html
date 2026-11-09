@@ -788,6 +788,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <button class="btn" id="smShow" type="button">展示座位圖</button>
       <button class="btn" id="smDl" type="button">下載座位圖</button>
       <button class="btn" id="smPdf" type="button">匯出 PDF</button>
+      <button class="btn" id="smXls" type="button">下載 Excel</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
     </div>
     <div class="smfound" id="smFound" hidden></div>
@@ -2886,8 +2887,8 @@ $("#prDoc").onclick=async()=>{
 function seatShow(on){
   document.body.classList.toggle("showseat",on);
   let b=document.getElementById("showBar");
-  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showDl">下載圖檔</button><button class="btn" type="button" id="showPdf">匯出 PDF</button><button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
-    $("#showPrint").onclick=()=>window.print();$("#showDl").onclick=e=>seatDownload(e.currentTarget);$("#showPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");$("#showExit").onclick=()=>seatShow(false);}
+  if(on&&!b){b=document.createElement("div");b.id="showBar";b.innerHTML=`<button class="btn" type="button" id="showDl">下載圖檔</button><button class="btn" type="button" id="showPdf">匯出 PDF</button><button class="btn" type="button" id="showXls">下載 Excel</button><button class="btn" type="button" id="showPrint">列印</button><button class="btn pri" type="button" id="showExit">結束展示</button>`;document.body.appendChild(b);
+    $("#showPrint").onclick=()=>window.print();$("#showDl").onclick=e=>seatDownload(e.currentTarget);$("#showPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");$("#showXls").onclick=e=>seatExcel(e.currentTarget);$("#showExit").onclick=()=>seatShow(false);}
   if(!on&&b)b.remove();
   if(on){UI.seatDetail=true;}
   renderAll();
@@ -2895,6 +2896,59 @@ function seatShow(on){
 $("#smShow").onclick=()=>seatShow(true);
 $("#smDl").onclick=e=>seatDownload(e.currentTarget);
 $("#smPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");
+$("#smXls").onclick=e=>seatExcel(e.currentTarget);
+function loadExcelJS(){if(window.ExcelJS)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc);});}
+async function seatExcel(btn){
+  const oldT=btn?btn.textContent:"";if(btn){btn.disabled=true;btn.textContent="產生中…";}
+  try{
+    await loadExcelJS();
+    const now=new Date();const pad=n=>String(n).padStart(2,"0");const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const hex=c=>{const m=String(c||"#888888").replace("#","");return (m.length===3?m.split("").map(x=>x+x).join(""):m).toUpperCase();};
+    const tint=(c,a)=>{const n=parseInt(hex(c),16);const mix=v=>Math.round(v*a+255*(1-a)).toString(16).padStart(2,"0");return (mix(n>>16&255)+mix(n>>8&255)+mix(n&255)).toUpperCase();};
+    const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:"FF"+c}});
+    const thin={style:"thin",color:{argb:"FFD1D5DB"}};const bd={top:thin,left:thin,bottom:thin,right:thin};
+    const occ={};S.guests.forEach(g=>{if(g.seat&&!occ[g.seat])occ[g.seat]=g;});const zm=zoneOfSeatMap();
+    const wb=new ExcelJS.Workbook();wb.creator="公館開箱活動工作台";
+    // 工作表一：座位圖
+    const ws=wb.addWorksheet("座位圖",{pageSetup:{paperSize:8,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:1},views:[{showGridLines:false}]});
+    const colOf=c=>2+(c-1)+(c>6?1:0)+(c>18?1:0);const LAST=colOf(24);
+    ws.getColumn(1).width=5;for(let i=2;i<=LAST;i++)ws.getColumn(i).width=13;[colOf(6)+1,colOf(18)+1].forEach(i=>ws.getColumn(i).width=2.5);
+    ws.mergeCells(1,1,1,LAST);const t=ws.getCell(1,1);t.value="水源新天地與公館運動館開箱活動｜座位圖";t.font={size:18,bold:true};
+    ws.mergeCells(2,1,2,LAST);const t2=ws.getCell(2,1);t2.value=`2026/11/11（三）｜公館大樓 A 棟國際會議廳｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`;t2.font={size:11,color:{argb:"FF4B5563"}};
+    ws.mergeCells(4,2,4,LAST);const st=ws.getCell(4,2);st.value="舞台";st.font={bold:true,size:14,color:{argb:"FFFFFFFF"}};st.fill=fill("111827");st.alignment={horizontal:"center",vertical:"middle"};ws.getRow(4).height=26;
+    let R=6;
+    for(const r of ROW_ORDER){
+      if(r===AISLE_ROW){ws.mergeCells(R,2,R,LAST);const a=ws.getCell(R,2);a.value="橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋";a.font={bold:true,color:{argb:"FF9D174D"}};a.fill=fill("FDF2F8");a.alignment={horizontal:"center",vertical:"middle"};ws.getRow(R).height=24;R+=2;continue;}
+      const lc=ws.getCell(R,1);lc.value=ROW_LETTER[r];lc.font={bold:true,size:13,color:{argb:"FF6B7280"}};lc.alignment={horizontal:"center",vertical:"middle"};ws.getRow(R).height=58;
+      for(let c=1;c<=24;c++){const sid=r+"-"+c;if(VOID.has(sid))continue;const cell=ws.getCell(R,colOf(c));cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};cell.border=bd;
+        if(OFF.has(sid)){if(isRsv(sid)){const rz=zoneById(zm[sid]);const col=rz?rz.color:"#6B7280";cell.value=blockedNote(sid);cell.fill=fill(tint(col,.18));cell.font={bold:true,size:10,color:{argb:"FF"+hex(col)}};}else{cell.value="不可入座";cell.fill=fill("E5E7EB");cell.font={size:9,color:{argb:"FF9CA3AF"}};}continue;}
+        const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
+        if(g){const un=(g.unit||"").replace(/[（(].*$/,"").trim();cell.value={richText:[{text:(g.name||"單位代表")+"\n",font:{bold:true,size:11,color:{argb:"FFFFFFFF"}}},{text:(g.title||"")+(un?"\n"+un:""),font:{size:8,color:{argb:"FFFFFFFF"}}}]};cell.fill=fill(z?hex(z.color):"6B7280");}
+        else{cell.value=`${ROW_LETTER[r]}-${c}`;cell.font={size:9,color:{argb:"FF9CA3AF"}};if(z)cell.fill=fill(tint(z.color,.14));}
+      }
+      R+=2;
+    }
+    ws.mergeCells(R,2,R,LAST);const en=ws.getCell(R,2);en.value="後方入口";en.alignment={horizontal:"center"};en.font={color:{argb:"FF9CA3AF"}};R+=2;
+    const zs=sortedZones();ws.getCell(R,2).value="座位區";ws.getCell(R,2).font={bold:true};R++;
+    zs.forEach(z=>{const zg=S.guests.filter(g=>g.zone===z.id&&g.seat&&g.status!=="不出席");const nr=(z.seats||[]).filter(isRsv).length;const a=zg.filter(g=>g.status==="出席"||g.status==="代理出席").length;
+      const c1=ws.getCell(R,2);c1.fill=fill(hex(z.color));c1.border=bd;ws.mergeCells(R,3,R,10);const c2=ws.getCell(R,3);c2.value=`${z.name}　${zg.length} 位${nr?`＋保留 ${nr} 席`:""}${a?`・出席 ${a}`:""}${zOwnerNames(z)?`｜管理 ${zOwnerNames(z)}`:""}`;R++;});
+    // 工作表二：座位名單
+    const w2=wb.addWorksheet("座位名單",{views:[{state:"frozen",ySplit:1}]});
+    w2.columns=[{header:"座位",key:"seat",width:8},{header:"座位區",key:"zone",width:26},{header:"姓名",key:"name",width:14},{header:"職稱",key:"title",width:20},{header:"單位",key:"unit",width:48},{header:"出席狀態",key:"status",width:10},{header:"帶位人員",key:"owner",width:14}];
+    w2.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};w2.getRow(1).fill=fill("111827");
+    const key=s=>{const [r,c]=s.split("-").map(Number);return ROW_ORDER.indexOf(r)*100+c;};
+    const rows=[];Object.keys(occ).sort((a,b)=>key(a)-key(b)).forEach(sid=>{const g=occ[sid];const z=zoneById(g.zone);rows.push({seat:seatLabel(sid),zone:z?z.name:"",name:g.name||"單位代表",title:g.title||"",unit:g.unit||"",status:g.status||"",owner:z?zOwnerNames(z):"",_c:z?z.color:null});});
+    blockedList().filter(b=>/保留/.test(b.why||"")).sort((a,b)=>key(a.s)-key(b.s)).forEach(b=>{const z=zoneById(zm[b.s]);rows.push({seat:seatLabel(b.s),zone:z?z.name:"",name:b.why,title:"",unit:"",status:"",owner:z?zOwnerNames(z):"",_c:z?z.color:null});});
+    rows.forEach(o=>{const rw=w2.addRow(o);if(o._c)rw.getCell(2).fill=fill(tint(o._c,.22));});
+    const un=S.guests.filter(g=>!g.seat&&g.status!=="不出席"&&g.zone!=="z-media");
+    if(un.length){w2.addRow({});const hr=w2.addRow({seat:"未排座位"});hr.font={bold:true};un.forEach(g=>{const z=zoneById(g.zone);w2.addRow({seat:"",zone:z?z.name:"",name:g.name||"單位代表",title:g.title||"",unit:g.unit||"",status:g.status||"",owner:""});});}
+    w2.autoFilter={from:"A1",to:"G1"};
+    const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_座位圖_${stamp}.xlsx`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast("座位圖 Excel 已下載");
+  }catch(e){console.error("seatExcel",e);toast("Excel 產生失敗，請稍後再試");}
+  finally{if(btn){btn.disabled=false;btn.textContent=oldT;}}
+}
 function loadJsPDF(){if(window.jspdf)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc);});}
 async function seatDownload(btn,fmt){
   const oldT=btn?btn.textContent:"";if(btn){btn.disabled=true;btn.textContent="產生中…";}
