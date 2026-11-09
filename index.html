@@ -247,6 +247,9 @@ button.st.off.blk{cursor:pointer}
 .rt-save{display:inline-flex;align-items:center;gap:8px}.rt-save small{color:var(--ink-3);font-size:12.5px;white-space:nowrap}
 .st.aisle{background:transparent;border:1px dashed var(--line);cursor:default}
 .st.sel{outline:3px solid var(--accent);outline-offset:1px}
+.st.msel{outline:3px solid #f5b400;outline-offset:1px;box-shadow:0 0 0 5px rgba(245,180,0,.28)}
+#hall.multi .rl{cursor:pointer;border-radius:6px}#hall.multi .rl:hover{background:var(--surface-3);color:var(--ink)}
+.selbar .mv{display:flex;gap:4px;flex-wrap:wrap}.selbar button.k{background:#f5b400;color:#1a1a1a}.selbar button:disabled{opacity:.4;cursor:default}
 .st.dup::after{content:"!";position:absolute;top:0;right:2px;color:#fff;font-weight:900}
 .st:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
 .aud{grid-column:2/-1;border:1px dashed var(--line);border-radius:7px;text-align:center;color:var(--ink-3);padding:6px;margin-top:8px;font-size:13px}
@@ -772,6 +775,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <div class="bar">
       <div class="seg" role="group" aria-label="模式">
         <button type="button" id="smSeat" aria-pressed="true">排座位</button>
+        <button type="button" id="smMulti" aria-pressed="false">多選搬移</button>
         <button type="button" id="smPaint" aria-pressed="false">畫分區</button>
         <button type="button" id="smBlock" aria-pressed="false">標不可排</button>
       </div>
@@ -1518,6 +1522,11 @@ function initSeats(){
   $("#smSeat").onclick=()=>{UI.seatMode="seat";renderSeats();};
   $("#smPaint").onclick=()=>{UI.seatMode="paint";if(!UI.brush&&S.zones[0])UI.brush=sortedZones()[0].id;UI.selGuest=null;renderSeats();};
   $("#smBlock").onclick=()=>{UI.seatMode="block";UI.selGuest=null;renderSeats();};
+  $("#smMulti").onclick=()=>{if(UI.seatMode==="multi"){msExit();return;}UI.seatMode="multi";if(UI.selGuest){msSet().add(UI.selGuest);UI.msAnchor=UI.selGuest;}UI.selGuest=null;renderSeats();};
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-msbar]");if(!b)return;msAct(b.dataset.msbar);});
+  document.addEventListener("keydown",e=>{if(UI.seatMode!=="multi"||UI.tab!=="seats")return;if(e.target.closest("input,textarea,select,[contenteditable]"))return;
+    const m={ArrowDown:"down",ArrowUp:"up",ArrowLeft:"left",ArrowRight:"right"}[e.key];if(m&&msSet().size){e.preventDefault();msAct(m);return;}
+    if(e.key==="Escape"){if(msSet().size){msSet().clear();renderSeats();}else msExit();}});
   try{if(localStorage.getItem("seatDetail")==="0")UI.seatDetail=false;}catch(e){}
   $("#sdDetail").onclick=()=>{UI.seatDetail=UI.seatDetail===false;try{localStorage.setItem("seatDetail",UI.seatDetail?"1":"0");}catch(e){}renderSeats();};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-selbar]");if(!b)return;const g=S.guests.find(x=>x.id===UI.selGuest);
@@ -1535,6 +1544,9 @@ function initSeats(){
   window.addEventListener("pointerup",()=>{if(painting)commitPaint();});
   H.addEventListener("click",e=>{const b=e.target.closest(".st[data-s]");if(!b||UI.seatMode!=="seat")return;seatClick(b.dataset.s);});
   H.addEventListener("click",e=>{const b=e.target.closest("[data-blk]");if(!b||UI.seatMode!=="block")return;toggleBlock(b.dataset.blk);});
+  H.addEventListener("click",e=>{if(UI.seatMode!=="multi")return;const rl=e.target.closest(".rl[data-row]");if(rl){msRow(+rl.dataset.row);return;}const b=e.target.closest(".st[data-s]");if(b)msClick(b.dataset.s,e.shiftKey);});
+  H.addEventListener("click",e=>{if(UI.seatMode!=="seat"||!(e.ctrlKey||e.metaKey||e.shiftKey))return;const b=e.target.closest(".st.taken[data-s]");if(!b)return;e.stopImmediatePropagation();
+    const g=S.guests.find(x=>x.seat===b.dataset.s);if(!g)return;UI.seatMode="multi";const st=msSet();if(UI.selGuest)st.add(UI.selGuest);st.add(g.id);UI.msAnchor=g.id;UI.selGuest=null;renderSeats();},true);
   $("#p-seats").addEventListener("click",e=>{const b=e.target.closest("[data-fixblk]");if(!b)return;const g=S.guests.find(x=>x.id===b.dataset.fixblk);if(!g)return;UI.seatMode="seat";UI.seatZone=g.zone||"";UI.selGuest=g.id;renderSeats();toast("已選取，點一個空位放入");});
   H.addEventListener("pointerdown",e=>{if(UI.seatMode!=="seat")return;const b=e.target.closest(".st.taken[data-s]");if(!b)return;const g=S.guests.find(x=>x.seat===b.dataset.s);if(g)sdStart(e,g.id);});
   $("#side").addEventListener("pointerdown",e=>{if(UI.seatMode!=="seat")return;const si=e.target.closest("[data-pick]");if(si)sdStart(e,si.dataset.pick);});
@@ -1625,6 +1637,48 @@ function zoneAtSeat(sid,exceptId){const exc=new Set([].concat(exceptId||[]));
   if(best)return best;
   const n2=nb.find(g=>g.zone);return n2?n2.zone:"";
 }
+/* ---------- 多選搬移：多選貴賓後整批上下左右移；被擋到的人一起往同方向推，直到遇到空位 ---------- */
+const SEAT_ROWS=()=>ROW_ORDER.filter(r=>r!==AISLE_ROW);
+function msSet(){if(!(UI.msel instanceof Set))UI.msel=new Set();return UI.msel;}
+function msExit(){msSet().clear();UI.msAnchor=null;UI.seatMode="seat";renderSeats();}
+function msGuests(){const st=msSet();return S.guests.filter(g=>st.has(g.id)&&g.seat);}
+function msClick(sid,shift){const st=msSet();const g=S.guests.find(x=>x.seat===sid);if(!g)return;
+  const a=UI.msAnchor&&S.guests.find(x=>x.id===UI.msAnchor);
+  if(shift&&a&&a.seat){const [ar,ac]=a.seat.split("-").map(Number),[r,c]=sid.split("-").map(Number);
+    if(ar===r){const lo=Math.min(ac,c),hi=Math.max(ac,c);S.guests.forEach(x=>{if(!x.seat)return;const [xr,xc]=x.seat.split("-").map(Number);if(xr===r&&xc>=lo&&xc<=hi)st.add(x.id);});renderSeats();return;}
+    if(ac===c){const i0=ROW_ORDER.indexOf(ar),i1=ROW_ORDER.indexOf(r),lo=Math.min(i0,i1),hi=Math.max(i0,i1);S.guests.forEach(x=>{if(!x.seat)return;const [xr,xc]=x.seat.split("-").map(Number);const xi=ROW_ORDER.indexOf(xr);if(xc===c&&xi>=lo&&xi<=hi)st.add(x.id);});renderSeats();return;}}
+  if(st.has(g.id))st.delete(g.id);else st.add(g.id);UI.msAnchor=g.id;renderSeats();}
+function msRow(r){const st=msSet();const inRow=S.guests.filter(x=>x.seat&&+x.seat.split("-")[0]===r);if(!inRow.length)return;
+  const all=inRow.every(x=>st.has(x.id));inRow.forEach(x=>all?st.delete(x.id):st.add(x.id));renderSeats();}
+function msWholeRow(){const st=msSet();const keys=new Set(msGuests().map(g=>{const [r,c]=g.seat.split("-").map(Number);return r+"|"+(c<=6?0:c<=18?1:2);}));
+  S.guests.forEach(x=>{if(!x.seat)return;const [r,c]=x.seat.split("-").map(Number);if(keys.has(r+"|"+(c<=6?0:c<=18?1:2)))st.add(x.id);});renderSeats();}
+function msLines(dir){// 回傳每一條移動線（同一欄或同一排同區塊）上的可用座位，依移動方向排好
+  const lines=[];
+  if(dir==="down"||dir==="up"){const rows=SEAT_ROWS();if(dir==="up")rows.reverse();for(let c=1;c<=24;c++)lines.push(rows.map(r=>r+"-"+c).filter(x=>!OFF.has(x)));}
+  else{for(const r of SEAT_ROWS())for(const b of BLOCKS){const cs=[];for(let c=b[0];c<=b[1];c++)cs.push(c);if(dir==="left")cs.reverse();lines.push(cs.map(c=>r+"-"+c).filter(x=>!OFF.has(x)));}}
+  return lines;}
+function msShift(dir){const st=msSet();const sel=msGuests();if(!sel.length){toast("先點選要移動的貴賓");return;}
+  const occ={};S.guests.forEach(g=>{if(g.seat)occ[g.seat]=g;});
+  const moves=[];// [guest, from, to]
+  for(const L of msLines(dir)){const idx=[];L.forEach((sid,i)=>{const g=occ[sid];if(g&&st.has(g.id))idx.push(i);});if(!idx.length)continue;
+    const mv=new Set(idx);for(let i=Math.min(...idx);i<L.length;i++){if(!mv.has(i))continue;const n=i+1;if(n>=L.length){const g=occ[L[i]];toast(`${g.name||g.unit}（${seatLabel(L[i])}）${{down:"後面",up:"前面",left:"左邊",right:"右邊"}[dir]}已經沒有空位可推，這次沒有移動`);return;}if(occ[L[n]])mv.add(n);}
+    [...mv].forEach(i=>moves.push([occ[L[i]],L[i],L[i+1]]));}
+  if(!moves.length)return;
+  UI.msUndo=moves.map(([g,f])=>({id:g.id,seat:f,zone:g.zone||""}));
+  const pushed=moves.filter(([g])=>!st.has(g.id)).length;
+  moves.forEach(([g,f,t])=>{g.seat=t;});
+  moves.forEach(([g,f,t])=>{upd("guests",g.id,{seat:t});claimSeat(g,t);});
+  moves.forEach(([g,f])=>releaseSeat(f));
+  schedule();toast(`已${{down:"往後移一排",up:"往前移一排",left:"往左移一格",right:"往右移一格"}[dir]}：${moves.length-pushed} 位${pushed?`，後面被推動 ${pushed} 位`:""}`);}
+function msUndo(){const u=UI.msUndo;if(!u||!u.length){toast("沒有可以復原的搬移");return;}
+  const ids=new Set(u.map(x=>x.id));const cur={};u.forEach(x=>{const g=S.guests.find(y=>y.id===x.id);if(g)cur[x.id]=g.seat;});
+  const blocker=u.find(x=>S.guests.some(g=>!ids.has(g.id)&&g.seat===x.seat));if(blocker){toast("原本的位子已經有人，無法復原");return;}
+  u.forEach(x=>{const g=S.guests.find(y=>y.id===x.id);if(!g)return;g.seat=x.seat;const p={seat:x.seat};if((g.zone||"")!==x.zone){g.zone=x.zone;p.zone=x.zone;}upd("guests",g.id,p);claimSeat(g,x.seat);});
+  Object.values(cur).forEach(s=>releaseSeat(s));UI.msUndo=null;schedule();toast("已復原上一步搬移");}
+function msAct(a){if(a==="down"||a==="up"||a==="left"||a==="right")return msShift(a);
+  if(a==="row")return msWholeRow();if(a==="undo")return msUndo();
+  if(a==="clear"){msSet().clear();renderSeats();return;}if(a==="done")return msExit();
+}
 function placeGuest(gid,sid){
   const sel=S.guests.find(g=>g.id===gid);if(!sel||sel.seat===sid)return;
   const occ=S.guests.find(g=>g.seat===sid&&g.id!==gid);
@@ -1691,16 +1745,16 @@ function openBlockReason(sid,g){
 }
 function renderSeats(){
   initSeats();
-  $("#smSeat").setAttribute("aria-pressed",UI.seatMode==="seat");$("#smPaint").setAttribute("aria-pressed",UI.seatMode==="paint");$("#smBlock").setAttribute("aria-pressed",UI.seatMode==="block");$("#smBlock").hidden=!canWrite;
+  $("#smSeat").setAttribute("aria-pressed",UI.seatMode==="seat");$("#smPaint").setAttribute("aria-pressed",UI.seatMode==="paint");$("#smBlock").setAttribute("aria-pressed",UI.seatMode==="block");$("#smMulti").setAttribute("aria-pressed",UI.seatMode==="multi");$("#smBlock").hidden=!canWrite;
   {const sq=(UI.seatQ||"").trim().toLowerCase();if(sq){const hs=S.guests.filter(g=>g.seat&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq)).sort((a,b)=>seatKey(a.seat)-seatKey(b.seat));const ns=S.guests.filter(g=>!g.seat&&g.zone!=="z-media"&&[g.name,g.unit,g.title].join(" ").toLowerCase().includes(sq));
     $("#smFound").innerHTML=`<b>找到 ${hs.length} 位</b>${hs.length?"："+hs.slice(0,30).map(g=>`<span class="fd">${esc(seatLabel(g.seat))} ${esc(g.name||"單位代表")}</span>`).join(""):""}${ns.length?`<span class="fd warn">尚未排座位：${ns.map(g=>esc(g.name||g.unit)).join("、")}</span>`:""}`;$("#smFound").hidden=false;}else $("#smFound").hidden=true;}
-  $("#smHint").textContent=UI.seatMode==="block"?"點座位標成不可排（會請你寫原因），再點一次取消；斜線格就是不可排的位子":UI.seatMode==="paint"?"選一個座位區後，在座位上點或拖曳來畫區；在同色座位上拖曳會清除":"拖曳換位（拖到畫面上下緣會自動捲動）；跨很多排時，點一下貴賓、捲到目標排再點座位，有人會互換";
+  $("#smHint").textContent=UI.seatMode==="multi"?"點貴賓加入／取消選取；點左邊排號選整排；Shift＋點選一段；選好按下方按鈕或方向鍵整批移動，擋到的人會一起往後推":UI.seatMode==="block"?"點座位標成不可排（會請你寫原因），再點一次取消；斜線格就是不可排的位子":UI.seatMode==="paint"?"選一個座位區後，在座位上點或拖曳來畫區；在同色座位上拖曳會清除":"拖曳換位（拖到畫面上下緣會自動捲動）；跨很多排時，點一下貴賓、捲到目標排再點座位，有人會互換";
   const zm=zoneOfSeatMap();const occ={};const dup=new Set();
   for(const g of S.guests){if(!g.seat)continue;if(occ[g.seat])dup.add(g.seat);else occ[g.seat]=g;}
   let h=`<div class="stage" style="grid-row:1">舞台</div>`;
   for(const r of ROW_ORDER){
     if(r===AISLE_ROW){h+=`<div class="rl" style="grid-row:${GR(r)};grid-column:1"></div><div class="mediaband" style="grid-row:${GR(r)};grid-column:2/-1">橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋</div>`;continue;}
-    h+=`<div class="rl" style="grid-row:${GR(r)};grid-column:1">${ROW_LETTER[r]}</div>`;
+    h+=`<div class="rl" data-row="${r}" style="grid-row:${GR(r)};grid-column:1"${UI.seatMode==="multi"?` title="點一下選取 ${ROW_LETTER[r]} 排全部"`:""}>${ROW_LETTER[r]}</div>`;
     let col=2;
     BLOCKS.forEach((b,bi)=>{if(bi>0)col++;for(let c=b[0];c<=b[1];c++){const sid=r+"-"+c;const gc=col++;
       if(r===AISLE_ROW){h+=`<div class="st aisle" style="grid-row:${GR(r)};grid-column:${gc}" aria-hidden="true"></div>`;continue;}
@@ -1709,7 +1763,7 @@ function renderSeats(){
         if(bn&&!GRAY[sid]&&UI.seatMode==="block"){h+=`<button type="button" class="st off blk" data-blk="${sid}" style="grid-row:${GR(r)};grid-column:${gc}" title="${esc(seatLabel(sid)+"｜不可排："+bn+"（點一下取消）")}" aria-label="${esc(seatLabel(sid)+" 不可排，點一下取消")}"><span class="no">✕</span></button>`;continue;}
         h+=`<div class="st off${bn?" blk":""}" style="grid-row:${GR(r)};grid-column:${gc}" title="${esc(bn?seatLabel(sid)+"｜不可排："+bn:"不可入座")}">${bn?'<span class="no">✕</span>':""}</div>`;continue;}
       const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
-      const cls=["st"];if(z)cls.push("z");if(g)cls.push("taken");if(g&&g.id===UI.selGuest)cls.push("sel");if(dup.has(sid))cls.push("dup");
+      const cls=["st"];if(z)cls.push("z");if(g)cls.push("taken");if(g&&g.id===UI.selGuest)cls.push("sel");if(g&&UI.seatMode==="multi"&&msSet().has(g.id))cls.push("msel");if(dup.has(sid))cls.push("dup");
       const sq=(UI.seatQ||"").trim().toLowerCase();const hit=!!(sq&&g&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq));if(hit)cls.push("hit");
       const dim=(UI.seatMode==="seat"&&UI.seatZone&&zm[sid]!==UI.seatZone)||(sq&&!hit);
       const nm=g?(g.name||g.unit||"").replace(/[（(].*$/,"").trim():"";
@@ -1732,10 +1786,14 @@ function renderSeats(){
   }
   $("#hall").innerHTML=h;
   $("#hall").classList.toggle("nolab",UI.seatMode==="paint");
+  $("#hall").classList.toggle("multi",UI.seatMode==="multi");
   $("#hall").classList.toggle("detail",UI.seatDetail!==false);
   $("#sdDetail").setAttribute("aria-pressed",UI.seatDetail!==false);
   {let sb=document.getElementById("selbar");const sg=UI.seatMode==="seat"&&S.guests.find(g=>g.id===UI.selGuest);
-   if(sg){if(!sb){sb=document.createElement("div");sb.id="selbar";sb.className="selbar";document.body.appendChild(sb);}
+   if(UI.seatMode==="multi"&&UI.tab==="seats"){if(!sb){sb=document.createElement("div");sb.id="selbar";sb.className="selbar";document.body.appendChild(sb);}
+     const n=msGuests().length;const dis=n?"":" disabled";
+     sb.innerHTML=`<span>多選 <b>${n}</b> 位</span><span class="mv"><button type="button" data-msbar="row"${dis} title="把同一排、同一區塊的人全部選進來">選整排</button><button type="button" class="k" data-msbar="down"${dis}>↓ 往後一排</button><button type="button" data-msbar="up"${dis}>↑ 往前一排</button><button type="button" data-msbar="left"${dis}>← 左移</button><button type="button" data-msbar="right"${dis}>→ 右移</button>${UI.msUndo?`<button type="button" data-msbar="undo">復原</button>`:""}<button type="button" data-msbar="clear"${dis}>清除選取</button><button type="button" data-msbar="done">完成</button></span>`;}
+   else if(sg){if(!sb){sb=document.createElement("div");sb.id="selbar";sb.className="selbar";document.body.appendChild(sb);}
      sb.innerHTML=`<span>已選 <b>${esc(sg.name||sg.unit)}</b>${sg.seat?`（${esc(seatLabel(sg.seat))}）`:""}，捲到任一排點座位放入，有人會互換</span>${sg.seat?`<button type="button" data-selbar="unseat">移出座位</button>`:""}<button type="button" data-selbar="edit">改資料</button><button type="button" data-selbar="del">刪除</button><button type="button" data-selbar="cancel">取消</button>`;}
    else if(sb)sb.remove();}
   const zs=sortedZones();
