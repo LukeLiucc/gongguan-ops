@@ -2477,24 +2477,30 @@ function piLine(l){
   if(!name){const lat=u.filter(t=>/^[A-Za-z][A-Za-z.\-]{1,20}$/.test(t));if(lat.length===1&&u.length===1){name=lat[0];u=[];}}
   return {name,title,unit:u.join(" ")};
 }
+function cnNum(v){if(/^\d+$/.test(v))return +v;const d={零:0,一:1,二:2,兩:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};if(v==="十")return 10;let m=v.match(/^([一二兩三四五六七八九])?十([一二三四五六七八九])?$/);if(m)return (m[1]?d[m[1]]:1)*10+(m[2]?d[m[2]]:0);return v.length===1&&d[v]!=null?d[v]:NaN;}
 function piParse(text){
-  const out=[];let unit="";
+  const out=[];let unit="";let want=null;
+  const flush=()=>{if(want){const have=out.filter(r=>r.unit===want.unit).length;for(let i=have;i<want.n;i++)out.push({unit:want.unit,name:"",title:""});want=null;}};
   const isName=t=>(/^[一-鿿]{2,3}$/.test(t)||/^[A-Za-z][A-Za-z.\-]{1,20}$/.test(t))&&!PI_TITLE.test(t)&&!PI_UNIT.test(t);
   for(let raw of String(text).split(/\r?\n/)){
     let l=raw.replace(/^[\s•·\-－—*＊●○◎▪►>]+/,"").replace(/^\d+[.、)）]\s*/,"").replace(/[，,。]?\s*(謝謝|感謝|敬請|麻煩)[^]*$/,"").replace(/[【】\[\]]/g," ").trim();
     if(!l)continue;
-    let m=l.match(/回報\s*(.+?)\s*(?:的)?出席/);if(m){unit=m[1].trim();continue;}
+    let m=l.match(/回報\s*(.+?)\s*(?:的)?出席/);if(m){flush();unit=m[1].trim();continue;}
+    m=l.match(/^(.+?)\s*(?:目前|共|預計|約)?\s*(\d+|[一二兩三四五六七八九十]{1,3})\s*(?:位|人|名)(?:出席|參加|報名)?\s*[：:]?\s*$/);
+    if(m&&!PI_TITLE.test(m[1].trim())){flush();unit=m[1].replace(/(目前|共|預計|約)$/,"").trim();const n=cnNum(m[2]);if(n>0&&n<200)want={unit,n};continue;}
     l=l.replace(/^(加報名貴賓參加|加報名貴賓|加報名|報名|新增|另外|補充)[，,：:\s]*/,"").trim();if(!l)continue;
     m=l.match(/^(.+?)(?:\s*代表)?\s*[：:]\s*(.*)$/);
-    if(m&&!m[2]){unit=m[1].trim();continue;}
-    if(m&&m[2]){unit=m[1].trim();l=m[2].trim();}
+    if(m&&!m[2]){flush();unit=m[1].trim();continue;}
+    if(m&&m[2]){flush();unit=m[1].trim();l=m[2].trim();}
     m=l.match(/^(.+?)\s*目前\s*\S*\s*位?出席/);if(m){unit=m[1].trim();continue;}
     const parts=l.split(/[｜|、，,]+/).map(x=>x.trim()).filter(Boolean);
     if(parts.length>1&&parts.every(isName)){parts.forEach(n=>out.push({unit,name:n,title:""}));continue;}
     const r=piLine(l);
-    if(!r.name&&!r.title){if(!/活動|開幕|開箱/.test(l))unit=r.unit;continue;}
+    if(!r.name&&!r.title){if(!/活動|開幕|開箱/.test(l)){flush();unit=r.unit;}continue;}
+    if(r.unit&&want&&r.unit!==want.unit&&!r.unit.includes(want.unit))flush();
     out.push({unit:r.unit||unit,name:r.name,title:r.title});
   }
+  flush();
   return out;
 }
 function openPasteImport(){
@@ -2502,7 +2508,7 @@ function openPasteImport(){
   const zs=sortedZones();
   const md=modal(`<h3>貼上文字新增貴賓</h3>
     <div class="muted" style="font-size:13.5px">把群組裡的出席回覆整段貼進來，按「整理」會自動拆成單位、姓名、職稱；下面表格可以先改，確認後再匯入。</div>
-    <textarea class="inp pi-ta" id="piText" placeholder="例如：&#10;奧美廣告目前兩位出席&#10;－董事總經理 Zoe&#10;－資深業務總監 Liping&#10;&#10;台大EMBA 103B 代表：&#10;王定乾&#10;汪家玗"></textarea>
+    <textarea class="inp pi-ta" id="piText" placeholder="例如：&#10;大魯閣 8 位&#10;&#10;奧美廣告目前兩位出席&#10;－董事總經理 Zoe&#10;－資深業務總監 Liping&#10;&#10;台大EMBA 103B 代表：&#10;王定乾&#10;汪家玗"></textarea>
     <div class="fg">
       <label>邀約單位<select class="sel" id="piInv" style="width:100%">${INV_G.map(x=>`<option value="${esc(x.val)}"${x.val==="聯新國際體育"?" selected":""}>${esc(x.label)}</option>`).join("")}</select></label>
       <label>出席狀態<select class="sel" id="piSt" style="width:100%">${STATUS.map(x=>`<option${x==="出席"?" selected":""}>${x}</option>`).join("")}</select></label>
@@ -2514,11 +2520,11 @@ function openPasteImport(){
   let rows=[];
   const draw=()=>{
     if(!rows.length){$("#piOut").innerHTML="";$("#piSave").disabled=true;return;}
-    $("#piOut").innerHTML=`<table class="pi-tb"><thead><tr><th>匯入</th><th>單位／機關</th><th>姓名</th><th>職稱</th><th>座位區</th></tr></thead><tbody>${rows.map((r,i)=>{const dupe=S.guests.find(g=>r.name&&(g.name||"").replace(/[（(].*$/,"")===r.name.replace(/[（(].*$/,""));return `<tr data-i="${i}"><td><input type="checkbox" data-k="on"${r.on?" checked":""} aria-label="匯入第 ${i+1} 筆"></td><td><input class="inp" data-k="unit" value="${esc(r.unit)}"></td><td><input class="inp" data-k="name" value="${esc(r.name)}">${dupe?`<div style="color:var(--warn);font-size:12px">名單已有同名：${esc(dupe.unit||"")}</div>`:""}</td><td><input class="inp" data-k="title" value="${esc(r.title)}"></td><td><select class="sel" data-k="zone" style="width:100%">${zopt(r.zone)}</select></td></tr>`;}).join("")}</tbody></table>`;
+    $("#piOut").innerHTML=`<table class="pi-tb"><thead><tr><th>匯入</th><th>單位／機關</th><th>姓名</th><th>職稱</th><th>座位區</th></tr></thead><tbody>${rows.map((r,i)=>{const dupe=S.guests.find(g=>r.name&&(g.name||"").replace(/[（(].*$/,"")===r.name.replace(/[（(].*$/,""));return `<tr data-i="${i}"><td><input type="checkbox" data-k="on"${r.on?" checked":""} aria-label="匯入第 ${i+1} 筆"></td><td><input class="inp" data-k="unit" value="${esc(r.unit)}"></td><td><input class="inp" data-k="name" value="${esc(r.name)}" placeholder="單位代表（姓名可之後補）">${dupe?`<div style="color:var(--warn);font-size:12px">名單已有同名：${esc(dupe.unit||"")}</div>`:""}</td><td><input class="inp" data-k="title" value="${esc(r.title)}"></td><td><select class="sel" data-k="zone" style="width:100%">${zopt(r.zone)}</select></td></tr>`;}).join("")}</tbody></table>`;
     const n=rows.filter(r=>r.on).length;$("#piSave").disabled=!n;$("#piSave").textContent=`匯入 ${n} 位`;
   };
   const guessZone=u=>{const g=S.guests.find(x=>u&&unitKey(x)&&(unitKey(x)===u||unitKey(x).includes(u)||u.includes(unitKey(x))));return g?g.zone||"":"";};
-  md.querySelector("#piGo").onclick=()=>{rows=piParse($("#piText").value).map(r=>({...r,on:true,zone:guessZone(r.unit)}));$("#piMsg").textContent=rows.length?`整理出 ${rows.length} 位，請確認下表`:"沒有整理出姓名，請檢查貼上的內容";draw();};
+  md.querySelector("#piGo").onclick=()=>{rows=piParse($("#piText").value).map(r=>({...r,on:true,zone:guessZone(r.unit)}));{const blank=rows.filter(r=>!r.name).length;$("#piMsg").textContent=rows.length?`整理出 ${rows.length} 位${blank?`（其中 ${blank} 位還沒有姓名，先以單位代表新增，名額會算進人數）`:""}，請確認下表`:"沒有整理出內容。可以寫「大魯閣 8 位」，或一行一位「單位 姓名 職稱」";}draw();};
   md.querySelector("#piOut").addEventListener("input",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;if(k==="on")draw();});
   md.querySelector("#piOut").addEventListener("change",e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=rows[+tr.dataset.i];const k=e.target.dataset.k;r[k]=k==="on"?e.target.checked:e.target.value;draw();});
   md.querySelector("#piSave").onclick=async()=>{
