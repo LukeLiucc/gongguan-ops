@@ -867,12 +867,12 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       </section>
     </div>
 
-    <div class="ttl2" style="margin-top:22px"><h2>當天流程</h2><span class="hint">09:15 開放報到，09:40 市長到場，09:45 典禮開始</span></div>
+    <div class="ttl2" style="margin-top:22px"><h2>當天流程</h2><span class="hint">09:15 開放報到，09:31 主持人開場，09:40 市長到場</span></div>
     <div class="ho-flow">
       <div class="card ho-step"><span class="t">報到桌</span><h4>確認身分、發座位卡</h4><p>報到組 Alice、簡愛確認身分與出席；蔡秀蓁簽到、發伴手禮與座位卡。座位卡顏色就是要去的座位區，同色舉牌人員就在桌旁。</p></div>
       <div class="card ho-step"><span class="t">舉牌帶位</span><h4>同色區塊牌接人</h4><p>每區一人在報到桌旁舉該區區塊牌，貴賓拿到座位卡後走向同色牌子，由該區人員帶進場。</p></div>
-      <div class="card ho-step"><span class="t">入座</span><h4>帶到位子、回報空位</h4><p>對號區照卡上的編號帶到座位；分區由前往後、由走道往內安排。入座後回報到桌旁接下一位，09:35 前把空位數回報帶位組長偉嘉。</p></div>
-      <div class="card ho-step"><span class="t">09:35</span><h4>最終出席名單送舞台</h4><p>簡愛把最終出席名單交給舞台組婷宜，主持人據此唱名。之後晚到的貴賓由報到組登記，婷宜轉便條給主持人。</p></div>
+      <div class="card ho-step"><span class="t">入座</span><h4>帶到位子、回報空位</h4><p>對號區照卡上的編號帶到座位；分區由前往後、由走道往內安排。入座後回報到桌旁接下一位，09:20 前把空位數回報帶位組長偉嘉。</p></div>
+      <div class="card ho-step"><span class="t">09:25</span><h4>最終出席名單送舞台</h4><p>簡愛把最終出席名單交給舞台組婷宜，主持人據此唱名。之後晚到的貴賓由報到組登記，婷宜轉便條給主持人。</p></div>
     </div>
 
 
@@ -880,9 +880,9 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <h3>空位調度</h3>
       <p class="ho-own">決定人：<b>帶位組長 偉嘉</b>｜執行：各區舉牌人員｜P 排有調動時，偉嘉先告知貴賓組許總</p>
       <ol class="ho-tl">
-        <li><span class="t num">09:30</span><div><b>各區回報空位</b><p>11 位舉牌人員把該區「已入座／應到」人數傳到帶位群組，例如「市議員 16／20」。</p></div></li>
-        <li><span class="t num">09:35</span><div><b>偉嘉決定怎麼補</b><p>依下面的規則判斷，逐區通知舉牌人員執行，09:45 典禮開始前完成。</p></div></li>
-        <li><span class="t num">09:45</span><div><b>停止移位</b><p>典禮開始後不再請長官換位子。晚到的貴賓坐自己原本的座位；原位已被補走時，坐同區最近的空位或議員預留席。</p></div></li>
+        <li><span class="t num">09:20</span><div><b>各區回報空位</b><p>11 位舉牌人員把該區「已入座／應到」人數傳到帶位群組，例如「市議員 16／20」。</p></div></li>
+        <li><span class="t num">09:25</span><div><b>偉嘉決定怎麼補</b><p>依下面的規則判斷，逐區通知舉牌人員執行，09:30 主持人開場前完成。</p></div></li>
+        <li><span class="t num">09:30</span><div><b>停止移位</b><p>典禮開始後不再請長官換位子。晚到的貴賓坐自己原本的座位；原位已被補走時，坐同區最近的空位或議員預留席。</p></div></li>
       </ol>
       <div class="ho-ex" style="margin-top:12px">
         <div><b>P 排貴賓席</b><p>同一排往市長方向靠攏，空位推到兩端。不從N 排拉人上P 排，避免順位爭議。由王振洋執行。</p></div>
@@ -2157,8 +2157,8 @@ function drawRoster(){
   const own=[...new Set(S.zones.filter(z=>!z.byGroup).flatMap(z=>[z.owner]).filter(Boolean))].map(staffById).filter(Boolean);
   const roamP=S.staff.filter(p=>!isLead(p)&&slotsOf(p).some(d=>/^機動支援/.test(d.task)));
   $("#usherRules").innerHTML=`<b>報到與帶位分工</b><br>
-  <b>A. 報到人員</b>｜${chk?names(teamMembers(chk)):"—"}：門廳聯新報到桌，確認來賓身分與出席狀態、簽到、伴手禮；09:35 最終出席名單送舞台婷宜。<br>
-  <b>B. 舉牌帶位（一區一人）</b>｜${names(own)||"—"}：09:15 起在報到桌旁舉該區區塊牌，貴賓報到後直接帶到座位，入座後回報到桌旁接下一位；09:35 前回報該區空位。<br>
+  <b>A. 報到人員</b>｜${chk?names(teamMembers(chk)):"—"}：門廳聯新報到桌，確認來賓身分與出席狀態、簽到、伴手禮；09:25 最終出席名單送舞台婷宜。<br>
+  <b>B. 舉牌帶位（一區一人）</b>｜${names(own)||"—"}：09:15 起在報到桌旁舉該區區塊牌，貴賓報到後直接帶到座位，入座後回報到桌旁接下一位；09:20 前回報該區空位。<br>
   市府局處・區長・中央部會（L 排中）、設計施工・受邀單位（右區M、L 排）由北水處邀約，聯新國際體育舉牌人員帶位入席。晚到貴賓由報到組登記後遞便條紙給舞台婷宜。`;
   $("#usherTable").innerHTML=`<thead><tr><th>座位區</th><th>預計到場</th><th>舉牌帶位（一區一人）</th><th>協助</th></tr></thead><tbody>`+sortedZones().map(z=>{const st=zoneStats(z);return `<tr><td><span style="display:inline-flex;gap:7px;align-items:center"><i class="zdot" style="background:${esc(z.color)}"></i><b>${esc(z.name)}</b></span>${z.desc?`<div class="muted" style="font-size:12px">${esc(z.desc)}</div>`:""}</td><td class="no">${st.expected}</td><td class="who">${esc(pname(z.owner)||(z.ext?"主辦單位接待":"—"))}</td><td class="who">${esc(pname(z.owner2)||"—")}</td></tr>`;}).join("")+`</tbody>`;
   $("#rosterTable").innerHTML=`<thead><tr><th>組別</th><th>組長</th><th>成員</th><th>負責工作</th><th>工作位置</th><th>執勤時間</th><th>支援人員</th></tr></thead><tbody>`+sortedTeams().map(t=>{const L=teamLeads(t),M=teamMembers(t).filter(m=>!(t.lead||[]).includes(m.id)),SP=teamSupport(t);return `<tr><td style="white-space:nowrap"><b>${esc(t.name)}</b></td><td class="who">${names(L)||"—"}</td><td class="who">${M.map(p=>esc(p.name)+(stOf(p)==="建議分工"?'<sup class="sg">建議</sup>':"")).join("、")||"—"}</td><td>${esc(t.work||"")}</td><td>${esc(t.place||"")}</td><td class="no">${esc(teamTime(t))}</td><td class="who">${SP.map(x=>`${esc(x.p.name)}（${esc(x.d.s)}–${esc(x.d.e)}）`).join("、")||esc(t.support||"—")}</td></tr>`;}).join("")+`</tbody>`;
