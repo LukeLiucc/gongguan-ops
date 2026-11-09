@@ -1608,24 +1608,28 @@ function sdEnd(){
 window.addEventListener("pointermove",sdMove,{passive:false});
 window.addEventListener("pointerup",sdEnd);
 window.addEventListener("pointercancel",sdEnd);
-function zoneAtSeat(sid,exceptId){
-  // 空位屬於哪一區：看它落在哪一區的範圍內（同一個左／中／右區塊），不然看左右鄰座
+function zoneAtSeat(sid,exceptId){const exc=new Set([].concat(exceptId||[]));
+  // 空位屬於哪一區：先看同一排左右鄰座，再看落在哪一區的範圍內（同一個左／中／右區塊）
   const [r,c]=sid.split("-").map(Number);const ri=ROW_ORDER.indexOf(r);const blk=x=>x<=6?0:x<=18?1:2;
+  const nb=[-1,1,-2,2].map(d=>S.guests.find(g=>!exc.has(g.id)&&g.seat===`${r}-${c+d}`&&blk(c+d)===blk(c))).filter(Boolean);
+  const n1=nb.filter(g=>Math.abs(+g.seat.split("-")[1]-c)===1);
+  if(n1.length===2&&n1[0].zone===n1[1].zone&&n1[0].zone)return n1[0].zone;
+  if(n1.length===1&&n1[0].zone)return n1[0].zone;
+  if(n1.length===2){const L=n1.find(g=>+g.seat.split("-")[1]<c);if(L&&L.zone)return L.zone;}
   let best=null,area=1e9;
-  for(const z of S.zones){const ss=S.guests.filter(g=>g.zone===z.id&&g.seat&&g.id!==exceptId).map(g=>g.seat.split("-").map(Number)).filter(([rr,cc])=>blk(cc)===blk(c));
+  for(const z of S.zones){const ss=S.guests.filter(g=>g.zone===z.id&&g.seat&&!exc.has(g.id)).map(g=>g.seat.split("-").map(Number)).filter(([rr,cc])=>blk(cc)===blk(c));
     if(!ss.length)continue;const rs=ss.map(x=>ROW_ORDER.indexOf(x[0])),cs=ss.map(x=>x[1]);
     const r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
     if(ri>=r0&&ri<=r1&&c>=c0&&c<=c1){const a=(r1-r0+1)*(c1-c0+1);if(a<area){area=a;best=z.id;}}}
   if(best)return best;
-  for(const d of [-1,1]){const n=S.guests.find(g=>g.id!==exceptId&&g.seat===`${r}-${c+d}`&&blk(c+d)===blk(c));if(n&&n.zone)return n.zone;}
-  return "";
+  const n2=nb.find(g=>g.zone);return n2?n2.zone:"";
 }
 function placeGuest(gid,sid){
   const sel=S.guests.find(g=>g.id===gid);if(!sel||sel.seat===sid)return;
   const occ=S.guests.find(g=>g.seat===sid&&g.id!==gid);
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  const tz=occ?(occ.zone||""):(zoneAtSeat(sid,sel.id)||zm[sid]||"");const oz=sel.zone||"";
+  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=zoneAtSeat(sid,ex)||(occ?occ.zone:"")||zm[sid]||"";const oz=(old&&zoneAtSeat(old,ex))||sel.zone||"";
   if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
   sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
@@ -1640,7 +1644,7 @@ function seatClick(sid){
   if(occ&&occ.id===sel.id){UI.selGuest=null;renderSeats();return;}
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
-  const tz=occ?(occ.zone||""):(zoneAtSeat(sid,sel.id)||zm[sid]||"");const oz=sel.zone||"";
+  const ex=[sel.id,occ&&occ.id].filter(Boolean);const tz=zoneAtSeat(sid,ex)||(occ?occ.zone:"")||zm[sid]||"";const oz=(old&&zoneAtSeat(old,ex))||sel.zone||"";
   if(occ){occ.seat=old;const po={seat:old};if(old&&oz&&occ.zone!==oz){occ.zone=oz;po.zone=oz;}upd("guests",occ.id,po);}
   sel.seat=sid;const ps={seat:sid};if(tz&&tz!==sel.zone){sel.zone=tz;ps.zone=tz;}upd("guests",sel.id,ps);
   claimSeat(sel,sid);if(occ)claimSeat(occ,old);else releaseSeat(old);
