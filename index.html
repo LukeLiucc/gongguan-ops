@@ -646,6 +646,8 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <section class="pane" id="p-tasks" hidden>
     <div class="ttl2"><h2>副座交辦事項</h2><span class="hint">每項可改處理說明、負責人與狀態，大家看到的是同一份</span></div>
     <div id="tkList" class="tklist"></div>
+    <div class="ttl2" style="margin-top:26px"><h2>待確認事項</h2><span class="hint">活動前要確認或決定的細節，處理完把狀態改成已完成</span></div>
+    <div id="tkList2" class="tklist"></div>
   </section>
 
   <!-- 新聞稿 -->
@@ -2396,7 +2398,7 @@ const TK_SEED=[
 ];
 const TK_ST=["未處理","處理中","已完成"];
 const TK_CLS={"未處理":"s-todo","處理中":"s-doing","已完成":"s-done"};
-const TAB_NAME={press:"新聞稿",roster:"名單表",flow:"行程細流",seats:"座位分區",guests:"貴賓名單"};
+const TAB_NAME={tasks:"交辦事項",staff:"人力分工",roster:"名單表",flow:"行程細流",seats:"座位分區",guests:"貴賓名單"};
 let tkSeeded=false;
 function attGroups(){
   const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.category!=="媒體");
@@ -2408,9 +2410,10 @@ function renderTasks(){
   if(S.loaded.has("tasks")&&!tkSeeded){tkSeeded=true;for(const t of TK_SEED){if(!S.tasks.find(x=>x.id===t.id)){const {id,...d}=t;S.tasks.push(t);put("tasks",id,d);}}}
   const L=$("#tkList");
   if(!S.loaded.has("tasks")){L.innerHTML=`<div class="empty">交辦事項讀取中</div>`;return;}
-  if(L.contains(document.activeElement)&&document.activeElement.matches("input,textarea"))return;
+  const pane=$("#p-tasks");if(pane.contains(document.activeElement)&&document.activeElement.matches("input,textarea"))return;
   const A=attGroups();
-  L.innerHTML=[...S.tasks].sort((a,b)=>(a.no||0)-(b.no||0)).map(t=>{
+  const L2=$("#tkList2");
+  const card=t=>{
     const st=t.status||"未處理";
     let att="";
     if(t.att){
@@ -2426,11 +2429,16 @@ function renderTasks(){
       <div><label for="tks-${esc(t.id)}">狀態</label><select class="sel" id="tks-${esc(t.id)}" data-f="status" style="width:100%">${TK_ST.map(x=>`<option${x===st?" selected":""}>${x}</option>`).join("")}</select></div></div>
       ${t.go&&!HIDE_TABS.includes(t.go)?`<div class="go"><a class="btn" href="#${esc(t.go)}">前往「${esc(TAB_NAME[t.go]||t.go)}」</a></div>`:""}
       ${att}</div></article>`;
-  }).join("");
+  };
+  const all=[...S.tasks].sort((a,b)=>(a.no||0)-(b.no||0));
+  L.innerHTML=all.filter(t=>t.kind!=="check").map(card).join("");
+  const ck=all.filter(t=>t.kind==="check");
+  L2.innerHTML=ck.length?ck.map(card).join(""):`<div class="empty" style="padding:16px">目前沒有待確認事項</div>`;
 }
 function tkSave(el){const c=el.closest("[data-tk]");if(!c)return;const id=c.dataset.tk,f=el.dataset.f,v=el.value.trim();const t=S.tasks.find(x=>x.id===id);if(!t||(t[f]||"")===v)return;t[f]=v;upd("tasks",id,{[f]:v});if(f==="status")renderAll();}
-$("#tkList").addEventListener("change",e=>{if(e.target.matches("[data-f]"))tkSave(e.target);});
-$("#tkList").addEventListener("focusout",e=>{if(e.target.matches("input[data-f],textarea[data-f]"))tkSave(e.target);});
+for(const sel of ["#tkList","#tkList2"]){
+$(sel).addEventListener("change",e=>{if(e.target.matches("[data-f]"))tkSave(e.target);});
+$(sel).addEventListener("focusout",e=>{if(e.target.matches("input[data-f],textarea[data-f]"))tkSave(e.target);});}
 $("#tkList").addEventListener("click",async e=>{
   const x=e.target.closest("[data-attx],[data-attw]");if(!x)return;
   if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再按");return;}
