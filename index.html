@@ -672,7 +672,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <section class="pane" id="p-flow" hidden>
     <div class="bar" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--line,#e5e7eb);border-radius:12px;background:var(--surface,#fff)">
       <b style="font-size:15px">下載／列印</b>
-      <button class="btn pri" id="fAll" type="button">下載全套 PDF（流程＋人力分工＋座位圖＋名單表）</button>
+      <button class="btn pri" id="fAll" type="button">下載全套 PDF（人力分工＋流程＋名單表）</button>
       <button class="btn" id="fPrint" type="button">只下載流程 PDF</button>
       <span class="muted" style="font-size:13px">下方「只看」選了組別時，只下載流程會只印那一組</span>
     </div>
@@ -1366,7 +1366,7 @@ async function flowPrint(btn,all){
     const F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';const PW=1240,PH=1754,M=70,BOT=PH-60;
     const now=new Date();const pad=x=>String(x).padStart(2,"0");const role=UI.role||"";
     const d=S.outline.find(x=>x.id==="main");const tl=timeline();
-    let page=null,x=null,y=0,pg=0,first=true,DT="行程細流";
+    let page=null,x=null,y=0,pg=0,first=true,DT=all?"人力分工":"行程細流";
     const flush=()=>{if(!page)return;if(!first)pdf.addPage("a4","portrait");first=false;pdf.addImage(page.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297);page=null;};
     const wrap=(t,w)=>{const out=[];String(t||"").split("\n").forEach(par=>{if(!par){out.push("");return;}let line="";for(const ch of par){if(x.measureText(line+ch).width>w&&line){out.push(line);line=ch;}else line+=ch;}out.push(line);});return out;};
     const newPage=()=>{flush();
@@ -1377,6 +1377,23 @@ async function flowPrint(btn,all){
     const need=h=>{if(y+h>BOT)newPage();};
     const sec=t=>{need(80);x.fillStyle="#111827";x.fillRect(M,y,PW-2*M,52);x.fillStyle="#fff";x.font=`800 28px ${F}`;x.fillText(t,M+16,y+36);y+=68;};
     newPage();
+    if(all){
+      /* 人力分工 */
+      DT="人力分工";sec("人力分工");
+      const tline=(lab,t,col)=>{x.font=`400 22px ${F}`;const ls=wrap(t,PW-2*M-150);need(Math.min(ls.length,3)*33+4);ls.forEach((l,i)=>{if(y+33>BOT)newPage();if(i===0){x.fillStyle=col||"#1D4ED8";x.font=`700 20px ${F}`;x.fillText(lab,M+10,y+25);}x.fillStyle="#111827";x.font=`400 22px ${F}`;x.fillText(l,M+150,y+25);y+=33;});};
+      for(const t of sortedTeams()){const L=teamLeads(t),Mm=teamMembers(t),SP=teamSupport(t);
+        need(200);x.fillStyle="#E5E7EB";x.fillRect(M,y,PW-2*M,48);x.fillStyle="#111827";x.font=`800 26px ${F}`;x.fillText(t.name||"",M+14,y+34);const nw=x.measureText(t.name||"").width;x.font=`500 21px ${F}`;x.fillStyle="#4B5563";x.fillText(`${Mm.length} 人${teamTime(t)?"｜執勤 "+teamTime(t):""}`,M+30+nw,y+33);y+=60;
+        if(t.work)tline("負責工作",t.work);if(t.place)tline("工作位置",t.place);
+        tline("組長",L.map(p=>p.name).join("、")||"未指定");
+        for(const p of Mm){const sl=slotsOf(p);const head=`${p.name||""}${(t.lead||[]).includes(p.id)?"（組長）":""}｜${p.org||""}${p.title?"　"+p.title:""}`;
+          need(40+Math.min(sl.length,2)*31);x.fillStyle="#111827";x.font=`700 22px ${F}`;wrap(head,PW-2*M-30).forEach(l=>{if(y+32>BOT)newPage();x.fillText(l,M+20,y+25);y+=32;});
+          sl.forEach(dd=>{const ot=dd.team&&dd.team!==t.id?teamById(dd.team):null;const txt=`${dd.s}–${dd.e}　${dd.task||""}${ot?"（支援 "+ot.name+"）":""}${dd.place?"｜地點："+dd.place:""}`;x.font=`400 21px ${F}`;wrap(txt,PW-2*M-60).forEach(l=>{if(y+31>BOT)newPage();x.fillStyle="#374151";x.font=`400 21px ${F}`;x.fillText(l,M+50,y+24);y+=31;});});
+          y+=6;}
+        if(SP.length){SP.forEach(q=>tline("支援人員",`${q.p.name}　${q.d.s}–${q.d.e}　${q.d.task||""}${q.d.place?"｜地點："+q.d.place:""}`,"#7C3AED"));}
+        else if(t.support)tline("支援人員",t.support,"#7C3AED");
+        y+=14;x.strokeStyle="#9CA3AF";x.lineWidth=1.5;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();y+=18;}
+      DT="行程細流";newPage();
+    }
     /* 典禮流程總覽 */
     if(d&&!role){sec(d.title||"典禮流程");
       x.font=`400 22px ${F}`;x.fillStyle="#374151";const meta=[d.date&&"日期："+d.date,d.time&&"時間："+d.time,d.place&&"地點："+d.place].filter(Boolean).join("　");
@@ -1390,10 +1407,18 @@ async function flowPrint(btn,all){
         y+=h;x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();});
       if(d.remark){x.font=`400 21px ${F}`;x.fillStyle="#6B7280";wrap("備註："+d.remark,PW-2*M).forEach(l=>{need(30);x.fillText(l,M,y+24);y+=30;});}
       y+=18;
-      if(Array.isArray(d.pads)&&d.pads.length){const n=d.pads.reduce((a,p)=>a+p.length,0);sec(`科技啟動儀式站位｜啟動台 ${d.pads.length} 座，上台 ${n} 人`);
-        d.pads.forEach((ids,i)=>{const t=ids.map(id=>{const g=S.guests.find(q=>q.id===id)||{};const u=(g.unit||"").replace(/[（(].*$/,"").trim();return `${u} ${g.name||""} ${g.title||""}`.trim();}).join("、");
-          x.font=`400 23px ${F}`;const ls=wrap(t,PW-2*M-150);need(ls.length*36+12);x.fillStyle="#111827";x.font=`800 24px ${F}`;x.fillText(`啟動台 ${i+1}`,M+6,y+26);x.font=`400 23px ${F}`;x.fillStyle="#374151";ls.forEach((l,j)=>x.fillText(l,M+150,y+26+j*36));y+=ls.length*36+12;});
-        y+=18;}
+      if(Array.isArray(d.pads)&&d.pads.length){const P=d.pads;const n=P.reduce((a,p)=>a+p.length,0);
+        const AH=640;need(80+AH);sec(`科技啟動儀式站位｜啟動台 ${P.length} 座，上台 ${n} 人（每座 1–2 人）`);
+        const AX=M,AW=PW-2*M,AY=y;x.fillStyle="#F3F4F6";x.beginPath();x.roundRect?x.roundRect(AX,AY,AW,AH,16):x.rect(AX,AY,AW,AH);x.fill();
+        const pos=[[34,6],[66,6],[24,38],[76,38],[16,70],[84,70]];const BW=330;
+        P.forEach((ids,i)=>{const [px,py]=pos[i]||[50,50];const bx=AX+AW*px/100-BW/2,by=AY+AH*py/100;const mid=ids.includes("g001");const col=mid?"#0A68AD":"#1E5A7A";
+          const ppl=ids.map(id=>S.guests.find(q=>q.id===id)||{});const bh=24+ppl.length*62;
+          x.fillStyle="#fff";x.strokeStyle=col;x.lineWidth=mid?5:3;x.beginPath();x.roundRect?x.roundRect(bx,by,BW,bh,16):x.rect(bx,by,BW,bh);x.fill();x.stroke();
+          x.fillStyle=col;x.beginPath();x.roundRect?x.roundRect(bx+14,by-16,92,32,16):x.rect(bx+14,by-16,92,32);x.fill();x.fillStyle="#fff";x.font=`800 19px ${F}`;x.fillText(`啟動台 ${i+1}`,bx+22,by+7);
+          ppl.forEach((g,k)=>{const yy=by+26+k*62;const u=(g.unit||"").replace(/[（(].*$/,"").trim();x.fillStyle="#111827";x.font=`800 27px ${F}`;x.fillText(`${g.name||""}`,bx+18,yy+26);const nw=x.measureText(g.name||"").width;x.font=`500 20px ${F}`;x.fillStyle="#374151";x.fillText(g.title||"",bx+28+nw,yy+26);
+            x.font=`400 17px ${F}`;x.fillStyle="#6B7280";let t=u;while(t.length>1&&x.measureText(t).width>BW-36)t=t.slice(0,-1);x.fillText(t===u?u:t+"…",bx+18,yy+50);});});
+        y=AY+AH+28;
+      }
     }
     /* 工作細流 */
     if(tl.length){const s0=tl[0].s,e0=tl[tl.length-1].e;sec(`工作細流｜${fmt(s0)}–${fmt(e0)}，共 ${e0-s0} 分鐘${role?"｜"+role:""}`);}
@@ -1419,23 +1444,6 @@ async function flowPrint(btn,all){
     }
 
     if(all){
-      /* 人力分工 */
-      DT="人力分工";newPage();sec("人力分工");
-      const tline=(lab,t,col)=>{x.font=`400 22px ${F}`;const ls=wrap(t,PW-2*M-150);need(Math.min(ls.length,3)*33+4);ls.forEach((l,i)=>{if(y+33>BOT)newPage();if(i===0){x.fillStyle=col||"#1D4ED8";x.font=`700 20px ${F}`;x.fillText(lab,M+10,y+25);}x.fillStyle="#111827";x.font=`400 22px ${F}`;x.fillText(l,M+150,y+25);y+=33;});};
-      for(const t of sortedTeams()){const L=teamLeads(t),Mm=teamMembers(t),SP=teamSupport(t);
-        need(200);x.fillStyle="#E5E7EB";x.fillRect(M,y,PW-2*M,48);x.fillStyle="#111827";x.font=`800 26px ${F}`;x.fillText(t.name||"",M+14,y+34);const nw=x.measureText(t.name||"").width;x.font=`500 21px ${F}`;x.fillStyle="#4B5563";x.fillText(`${Mm.length} 人${teamTime(t)?"｜執勤 "+teamTime(t):""}`,M+30+nw,y+33);y+=60;
-        if(t.work)tline("負責工作",t.work);if(t.place)tline("工作位置",t.place);
-        tline("組長",L.map(p=>p.name).join("、")||"未指定");
-        for(const p of Mm){const sl=slotsOf(p);const head=`${p.name||""}${(t.lead||[]).includes(p.id)?"（組長）":""}｜${p.org||""}${p.title?"　"+p.title:""}`;
-          need(40+Math.min(sl.length,2)*31);x.fillStyle="#111827";x.font=`700 22px ${F}`;wrap(head,PW-2*M-30).forEach(l=>{if(y+32>BOT)newPage();x.fillText(l,M+20,y+25);y+=32;});
-          sl.forEach(dd=>{const ot=dd.team&&dd.team!==t.id?teamById(dd.team):null;const txt=`${dd.s}–${dd.e}　${dd.task||""}${ot?"（支援 "+ot.name+"）":""}${dd.place?"｜地點："+dd.place:""}`;x.font=`400 21px ${F}`;wrap(txt,PW-2*M-60).forEach(l=>{if(y+31>BOT)newPage();x.fillStyle="#374151";x.font=`400 21px ${F}`;x.fillText(l,M+50,y+24);y+=31;});});
-          y+=6;}
-        if(SP.length){SP.forEach(q=>tline("支援人員",`${q.p.name}　${q.d.s}–${q.d.e}　${q.d.task||""}${q.d.place?"｜地點："+q.d.place:""}`,"#7C3AED"));}
-        else if(t.support)tline("支援人員",t.support,"#7C3AED");
-        y+=14;x.strokeStyle="#9CA3AF";x.lineWidth=1.5;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();y+=18;}
-      /* 座位圖 */
-      flush();const sc=await seatDownload(null,"canvas");
-      if(sc&&sc.cv){pdf.addPage("a4","landscape");const W2=297,H2=210,mg=6;const k=Math.min((W2-2*mg)/sc.W,(H2-2*mg)/sc.H);pdf.addImage(sc.cv.toDataURL("image/jpeg",0.92),"JPEG",(W2-sc.W*k)/2,(H2-sc.H*k)/2,sc.W*k,sc.H*k);}
       /* 名單表 */
       DT="名單表";newPage();sec("名單表（貴賓名單）");
       const R=rtRows();const cols=[["#",50],["座位區",190],["座位",80],["單位／機關",330],["姓名",130],["職稱",160],["出席",80],["帶位",0]];
@@ -1454,7 +1462,7 @@ async function flowPrint(btn,all){
         y+=24;}
     }
     flush();
-    const blob=pdf.output("blob");offerFile(blob,`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`,all?"活動執行手冊（流程＋人力分工＋座位圖＋名單表）":"行程細流",pdf.getNumberOfPages());
+    const blob=pdf.output("blob");offerFile(blob,`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`,all?"活動執行手冊（人力分工＋流程＋名單表）":"行程細流",pdf.getNumberOfPages());
   }catch(e){console.error(e);toast("流程 PDF 產生失敗");}finally{btn.disabled=false;btn.textContent=old;}
 }
 function openRow(id,afterId){
