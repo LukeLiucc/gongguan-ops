@@ -1385,7 +1385,7 @@ async function flowPrint(btn,all){
         need(200);x.fillStyle="#E5E7EB";x.fillRect(M,y,PW-2*M,48);x.fillStyle="#111827";x.font=`800 26px ${F}`;x.fillText(t.name||"",M+14,y+34);const nw=x.measureText(t.name||"").width;x.font=`500 21px ${F}`;x.fillStyle="#4B5563";x.fillText(`${Mm.length} 人${teamTime(t)?"｜執勤 "+teamTime(t):""}`,M+30+nw,y+33);y+=60;
         if(t.work)tline("負責工作",t.work);if(t.place)tline("工作位置",t.place);
         tline("組長",L.map(p=>p.name).join("、")||"未指定");
-        for(const p of Mm){const sl=slotsOf(p);const head=`${p.name||""}${(t.lead||[]).includes(p.id)?"（組長）":""}｜${p.org||""}${p.title?"　"+p.title:""}`;
+        for(const p of Mm){const sl=slotsOf(p);const head=`${p.name||""}${(t.lead||[]).includes(p.id)?"（組長）":""}｜${p.org||""}`;
           need(40+Math.min(sl.length,2)*31);x.fillStyle="#111827";x.font=`700 22px ${F}`;wrap(head,PW-2*M-30).forEach(l=>{if(y+32>BOT)newPage();x.fillText(l,M+20,y+25);y+=32;});
           sl.forEach(dd=>{const ot=dd.team&&dd.team!==t.id?teamById(dd.team):null;const txt=`${dd.s}–${dd.e}　${dd.task||""}${ot?"（支援 "+ot.name+"）":""}${dd.place?"｜地點："+dd.place:""}`;x.font=`400 21px ${F}`;wrap(txt,PW-2*M-60).forEach(l=>{if(y+31>BOT)newPage();x.fillStyle="#374151";x.font=`400 21px ${F}`;x.fillText(l,M+50,y+24);y+=31;});});
           y+=6;}
