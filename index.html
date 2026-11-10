@@ -1353,6 +1353,13 @@ function renderFlow(){
   $("#fList").innerHTML=h;
 }
 /* ---------- 流程列印 ---------- */
+function offerFile(blob,name,label,pages){
+  const url=URL.createObjectURL(blob);const mb=(blob.size/1048576).toFixed(1);
+  const md=modal(`<h3>${esc(label)} PDF 已產生</h3><p class="muted" style="margin:6px 0 14px">${pages?pages+" 頁｜":""}${mb} MB｜按下面的按鈕下載或直接開啟列印</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn pri" href="${url}" download="${esc(name)}" id="ofDl">下載 PDF</a><a class="btn" href="${url}" target="_blank" rel="noopener">在新分頁開啟（可直接列印）</a></div>
+    <div class="ft"><button class="btn" type="button" data-close>關閉</button></div>`);
+  const d=md.querySelector("#ofDl");if(d)d.addEventListener("click",()=>toast("已開始下載"));
+}
 async function flowPrint(btn,all){
   const old=btn.textContent;btn.disabled=true;btn.textContent="產生中…";
   try{await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
@@ -1447,7 +1454,7 @@ async function flowPrint(btn,all){
         y+=24;}
     }
     flush();
-    const blob=pdf.output("blob");const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast(all?"活動執行手冊 PDF 已下載":"流程 PDF 已下載");
+    const blob=pdf.output("blob");offerFile(blob,`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`,all?"活動執行手冊（流程＋人力分工＋座位圖＋名單表）":"行程細流",pdf.getNumberOfPages());
   }catch(e){console.error(e);toast("流程 PDF 產生失敗");}finally{btn.disabled=false;btn.textContent=old;}
 }
 function openRow(id,afterId){
