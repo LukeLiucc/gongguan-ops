@@ -2817,7 +2817,7 @@ function attGroups(){
 }
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
 /* ================= 唱名清單 ================= */
-const RC_CATS=["府級長官","主辦單位","民意代表","市府局處首長","里長","法人團體","公司行號","聯新國際醫療集團同仁"];
+const RC_CATS=["府級長官","民意代表","市府局處首長","法人團體","主辦單位","公司行號","里長","聯新國際醫療集團"];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
 function rcDefaultCat(e){const g=e.g0,u=e.unit,t=e.title||"";
   if(u==="臺北市政府")return "府級長官";
@@ -2825,7 +2825,7 @@ function rcDefaultCat(e){const g=e.g0,u=e.unit,t=e.title||"";
   if(/臺北市議會|立法院/.test(u))return "民意代表";
   if(/^臺北市政府|區公所|臺北市商業處/.test(u))return "市府局處首長";
   if(/里長/.test(t)||/里$/.test(u))return "里長";
-  if(/^聯新國際醫療集團/.test(u))return "聯新國際醫療集團同仁";
+  if(/^聯新國際醫療集團/.test(u))return "聯新國際醫療集團";
   if(/協會|委員會|總會|賽車會|基金會|策進會|大學|EMBA|運動中心|運動館|游泳池|籃球館/.test(u))return "法人團體";
   return "公司行號";}
 const RC_HOST=["臺北自來水事業處","臺北市政府體育局","聯新國際體育股份有限公司"];
@@ -2839,7 +2839,7 @@ function rcEntries(){
   out.forEach(e=>{e.text=rcUnit(e.unit);e.text0=e.text;e.label0=e.label;const o=ov[e.key];if(o){if(typeof o.unit==="string")e.text=o.unit;if(typeof o.label==="string")e.label=o.label;e.edited=true;}});
   return out;}
 function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__del:[]};RC_CATS.forEach(c=>byCat[c]=[]);
-  es.forEach(e=>{const r=m[e.key];const c=r&&r.c==="__del"?"__del":(r&&RC_CATS.includes(r.c)?r.c:rcDefaultCat(e));e.cat=c;e.o=r&&typeof r.o==="number"?r.o:null;byCat[c].push(e);});
+  es.forEach(e=>{const r0=m[e.key];const r=r0&&r0.c==="聯新國際醫療集團同仁"?{c:"聯新國際醫療集團",o:r0.o}:r0;const c=r&&r.c==="__del"?"__del":(r&&RC_CATS.includes(r.c)?r.c:rcDefaultCat(e));e.cat=c;e.o=r&&typeof r.o==="number"?r.o:null;byCat[c].push(e);});
   const sk=x=>{if(!x)return 1e6;const [r,c]=x.split("-").map(Number);return ROW_ORDER.indexOf(r)*100+c;};
   const rank=e=>{if(e.g0&&e.g0.name==="蔣萬安")return -1;if(e.cat==="主辦單位"){if(e.g0&&e.g0.name==="簡伯毅")return 2000+sk(e.seat)/1e4;const i=RC_HOST.findIndex(u=>e.unit===u);if(i>=0)return i*1000+sk(e.seat)/1e4;}return 5000+sk(e.seat);};
   RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>(a.o??1e9)-(b.o??1e9)||rank(a)-rank(b)));
