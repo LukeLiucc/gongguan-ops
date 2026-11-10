@@ -1410,7 +1410,7 @@ async function flowPrint(btn,all){
       if(Array.isArray(d.pads)&&d.pads.length){const P=d.pads;const n=P.reduce((a,p)=>a+p.length,0);
         const AH=640;need(80+AH);sec(`科技啟動儀式站位｜啟動台 ${P.length} 座，上台 ${n} 人（每座 1–2 人）`);
         const AX=M,AW=PW-2*M,AY=y;x.fillStyle="#F3F4F6";x.beginPath();x.roundRect?x.roundRect(AX,AY,AW,AH,16):x.rect(AX,AY,AW,AH);x.fill();
-        const pos=[[34,6],[66,6],[24,38],[76,38],[16,70],[84,70]];const BW=330;
+        const pos=[[34,6],[66,6],[24,38],[76,38],[16,70],[84,70]];const BW=290;
         P.forEach((ids,i)=>{const [px,py]=pos[i]||[50,50];const bx=AX+AW*px/100-BW/2,by=AY+AH*py/100;const mid=ids.includes("g001");const col=mid?"#0A68AD":"#1E5A7A";
           const ppl=ids.map(id=>S.guests.find(q=>q.id===id)||{});const bh=24+ppl.length*62;
           x.fillStyle="#fff";x.strokeStyle=col;x.lineWidth=mid?5:3;x.beginPath();x.roundRect?x.roundRect(bx,by,BW,bh,16):x.rect(bx,by,BW,bh);x.fill();x.stroke();
