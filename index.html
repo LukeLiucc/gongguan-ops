@@ -2962,28 +2962,43 @@ async function seatExcel(btn){
   finally{if(btn){btn.disabled=false;btn.textContent=oldT;}}
 }
 function loadJsPDF(){if(window.jspdf)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc);});}
-function usherPages(pdf,F,zm,occ,now){
-  const PW=1240,PH=1754,M=70,RH=46;const pad=n=>String(n).padStart(2,"0");
+async function usherPages(pdf,F,zm,occ,now){
+  const PW=1240,PH=1754,M=56,GAP=22,COLS=2,ROWS=4;const pad=n=>String(n).padStart(2,"0");
   const key=s=>{const [r,c]=s.split("-").map(Number);return ROW_ORDER.indexOf(r)*100+c;};
-  const cols=[["座位",110],["姓名",190],["職稱",200],["單位",430],["狀態",100],["報到",70]];
   const fit=(x,t,w)=>{if(x.measureText(t).width<=w)return t;let s=t;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…";};
+  const wrap=(x,t,w,max)=>{const out=[];let cur="";for(const ch of t){if(x.measureText(cur+ch).width>w){out.push(cur);cur=ch;}else cur+=ch;}if(cur)out.push(cur);if(out.length>max){out.length=max;out[max-1]=fit(x,out[max-1]+"…",w);}return out;};
+  const rr=(x,X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
+  const tint=(hex,a)=>{const m=String(hex||"#888").replace("#","");const n=parseInt(m.length===3?m.split("").map(c=>c+c).join(""):m,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
+  const imgs=window.__seatImgs||{};
+  const CWd=(PW-2*M-(COLS-1)*GAP)/COLS,HEAD=190,CHt=(PH-M-HEAD-60-(ROWS-1)*GAP)/ROWS,PHW=Math.round(CHt*0.78)-24,PHH=CHt-24;
   for(const z of sortedZones()){
     const seats=new Set(z.seats||[]);S.guests.forEach(g=>{if(g.seat&&g.zone===z.id)seats.add(g.seat);});
-    const rows=[...seats].filter(sid=>occ[sid]&&occ[sid].zone===z.id||isRsv(sid)&&zm[sid]===z.id).sort((a,b)=>key(a)-key(b)).map(sid=>{const g=occ[sid];return g&&g.zone===z.id?[seatLabel(sid),g.name||"單位代表",g.title||"",g.unit||"",g.status||"",""]:[seatLabel(sid),blockedNote(sid),"","","",""];});
-    if(!rows.length)continue;
-    const ppl=rows.filter(r=>!/保留/.test(r[1])).length,rsv=rows.length-ppl;const att=S.guests.filter(g=>g.zone===z.id&&g.seat&&(g.status==="出席"||g.status==="代理出席")).length;
-    const per=Math.floor((PH-M-260)/RH);const pages=Math.ceil(rows.length/per);
+    const items=[...seats].filter(sid=>(occ[sid]&&occ[sid].zone===z.id)||(isRsv(sid)&&zm[sid]===z.id)).sort((a,b)=>key(a)-key(b)).map(sid=>({sid,g:occ[sid]&&occ[sid].zone===z.id?occ[sid]:null}));
+    if(!items.length)continue;
+    const ppl=items.filter(t=>t.g).length,rsv=items.length-ppl;const att=items.filter(t=>t.g&&(t.g.status==="出席"||t.g.status==="代理出席")).length;
+    const per=COLS*ROWS,pages=Math.ceil(items.length/per);const col=z.color||"#374151";
     for(let pg=0;pg<pages;pg++){
       const cv=document.createElement("canvas");cv.width=PW;cv.height=PH;const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);
-      x.fillStyle=z.color||"#374151";x.fillRect(M,M,PW-2*M,84);x.fillStyle="#fff";x.font=`800 40px ${F}`;x.fillText(fit(x,z.name+(pages>1?`（${pg+1}/${pages}）`:""),PW-2*M-40),M+24,M+56);
-      x.fillStyle="#111827";x.font=`700 26px ${F}`;x.fillText(`帶位人員：${zOwnerNames(z)||"—"}`,M,M+130);
-      x.fillStyle="#4B5563";x.font=`400 22px ${F}`;x.fillText(`${ppl} 位${rsv?`＋保留 ${rsv} 席`:""}｜已確認出席 ${att} 位｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,M,M+168);
-      let y=M+200;x.fillStyle="#F3F4F6";x.fillRect(M,y,PW-2*M,RH);x.fillStyle="#111827";x.font=`700 22px ${F}`;let cx=M;cols.forEach(([h,w])=>{x.fillText(h,cx+10,y+31);cx+=w;});y+=RH;
-      rows.slice(pg*per,(pg+1)*per).forEach((r,i)=>{if(i%2){x.fillStyle="#FAFAFA";x.fillRect(M,y,PW-2*M,RH);}cx=M;const rs=/保留/.test(r[1]);
-        r.forEach((v,j)=>{const w=cols[j][1];if(j===5){x.strokeStyle="#9CA3AF";x.lineWidth=2;x.strokeRect(cx+20,y+10,26,26);}else{x.fillStyle=rs&&j===1?(z.color||"#6B7280"):j===4&&v!=="出席"&&v!=="代理出席"?"#B45309":"#111827";x.font=`${j<2?700:400} ${j===0||j===1?24:20}px ${F}`;x.fillText(fit(x,v,w-16),cx+10,y+31);}cx+=w;});
-        x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y+RH);x.lineTo(PW-M,y+RH);x.stroke();y+=RH;});
-      x.fillStyle="#9CA3AF";x.font=`400 18px ${F}`;x.fillText("水源新天地與公館運動館開箱活動｜2026/11/11（三）｜公館大樓 A 棟國際會議廳",M,PH-40);
-      pdf.addPage("a4","portrait");pdf.addImage(cv.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297);
+      x.fillStyle=col;rr(x,M,M,PW-2*M,78,12);x.fill();x.fillStyle="#fff";x.font=`800 38px ${F}`;x.fillText(fit(x,z.name+(pages>1?`（${pg+1}/${pages}）`:""),PW-2*M-40),M+24,M+52);
+      x.fillStyle="#111827";x.font=`700 26px ${F}`;x.fillText(`帶位人員：${zOwnerNames(z)||"—"}`,M,M+122);
+      x.fillStyle="#4B5563";x.font=`400 21px ${F}`;x.fillText(`${ppl} 位${rsv?`＋保留 ${rsv} 席`:""}｜已確認出席 ${att} 位｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,M,M+158);
+      items.slice(pg*per,(pg+1)*per).forEach((t,i)=>{const cx=M+(i%COLS)*(CWd+GAP),cy=M+HEAD+Math.floor(i/COLS)*(CHt+GAP);
+        x.fillStyle="#fff";rr(x,cx,cy,CWd,CHt,14);x.fill();x.strokeStyle=tint(col,.55);x.lineWidth=2.5;x.stroke();
+        const px=cx+12,py=cy+12;const tx=px+PHW+20,tw=cx+CWd-tx-16;
+        if(!t.g){x.setLineDash([10,7]);x.strokeStyle=col;x.lineWidth=2;rr(x,px,py,PHW,PHH,10);x.stroke();x.setLineDash([]);x.fillStyle=tint(col,.08);x.fill();
+          x.fillStyle=col;x.font=`800 30px ${F}`;x.textAlign="center";wrap(x,blockedNote(t.sid),PHW-30,3).forEach((l,k,a)=>x.fillText(l,px+PHW/2,py+PHH/2-(a.length-1)*20+k*40+10));x.textAlign="left";}
+        else{const im=imgs[t.g.id];x.save();rr(x,px,py,PHW,PHH,10);x.clip();
+          if(im){const sc=Math.max(PHW/im.naturalWidth,PHH/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(PHW-w)/2,py+(PHH-h)*0.3,w,h);}
+          else{x.fillStyle=tint(col,.14);x.fillRect(px,py,PHW,PHH);x.fillStyle=col;x.font=`800 ${t.g.name&&t.g.name.length>=3?64:72}px ${F}`;x.textAlign="center";x.fillText((t.g.name||"代表").slice(0,3),px+PHW/2,py+PHH/2+22);x.font=`500 18px ${F}`;x.fillStyle="#6B7280";x.fillText("（尚無照片）",px+PHW/2,py+PHH-22);x.textAlign="left";}
+          x.restore();}
+        x.fillStyle=col;rr(x,tx,cy+16,Math.min(tw,150),48,10);x.fill();x.fillStyle="#fff";x.font=`800 30px ${F}`;x.fillText(seatLabel(t.sid),tx+14,cy+51);
+        if(t.g){let y=cy+118;x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText(fit(x,t.g.name||"單位代表",tw),tx,y);y+=44;
+          x.fillStyle="#374151";x.font=`700 24px ${F}`;wrap(x,t.g.title||"",tw,2).forEach(l=>{x.fillText(l,tx,y);y+=32;});y+=6;
+          x.fillStyle="#4B5563";x.font=`400 21px ${F}`;wrap(x,t.g.unit||"",tw,4).forEach(l=>{x.fillText(l,tx,y);y+=28;});
+          if(t.g.status&&t.g.status!=="出席"&&t.g.status!=="代理出席"){x.fillStyle="#B45309";x.font=`700 20px ${F}`;x.fillText(t.g.status,tx,cy+CHt-20);}}
+      });
+      x.fillStyle="#9CA3AF";x.font=`400 18px ${F}`;x.fillText("水源新天地與公館運動館開箱活動｜2026/11/11（三）｜公館大樓 A 棟國際會議廳",M,PH-30);
+      pdf.addPage("a4","portrait");pdf.addImage(cv.toDataURL("image/jpeg",0.88),"JPEG",0,0,210,297);
     }
   }
 }
@@ -2992,7 +3007,8 @@ async function seatDownload(btn,fmt){
   try{
     const now=new Date();const pad=n=>String(n).padStart(2,"0");
     const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
-    const CW=96,CH=68,GX=4,BG=26,RL=34,M=44,RG=34,TOP=150;
+    const CW=112,CH=134,GX=5,BG=30,RL=38,M=44,RG=34,TOP=150;
+    const imgs={};await Promise.all(S.guests.filter(g=>g.seat&&g.photo).map(g=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";const t=setTimeout(()=>res(),9000);im.onload=()=>{clearTimeout(t);imgs[g.id]=im;res();};im.onerror=()=>{clearTimeout(t);res();};im.src=imgSrc(g.photo);})));window.__seatImgs=imgs;
     const occ={};S.guests.forEach(g=>{if(g.seat&&!occ[g.seat])occ[g.seat]=g;});
     const zm=zoneOfSeatMap();
     const colX=c=>{const bi=c<=6?0:c<=18?1:2;return M+RL+(c-1)*(CW+GX)+bi*(BG-GX);};
@@ -3019,10 +3035,14 @@ async function seatDownload(btn,fmt){
         if(OFF.has(sid)&&isRsv(sid)){const rz=zoneById(zm[sid]);const col=rz?rz.color:"#6B7280";x.fillStyle=tint(col,.14);rr(X,Y,CW,CH,6);x.fill();x.setLineDash([6,4]);x.strokeStyle=col;x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle=col;x.font=`800 14px ${F}`;x.textAlign="center";const bn=blockedNote(sid);const ls=wrap2(bn,CW-10,x.font);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+CH/2+5-(ls.length-1)*8+i*16));x.textAlign="left";continue;}
         if(OFF.has(sid)){x.fillStyle="#F3F4F6";rr(X,Y,CW,CH,6);x.fill();x.save();x.clip();x.strokeStyle="#D1D5DB";x.lineWidth=2;for(let d=-CH;d<CW;d+=12){x.beginPath();x.moveTo(X+d,Y+CH);x.lineTo(X+d+CH,Y);x.stroke();}x.restore();continue;}
         const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
-        if(g){x.fillStyle=z?z.color:"#6B7280";rr(X,Y,CW,CH,6);x.fill();x.fillStyle="#fff";x.textAlign="center";
-          x.font=`800 17px ${F}`;x.fillText(fit(g.name||"單位代表",CW-8,x.font),X+CW/2,Y+21);
-          x.font=`500 11px ${F}`;x.fillText(fit(g.title||"",CW-8,x.font),X+CW/2,Y+37);
-          const un=(g.unit||"").replace(/[（(].*$/,"").trim();const ls=wrap2(un,CW-8,`400 11px ${F}`);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+52+i*13));x.textAlign="left";}
+        if(g){x.fillStyle=z?z.color:"#6B7280";rr(X,Y,CW,CH,7);x.fill();
+          x.fillStyle="rgba(0,0,0,.28)";rr(X+4,Y+4,40,18,5);x.fill();x.fillStyle="#fff";x.font=`800 12px ${F}`;x.textAlign="center";x.fillText(`${ROW_LETTER[r]}-${c}`,X+24,Y+17);
+          const pw=60,ph=72,px=X+(CW-pw)/2,py=Y+24;const im=imgs[g.id];x.save();rr(px,py,pw,ph,6);x.clip();
+          if(im){const sc=Math.max(pw/im.naturalWidth,ph/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(pw-w)/2,py+(ph-h)*0.3,w,h);}
+          else{x.fillStyle="rgba(255,255,255,.22)";x.fillRect(px,py,pw,ph);x.fillStyle="#fff";x.font=`800 30px ${F}`;x.fillText((g.name||"代").slice(0,1),X+CW/2,py+ph/2+11);}
+          x.restore();x.strokeStyle="rgba(255,255,255,.7)";x.lineWidth=1.5;rr(px,py,pw,ph,6);x.stroke();
+          x.fillStyle="#fff";x.font=`800 16px ${F}`;x.fillText(fit(g.name||"單位代表",CW-8,x.font),X+CW/2,Y+114);
+          x.font=`500 11px ${F}`;x.fillText(fit(g.title||"",CW-8,x.font),X+CW/2,Y+129);x.textAlign="left";}
         else{x.fillStyle=z?tint(z.color,.12):"#ffffff";rr(X,Y,CW,CH,6);x.fill();x.strokeStyle=z?tint(z.color,.45):"#D1D5DB";x.lineWidth=1;x.stroke();x.fillStyle="#9CA3AF";x.font=`500 14px ${F}`;x.textAlign="center";x.fillText(String(c),X+CW/2,Y+CH/2+5);x.textAlign="left";}
       }}
     for(const z of S.zones){const rects=zoneRects(z);
@@ -3036,7 +3056,7 @@ async function seatDownload(btn,fmt){
     x.fillStyle="#9CA3AF";x.font=`500 15px ${F}`;x.textAlign="center";x.fillText("後方入口",W/2,H-22);x.textAlign="left";
     let blob,ext="png";
     if(fmt==="usher"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);
-      pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",(PW-W*k)/2,(PH-H*k)/2,W*k,H*k);usherPages(pdf,F,zm,occ,now);blob=pdf.output("blob");ext="pdf";}
+      pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",(PW-W*k)/2,(PH-H*k)/2,W*k,H*k);await usherPages(pdf,F,zm,occ,now);blob=pdf.output("blob");ext="pdf";}
     else if(fmt==="pdf"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);const w=W*k,h=H*k;
       pdf.addImage(cv.toDataURL("image/jpeg",0.93),"JPEG",(PW-w)/2,(PH-h)/2,w,h);blob=pdf.output("blob");ext="pdf";}
     else blob=await new Promise(r=>cv.toBlob(r,"image/png"));
