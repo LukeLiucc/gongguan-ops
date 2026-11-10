@@ -249,7 +249,7 @@ button.st.off.blk{cursor:pointer}
 .st.sel{outline:3px solid var(--accent);outline-offset:1px}
 body.solo nav.tabs,body.solo #banner{display:none!important}body.solo #rcReset{display:none}
 .rcsum{margin:8px 0 14px;font-size:14px;color:var(--ink-2)}.rccat{margin:0 0 18px}.rccat h3{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 6px;padding:6px 10px;border-radius:8px;background:var(--surface-2,#f3f4f6)}.rccat h3 .n{font-weight:500;font-size:13px;color:var(--ink-3)}.rccat h3 .sp{flex:1}.rccat h3 button{border:0;background:transparent;cursor:pointer;font-size:14px;color:var(--ink-2)}
-.rcrow{display:grid;grid-template-columns:44px 28px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line,#e5e7eb);border-radius:10px;margin:0 0 5px;background:var(--surface,#fff)}.rcrow.drag{opacity:.4}.rcrow.over{outline:2px dashed var(--accent)}.rcrow .no{font-weight:800;color:var(--ink-3);font-size:13px;text-align:right}.rcrow .gr{cursor:grab;color:var(--ink-3);text-align:center;user-select:none}.rcrow .tx{min-width:0}.rcrow .tx b{font-size:16px}.rcrow .tx span{display:block;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcrow .mv{display:flex;gap:2px}.rcrow .mv button{border:1px solid var(--line,#e5e7eb);background:var(--surface,#fff);border-radius:6px;width:28px;height:28px;cursor:pointer}.rcrow select{font-size:12.5px;max-width:130px}.rcrow.skip{opacity:.55}
+.rcrow{display:grid;grid-template-columns:44px 28px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line,#e5e7eb);border-radius:10px;margin:0 0 5px;background:var(--surface,#fff)}.rcrow.drag{opacity:.4}.rcrow.over{outline:2px dashed var(--accent)}.rcrow .no{font-weight:800;color:var(--ink-3);font-size:13px;text-align:right}.rcrow .gr{cursor:grab;color:var(--ink-3);text-align:center;user-select:none}.rcrow .tx{min-width:0}.rcrow .tx b{font-size:16px}.rcin{display:block;width:100%;border:1px solid transparent;border-radius:6px;background:transparent;padding:2px 6px;margin:0 0 0 -6px;font:inherit;color:var(--ink)}.rcin:hover{border-color:var(--line,#e5e7eb)}.rcin:focus{border-color:var(--accent);background:var(--surface,#fff);outline:none}.rcin.l{font-size:16px;font-weight:800}.rcin.u{font-size:13px;color:var(--ink-2)}.rcundo{border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:12.5px;padding:0;text-decoration:underline}.rcrow .tx span{display:block;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcrow .mv{display:flex;gap:2px}.rcrow .mv button{border:1px solid var(--line,#e5e7eb);background:var(--surface,#fff);border-radius:6px;width:28px;height:28px;cursor:pointer}.rcrow select{font-size:12.5px;max-width:130px}.rcrow.skip{opacity:.55}
 @media (max-width:640px){.rcrow{grid-template-columns:30px minmax(0,1fr) auto;}.rcrow .gr{display:none}.rcrow select{grid-column:2/-1}}
 .padmap{position:relative;height:420px;margin:14px 0 8px;border-radius:12px;background:var(--surface-2,#f6f7f9)}.pad{position:absolute;transform:translateX(-50%);width:min(30%,190px);background:var(--surface,#fff);border:2px solid #1E5A7A;border-radius:14px;padding:10px 10px 8px;box-shadow:0 2px 6px rgba(0,0,0,.08)}.pad.mid{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}.pad .pdn{position:absolute;top:-11px;left:10px;background:#1E5A7A;color:#fff;font-style:normal;font-size:11px;font-weight:800;border-radius:999px;padding:1px 8px}.pad.mid .pdn{background:var(--accent)}.pad .pp{margin-top:4px;line-height:1.25}.pad .pp b{display:block;font-size:15px}.pad .pp span{display:block;font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.padlist{display:grid;gap:4px;font-size:13.5px}@media (max-width:760px){.padmap{height:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 12px;padding:20px 10px 12px}.pad{position:relative;left:auto!important;top:auto!important;transform:none;width:auto;min-width:0}.pad .pp b{font-size:14px}}
 .st.rsv{background:color-mix(in srgb,var(--zc,#888) 16%,var(--surface));border:1.5px dashed var(--zc,#888);color:var(--zc,#666);display:grid;place-items:center;cursor:default}.st.rsv .rsvt{font-size:11px;font-weight:800;line-height:1.15;text-align:center;padding:0 2px}button.st.rsv{cursor:pointer}
@@ -686,7 +686,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
 
   <!-- 交辦事項 -->
   <section class="pane" id="p-roll" hidden>
-    <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，右邊下拉選單可換分類；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
+    <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，點文字可直接改唱名用字，右邊下拉選單可換分類；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
       <button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
     <div class="rcsum" id="rcSum"></div>
     <div id="rcList"></div>
@@ -2835,7 +2835,8 @@ function rcEntries(){
     if(unnamed||emba){const k="u:"+(g.unit||"");(grp[k]=grp[k]||[]).push(g);}else out.push({key:g.id,ids:[g.id],g0:g,unit:g.unit||"",title:g.title||"",label:(g.name||"")+(g.title?" "+g.title:""),seat:g.seat});});
   Object.entries(grp).forEach(([k,list])=>{const g0=list[0];const emba=/EMBA/.test(g0.unit||"");const names=list.filter(x=>x.name&&x.name!=="單位代表").map(x=>x.name);
     out.push({key:k,ids:list.map(x=>x.id),g0:null,unit:g0.unit||"",title:"",label:emba?`同學 ${list.length} 位`:`代表 ${list.length} 位`,sub:names.join("、"),seat:list.map(x=>x.seat).sort((a,b)=>seatKey(b)-seatKey(a)).pop()});});
-  out.forEach(e=>{e.text=rcUnit(e.unit);});
+  const ov=S.meta.rcText||{};
+  out.forEach(e=>{e.text=rcUnit(e.unit);e.text0=e.text;e.label0=e.label;const o=ov[e.key];if(o){if(typeof o.unit==="string")e.text=o.unit;if(typeof o.label==="string")e.label=o.label;e.edited=true;}});
   return out;}
 function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={};RC_CATS.forEach(c=>byCat[c]=[]);
   es.forEach(e=>{const r=m[e.key];const c=r&&RC_CATS.includes(r.c)?r.c:rcDefaultCat(e);e.cat=c;e.o=r&&typeof r.o==="number"?r.o:null;byCat[c].push(e);});
@@ -2851,16 +2852,19 @@ function renderRoll(){
   const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
   $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項（不唱名 ${byCat["不唱名"].length} 項）｜依座位名單自動產生，新增或刪除貴賓會自動更新；媒體不列入`;
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
-    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項</span></h3>${list.map((e,i)=>`<div class="rcrow${c==="不唱名"?" skip":""}" draggable="${canWrite?"true":"false"}" data-key="${esc(e.key)}" data-cat="${esc(c)}">
-      <span class="no">${c==="不唱名"?"—":nums[e.key]}</span><span class="gr" title="拖拉排序">⋮⋮</span>
-      <div class="tx"><b>${esc(e.label)}</b><span>${esc(e.text)}${e.sub?"｜"+esc(e.sub):""}${e.seat?"｜座位 "+esc(seatLabel(e.seat)):""}</span></div>
+    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項</span></h3>${list.map((e,i)=>`<div class="rcrow${c==="不唱名"?" skip":""}" data-key="${esc(e.key)}" data-cat="${esc(c)}">
+      <span class="no">${c==="不唱名"?"—":nums[e.key]}</span><span class="gr" draggable="${canWrite?"true":"false"}" title="按住這裡拖拉排序">⋮⋮</span>
+      <div class="tx"><input class="rcin l" data-rcf="label" value="${esc(e.label)}" aria-label="姓名職稱（唱名用）"><input class="rcin u" data-rcf="unit" value="${esc(e.text)}" aria-label="單位（唱名用）"><span>${e.sub?esc(e.sub)+"｜":""}${e.seat?"座位 "+esc(seatLabel(e.seat)):""}${e.edited?`｜已改字 <button type="button" class="rcundo" data-rcundo>還原</button>`:""}</span></div>
       <div class="mv"><button type="button" data-rcmv="-1" aria-label="上移"${i===0?" disabled":""}>▲</button><button type="button" data-rcmv="1" aria-label="下移"${i===list.length-1?" disabled":""}>▼</button></div>
       <select class="sel" data-rccat aria-label="分類">${RC_CATS.map(x=>`<option${x===c?" selected":""}>${esc(x)}</option>`).join("")}</select></div>`).join("")||`<div class="muted" style="font-size:13px;padding:4px 10px">（拖到這裡）</div>`}</div>`;}).join("");
   if(rcInit)return;rcInit=true;
   const L=$("#rcList");
-  L.addEventListener("click",ev=>{const b=ev.target.closest("[data-rcmv]");if(!b)return;const row=b.closest(".rcrow");const bc=rcState();const list=bc[row.dataset.cat];const i=list.findIndex(e=>e.key===row.dataset.key);const j=i+(+b.dataset.rcmv);if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];rcSave(bc);renderRoll();});
-  L.addEventListener("change",ev=>{const sel=ev.target.closest("[data-rccat]");if(!sel)return;const row=sel.closest(".rcrow");const bc=rcState();const from=bc[row.dataset.cat];const i=from.findIndex(e=>e.key===row.dataset.key);const [e]=from.splice(i,1);bc[sel.value].push(e);rcSave(bc);renderRoll();toast(`已移到「${sel.value}」`);});
-  L.addEventListener("dragstart",ev=>{const r=ev.target.closest(".rcrow");if(!r)return;rcDrag=r.dataset.key;r.classList.add("drag");ev.dataTransfer.effectAllowed="move";try{ev.dataTransfer.setData("text/plain",rcDrag);}catch(e){}});
+  L.addEventListener("keydown",ev=>{if(ev.key==="Enter"&&ev.target.matches("[data-rcf]")){ev.preventDefault();ev.target.blur();}});
+  L.addEventListener("click",ev=>{const u=ev.target.closest("[data-rcundo]");if(u){const k=u.closest(".rcrow").dataset.key;const t=Object.assign({},S.meta.rcText||{});delete t[k];S.meta.rcText=t;upd("meta","event",{rcText:t});renderRoll();toast("已還原");return;}
+    const b=ev.target.closest("[data-rcmv]");if(!b)return;const row=b.closest(".rcrow");const bc=rcState();const list=bc[row.dataset.cat];const i=list.findIndex(e=>e.key===row.dataset.key);const j=i+(+b.dataset.rcmv);if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];rcSave(bc);renderRoll();});
+  L.addEventListener("change",ev=>{const inp=ev.target.closest("[data-rcf]");if(inp){const row=inp.closest(".rcrow");const k=row.dataset.key;const t=Object.assign({},S.meta.rcText||{});const cur=Object.assign({},t[k]||{});cur[inp.dataset.rcf]=inp.value.trim();t[k]=cur;S.meta.rcText=t;upd("meta","event",{rcText:t});toast("已存檔");renderRoll();return;}
+    const sel=ev.target.closest("[data-rccat]");if(!sel)return;const row=sel.closest(".rcrow");const bc=rcState();const from=bc[row.dataset.cat];const i=from.findIndex(e=>e.key===row.dataset.key);const [e]=from.splice(i,1);bc[sel.value].push(e);rcSave(bc);renderRoll();toast(`已移到「${sel.value}」`);});
+  L.addEventListener("dragstart",ev=>{if(ev.target.closest&&ev.target.closest("input,select"))return;const r=ev.target.closest(".rcrow");if(!r)return;rcDrag=r.dataset.key;r.classList.add("drag");ev.dataTransfer.effectAllowed="move";try{ev.dataTransfer.setData("text/plain",rcDrag);}catch(e){}});
   L.addEventListener("dragend",ev=>{rcDrag=null;L.querySelectorAll(".drag,.over").forEach(x=>x.classList.remove("drag","over"));});
   L.addEventListener("dragover",ev=>{if(!rcDrag)return;const t=ev.target.closest(".rcrow,.rccat");if(!t)return;ev.preventDefault();L.querySelectorAll(".over").forEach(x=>x.classList.remove("over"));t.classList.add("over");});
   L.addEventListener("drop",ev=>{if(!rcDrag)return;ev.preventDefault();const t=ev.target.closest(".rcrow,.rccat");if(!t)return;const bc=rcState();let e=null;RC_CATS.forEach(c=>{const i=bc[c].findIndex(x=>x.key===rcDrag);if(i>=0)e=bc[c].splice(i,1)[0];});if(!e)return;
@@ -3206,7 +3210,7 @@ function sub(col){
     e=>{setSync("off","連線中斷，請重新整理");});
 }
 const SOLO=/[?&]view=roll/.test(location.search);
-if(SOLO){document.body.classList.add("solo");document.title="唱名順序｜水源新天地與公館運動館開箱活動";const h=document.querySelector("#p-roll .ttl2 .hint");if(h)h.textContent="請直接拖拉，或按 ▲▼ 調整唱名順序；右邊下拉選單可以換分類，不需要唱名的移到「不唱名」。大家看到的是同一份，改了會即時同步。";}
+if(SOLO){document.body.classList.add("solo");document.title="唱名順序｜水源新天地與公館運動館開箱活動";const h=document.querySelector("#p-roll .ttl2 .hint");if(h)h.textContent="請直接拖拉，或按 ▲▼ 調整唱名順序；點文字可以直接改唱名用字（單位、姓名職稱）；右邊下拉選單可以換分類，不需要唱名的移到「不唱名」。大家看到的是同一份，改了會即時同步。";}
 setTab(SOLO?"roll":(location.hash.slice(1)||"guests"));
 (async()=>{
   if(!window.claude||!window.claude.use){setSync("off","離線預覽");$("#banner").innerHTML=`<div class="banner">這是離線預覽，資料要在 claude.ai 開啟這頁才會出現</div>`;return;}
