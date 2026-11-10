@@ -3007,7 +3007,7 @@ async function usherPages(pdf,F,zm,occ,now){
         if(!t.g){x.setLineDash([10,7]);x.strokeStyle=col;x.lineWidth=2;rr(x,px,py,PHW,PHH,10);x.stroke();x.setLineDash([]);x.fillStyle=tint(col,.08);x.fill();
           x.fillStyle=col;x.font=`800 ${Math.round(28*k)}px ${F}`;x.textAlign="center";wrap(x,blockedNote(t.sid),PHW-24,3).forEach((l,kk,a)=>x.fillText(l,px+PHW/2,py+PHH/2-(a.length-1)*18*k+kk*36*k+10));x.textAlign="left";}
         else{const im=imgs[t.g.id];x.save();rr(x,px,py,PHW,PHH,10);x.clip();
-          if(im){const sc=Math.max(PHW/im.naturalWidth,PHH/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(PHW-w)/2,py+(PHH-h)*0.3,w,h);}
+          if(im){x.fillStyle="#F3F4F6";x.fillRect(px,py,PHW,PHH);const sc=Math.min(PHW/im.naturalWidth,PHH/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(PHW-w)/2,py+(PHH-h)/2,w,h);}
           else{x.fillStyle=tint(col,.14);x.fillRect(px,py,PHW,PHH);x.fillStyle=col;const nm=(t.g.name||"代表").slice(0,3);x.font=`800 ${Math.round(Math.min(72,PHW/(nm.length+0.4))*1)}px ${F}`;x.textAlign="center";x.fillText(nm,px+PHW/2,py+PHH/2+20);x.font=`500 ${Math.round(17*k)}px ${F}`;x.fillStyle="#6B7280";x.fillText("（尚無照片）",px+PHW/2,py+PHH-16);x.textAlign="left";}
           x.restore();}
         const bw=Math.round(Math.min(tw,150)*k);x.fillStyle=col;
@@ -3059,7 +3059,7 @@ async function seatDownload(btn,fmt){
         if(g){x.fillStyle=z?z.color:"#6B7280";rr(X,Y,CW,CH,7);x.fill();
           x.fillStyle="rgba(0,0,0,.28)";rr(X+4,Y+4,40,18,5);x.fill();x.fillStyle="#fff";x.font=`800 12px ${F}`;x.textAlign="center";x.fillText(`${ROW_LETTER[r]}-${c}`,X+24,Y+17);
           const pw=60,ph=72,px=X+(CW-pw)/2,py=Y+24;const im=imgs[g.id];x.save();rr(px,py,pw,ph,6);x.clip();
-          if(im){const sc=Math.max(pw/im.naturalWidth,ph/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(pw-w)/2,py+(ph-h)*0.3,w,h);}
+          if(im){x.fillStyle="#fff";x.fillRect(px,py,pw,ph);const sc=Math.min(pw/im.naturalWidth,ph/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(pw-w)/2,py+(ph-h)/2,w,h);}
           else{x.fillStyle="rgba(255,255,255,.22)";x.fillRect(px,py,pw,ph);x.fillStyle="#fff";x.font=`800 30px ${F}`;x.fillText((g.name||"代").slice(0,1),X+CW/2,py+ph/2+11);}
           x.restore();x.strokeStyle="rgba(255,255,255,.7)";x.lineWidth=1.5;rr(px,py,pw,ph,6);x.stroke();
           x.fillStyle="#fff";x.font=`800 16px ${F}`;x.fillText(fit(g.name||"單位代表",CW-8,x.font),X+CW/2,Y+114);
