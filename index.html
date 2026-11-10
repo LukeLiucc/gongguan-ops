@@ -247,6 +247,7 @@ button.st.off.blk{cursor:pointer}
 .rt-save{display:inline-flex;align-items:center;gap:8px}.rt-save small{color:var(--ink-3);font-size:12.5px;white-space:nowrap}
 .st.aisle{background:transparent;border:1px dashed var(--line);cursor:default}
 .st.sel{outline:3px solid var(--accent);outline-offset:1px}
+.padmap{position:relative;height:440px;margin:14px 0 8px;border-radius:12px;background:var(--surface-2,#f6f7f9)}.pad{position:absolute;transform:translateX(-50%);width:min(30%,190px);background:var(--surface,#fff);border:2px solid #1E5A7A;border-radius:14px;padding:10px 10px 8px;box-shadow:0 2px 6px rgba(0,0,0,.08)}.pad.mid{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}.pad .pdn{position:absolute;top:-11px;left:10px;background:#1E5A7A;color:#fff;font-style:normal;font-size:11px;font-weight:800;border-radius:999px;padding:1px 8px}.pad.mid .pdn{background:var(--accent)}.pad .pp{margin-top:4px;line-height:1.25}.pad .pp b{display:block;font-size:15px}.pad .pp span{font-size:11.5px;color:var(--ink-2)}.padlist{display:grid;gap:4px;font-size:13.5px}@media (max-width:640px){.padmap{height:520px}.pad{width:42%}.pad .pp b{font-size:13px}}
 .st.rsv{background:color-mix(in srgb,var(--zc,#888) 16%,var(--surface));border:1.5px dashed var(--zc,#888);color:var(--zc,#666);display:grid;place-items:center;cursor:default}.st.rsv .rsvt{font-size:11px;font-weight:800;line-height:1.15;text-align:center;padding:0 2px}button.st.rsv{cursor:pointer}
 .st.msel{outline:3px solid #f5b400;outline-offset:1px;box-shadow:0 0 0 5px rgba(245,180,0,.28)}
 #hall.multi .rl{cursor:pointer;border-radius:6px}#hall.multi .rl:hover{background:var(--surface-3);color:var(--ink)}
@@ -2763,7 +2764,16 @@ $("#fOutline").addEventListener("dragover",e=>{const c=e.target.closest(".lc[dat
 $("#fOutline").addEventListener("drop",e=>{const c=e.target.closest(".lc[data-li]");if(!c||lDrag===null)return;e.preventDefault();const to=+c.dataset.li,from=lDrag;lDrag=null;launchMove(from,to);});
 $("#fOutline").addEventListener("dragend",()=>{lDrag=null;document.querySelectorAll(".lc.over,.lc.drag").forEach(x=>x.classList.remove("over","drag"));});
 $("#fOutline").addEventListener("click",e=>{const b=e.target.closest("[data-lmv]");if(!b)return;if(!canWrite){toast("你目前是檢視權限，無法修改");return;}const c=b.closest(".lc[data-li]");const i=+c.dataset.li;launchMove(i,i+(+b.dataset.lmv));});
+function padsHtml(d){
+  const P=d.pads;const pos=[[34,6],[66,6],[24,38],[76,38],[16,70],[84,70]];const n=P.reduce((a,x)=>a+x.length,0);
+  const pad=(ids,i)=>{const [x,y]=pos[i];const ppl=ids.map(id=>{const g=S.guests.find(q=>q.id===id)||{};const unit=(g.unit||"").replace(/[（(].*$/,"").trim();return `<div class="pp"><b>${esc(g.name||"")}</b><span>${esc(unit)} ${esc(g.title||"")}</span></div>`;}).join("");
+    return `<div class="pad${ids.includes("g001")?" mid":""}" style="left:${x}%;top:${y}%"><i class="pdn">${i+1}</i>${ppl}</div>`;};
+  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>啟動台 6 座，上台 ${n} 人（每座 1–2 人），依現場站位示意圖</span></div>
+   <div class="padmap">${P.map(pad).join("")}</div>
+   <div class="padlist">${P.map((ids,i)=>`<div><b>啟動台 ${i+1}</b>　${ids.map(id=>{const g=S.guests.find(q=>q.id===id)||{};return esc((g.name||"")+" "+(g.title||""));}).join("、")}</div>`).join("")}</div></section>`;
+}
 function launchHtml(d){
+  if(Array.isArray(d.pads)&&d.pads.length)return padsHtml(d);
   const ids=d.launch||[];if(!ids.length)return "";
   const mid=Math.floor(ids.length/2);
   const cells=ids.map((id,i)=>{const g=S.guests.find(x=>x.id===id)||{};const unit=(g.unit||"").replace(/[（(].*$/,"").trim();
