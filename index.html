@@ -2817,9 +2817,11 @@ function attGroups(){
 }
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
 /* ================= 唱名清單 ================= */
-const RC_CATS=["府級長官","民意代表","市府局處首長","法人團體","主辦單位","公司行號","里長","聯新國際醫療集團"];
+const RC_CATS=["府級長官","民意代表","市府局處首長","法人團體","主辦單位","北水處介紹貴賓","公司行號","里長","聯新國際醫療集團"];
+const RC_WSD=["封德屏","劉柏宏","黃大欉","陳小龍","胡志安","陳文程","陳鐿","莊棨椉","趙冠人","黃舒楓","林建河"];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
 function rcDefaultCat(e){const g=e.g0,u=e.unit,t=e.title||"";
+  if(g&&RC_WSD.includes(g.name))return "北水處介紹貴賓";
   if(u==="臺北市政府")return "府級長官";
   if(/臺北自來水事業處|臺北市政府體育局|聯新國際體育股份有限公司/.test(u)||(g&&g.name==="簡伯毅"))return "主辦單位";
   if(/臺北市議會|立法院/.test(u))return "民意代表";
@@ -2847,8 +2849,9 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   const sk=x=>{if(!x)return 1e6;const [r,c]=x.split("-").map(Number);return ROW_ORDER.indexOf(r)*100+c;};
   const rank=e=>{if(e.g0&&e.g0.name==="蔣萬安")return -1;if(e.cat==="主辦單位"){if(e.g0&&e.g0.name==="簡伯毅")return 2000+sk(e.seat)/1e4;const i=RC_HOST.findIndex(u=>e.unit===u);if(i>=0)return i*1000+sk(e.seat)/1e4;}return 5000+sk(e.seat);};
   const nm=e=>e.g0&&e.g0.name&&e.g0.name!=="單位代表"?e.g0.name:"";
+  const wsd=e=>{const i=RC_WSD.indexOf(nm(e));return i<0?99:i;};
   const byStroke=(a,b)=>{const na=nm(a),nb=nm(b);if(!na!==!nb)return na?-1:1;return na?rcCmpStroke(na,nb):rcCmpStroke(rcUnit(a.unit),rcUnit(b.unit));};
-  RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>(a.o??1e9)-(b.o??1e9)||(c==="府級長官"?rank(a)-rank(b):byStroke(a,b))));
+  RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>(a.o??1e9)-(b.o??1e9)||(c==="府級長官"?rank(a)-rank(b):c==="北水處介紹貴賓"?wsd(a)-wsd(b):byStroke(a,b))));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
 let rcInit=false,rcDrag=null;
@@ -2858,7 +2861,7 @@ function renderRoll(){
   const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
   $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜依座位名單自動產生，新增貴賓會自動加入；媒體不列入`;
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
-    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="府級長官"?"依職級":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
+    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="府級長官"?"依職級":c==="北水處介紹貴賓"?"依北水處提供順序":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
       <span class="no">${nums[e.key]}</span><span class="gr" draggable="${canWrite?"true":"false"}" title="按住這裡拖拉排序">⋮⋮</span>
       <div class="tx"><input class="rcin l" data-rcf="label" value="${esc(e.label)}" aria-label="姓名職稱（唱名用）"><input class="rcin u" data-rcf="unit" value="${esc(e.text)}" aria-label="單位（唱名用）"><span>${e.sub?esc(e.sub)+"｜":""}${e.seat?"座位 "+esc(seatLabel(e.seat)):""}${e.edited?`｜已改字 <button type="button" class="rcundo" data-rcundo>還原</button>`:""}</span></div>
       <div class="mv"><button type="button" data-rcmv="-1" aria-label="上移"${i===0?" disabled":""}>▲</button><button type="button" data-rcmv="1" aria-label="下移"${i===list.length-1?" disabled":""}>▼</button></div>
@@ -2891,10 +2894,10 @@ async function rcPrint(btn){
     const rows=[];let n=0;RC_CATS.forEach(c=>{if(!byCat[c].length)return;rows.push({h:c});byCat[c].forEach(e=>rows.push({n:++n,e}));});
     const fit=(x,t,w)=>{if(x.measureText(t).width<=w)return t;let s=t;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…";};
     let page=null,x=null,y=0,pg=0;const newPage=()=>{if(page){pdf.addImage(page.toDataURL("image/jpeg",0.92),"JPEG",0,0,210,297);pdf.addPage("a4","portrait");}page=document.createElement("canvas");page.width=PW;page.height=PH;x=page.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);pg++;
-      x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText("唱名稿｜水源新天地與公館運動館開箱活動",M,M+30);x.fillStyle="#6B7280";x.font=`400 20px ${F}`;x.fillText(`2026/11/11（三）｜各類別內依姓名筆劃排序｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本｜第 ${pg} 頁`,M,M+66);y=M+110;};
+      x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText("唱名稿｜水源新天地與公館運動館開箱活動",M,M+30);x.fillStyle="#6B7280";x.font=`400 20px ${F}`;x.fillText(`2026/11/11（三）｜各類別內依姓名筆劃排序（府級依職級、北水處介紹貴賓依北水處順序）｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本｜第 ${pg} 頁`,M,M+66);y=M+110;};
     newPage();
     for(const r of rows){const need=r.h?64:RH;if(y+need>PH-70)newPage();
-      if(r.h){x.fillStyle="#111827";x.fillRect(M,y+8,PW-2*M,46);x.fillStyle="#fff";x.font=`800 26px ${F}`;x.fillText(r.h,M+16,y+40);const w0=x.measureText(r.h).width;x.font=`400 18px ${F}`;x.fillStyle="#D1D5DB";x.fillText(r.h==="府級長官"?"（依職級）":"（依姓名筆劃排序）",M+28+w0,y+39);y+=64;continue;}
+      if(r.h){x.fillStyle="#111827";x.fillRect(M,y+8,PW-2*M,46);x.fillStyle="#fff";x.font=`800 26px ${F}`;x.fillText(r.h,M+16,y+40);const w0=x.measureText(r.h).width;x.font=`400 18px ${F}`;x.fillStyle="#D1D5DB";x.fillText(r.h==="府級長官"?"（依職級）":r.h==="北水處介紹貴賓"?"（依北水處提供順序）":"（依姓名筆劃排序）",M+28+w0,y+39);y+=64;continue;}
       const e=r.e;x.strokeStyle="#9CA3AF";x.lineWidth=2;x.strokeRect(M+4,y+20,30,30);
       x.fillStyle="#6B7280";x.font=`700 22px ${F}`;x.textAlign="right";x.fillText(String(r.n),M+92,y+45);x.textAlign="left";
       x.fillStyle="#374151";x.font=`400 24px ${F}`;const ut=fit(x,e.text,560);x.fillText(ut,M+112,y+45);const uw=x.measureText(ut).width;
