@@ -679,6 +679,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <select class="sel" id="fRole"></select>
       <label class="chk"><input type="checkbox" id="fCompact"> 收起各組工作</label>
       <span class="sp"></span>
+      <button class="btn" id="fPrint" type="button">列印流程 PDF</button>
       <button class="btn pri" id="fAdd" type="button">＋ 新增流程</button>
     </div>
     <div class="rd" id="fList"></div>
@@ -1299,6 +1300,7 @@ function renderOverview(){
 let flowInit=false, dragRd=null;
 function initFlow(){
   if(flowInit)return;flowInit=true;
+  $("#fPrint").onclick=ev=>flowPrint(ev.currentTarget);
   const sel=$("#fRole");
   sel.innerHTML=`<option value="">全部組別</option>`+ROLE_KEYS.map(k=>`<option>${k}</option>`).join("");
   sel.value=UI.role;
@@ -1344,6 +1346,67 @@ function renderFlow(){
     </div>`;
   }
   $("#fList").innerHTML=h;
+}
+/* ---------- 流程列印 ---------- */
+async function flowPrint(btn){
+  const old=btn.textContent;btn.disabled=true;btn.textContent="產生中…";
+  try{await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';const PW=1240,PH=1754,M=70,BOT=PH-60;
+    const now=new Date();const pad=x=>String(x).padStart(2,"0");const role=UI.role||"";
+    const d=S.outline.find(x=>x.id==="main");const tl=timeline();
+    let page=null,x=null,y=0,pg=0;
+    const wrap=(t,w)=>{const out=[];String(t||"").split("\n").forEach(par=>{if(!par){out.push("");return;}let line="";for(const ch of par){if(x.measureText(line+ch).width>w&&line){out.push(line);line=ch;}else line+=ch;}out.push(line);});return out;};
+    const newPage=()=>{if(page){pdf.addImage(page.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297);pdf.addPage("a4","portrait");}
+      page=document.createElement("canvas");page.width=PW;page.height=PH;x=page.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);pg++;
+      x.fillStyle="#111827";x.font=`800 34px ${F}`;x.fillText("行程細流｜水源新天地與公館運動館開箱活動",M,M+20);
+      x.fillStyle="#6B7280";x.font=`400 19px ${F}`;x.fillText(`${d&&d.date?d.date:"2026/11/11（三）"}${role?"｜只看："+role:""}｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本｜第 ${pg} 頁`,M,M+52);
+      x.strokeStyle="#111827";x.lineWidth=2;x.beginPath();x.moveTo(M,M+70);x.lineTo(PW-M,M+70);x.stroke();y=M+92;};
+    const need=h=>{if(y+h>BOT)newPage();};
+    const sec=t=>{need(70);x.fillStyle="#111827";x.fillRect(M,y,PW-2*M,44);x.fillStyle="#fff";x.font=`800 24px ${F}`;x.fillText(t,M+16,y+31);y+=58;};
+    newPage();
+    /* 典禮流程總覽 */
+    if(d&&!role){sec(d.title||"典禮流程");
+      x.font=`400 19px ${F}`;x.fillStyle="#374151";const meta=[d.date&&"日期："+d.date,d.time&&"時間："+d.time,d.place&&"地點："+d.place].filter(Boolean).join("　");
+      wrap(meta,PW-2*M).forEach(l=>{need(28);x.fillText(l,M,y+20);y+=28;});y+=8;
+      const C1=200,C2=230;
+      (d.rows||[]).forEach(r=>{x.font=`700 21px ${F}`;const hl=wrap(r.h,PW-2*M-C1-C2-24);x.font=`400 19px ${F}`;const li=[];(r.li||[]).forEach(t=>wrap("・"+t,PW-2*M-C1-C2-24).forEach(l=>li.push(l)));
+        x.font=`400 19px ${F}`;const pl=wrap(r.p,C2-16);const h=Math.max(hl.length*30+li.length*28,pl.length*28)+20;need(h);
+        x.fillStyle="#111827";x.font=`700 20px ${F}`;x.fillText(r.t||"",M+6,y+28);
+        x.fillStyle="#374151";x.font=`400 19px ${F}`;pl.forEach((l,i)=>x.fillText(l,M+C1,y+28+i*28));
+        let yy=y+28;x.fillStyle="#111827";x.font=`700 21px ${F}`;hl.forEach(l=>{x.fillText(l,M+C1+C2,yy);yy+=30;});x.fillStyle="#374151";x.font=`400 19px ${F}`;li.forEach(l=>{x.fillText(l,M+C1+C2+8,yy);yy+=28;});
+        y+=h;x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();});
+      if(d.remark){x.font=`400 18px ${F}`;x.fillStyle="#6B7280";wrap("備註："+d.remark,PW-2*M).forEach(l=>{need(26);x.fillText(l,M,y+22);y+=26;});}
+      y+=18;
+      if(Array.isArray(d.pads)&&d.pads.length){const n=d.pads.reduce((a,p)=>a+p.length,0);sec(`科技啟動儀式站位｜啟動台 ${d.pads.length} 座，上台 ${n} 人`);
+        d.pads.forEach((ids,i)=>{const t=ids.map(id=>{const g=S.guests.find(q=>q.id===id)||{};const u=(g.unit||"").replace(/[（(].*$/,"").trim();return `${u} ${g.name||""} ${g.title||""}`.trim();}).join("、");
+          x.font=`400 20px ${F}`;const ls=wrap(t,PW-2*M-150);need(ls.length*30+12);x.fillStyle="#111827";x.font=`800 21px ${F}`;x.fillText(`啟動台 ${i+1}`,M+6,y+26);x.font=`400 20px ${F}`;x.fillStyle="#374151";ls.forEach((l,j)=>x.fillText(l,M+150,y+26+j*30));y+=ls.length*30+12;});
+        y+=18;}
+    }
+    /* 工作細流 */
+    if(tl.length){const s0=tl[0].s,e0=tl[tl.length-1].e;sec(`工作細流｜${fmt(s0)}–${fmt(e0)}，共 ${e0-s0} 分鐘${role?"｜"+role:""}`);}
+    const TW=190,BX=M+TW,BW=PW-M-BX;let ph=null;
+    for(const {r,s,e} of tl){
+      const roles=r.roles||{};
+      if(role&&!(roles[role]||"").trim())continue;
+      if((r.phase||"")!==ph){ph=r.phase||"";if(ph){need(110);x.fillStyle="#F3F4F6";x.fillRect(M,y,PW-2*M,38);x.fillStyle="#111827";x.font=`700 20px ${F}`;x.fillText(ph,M+12,y+26);y+=48;}}
+      const lines=[];
+      x.font=`800 23px ${F}`;wrap(r.title||"未命名",BW).forEach(l=>lines.push({t:l,f:`800 23px ${F}`,c:"#111827",h:32}));
+      if(r.content){x.font=`400 19px ${F}`;wrap(r.content,BW).forEach(l=>lines.push({t:l,f:`400 19px ${F}`,c:"#374151",h:28}));}
+      const ks=role?[role]:ROLE_KEYS.filter(k=>(roles[k]||"").trim());
+      ks.forEach(k=>{x.font=`400 18px ${F}`;const ls=wrap(roles[k],BW-120);lines.push({gap:6});ls.forEach((l,i)=>lines.push({t:l,f:`400 18px ${F}`,c:"#1F2937",h:26,ind:120,lab:i===0?k:"",media:k==="攝影組"}));});
+      if(r.note&&!role){x.font=`400 17px ${F}`;lines.push({gap:6});wrap("備註："+r.note,BW).forEach(l=>lines.push({t:l,f:`400 17px ${F}`,c:"#92400E",h:25}));}
+      const H=lines.reduce((a,l)=>a+(l.gap||l.h),0)+22;
+      if(y+H>BOT&&H<BOT-M-120)newPage();else need(80);
+      const top=y;x.fillStyle="#111827";x.font=`800 22px ${F}`;x.fillText(`${fmt(s)}–${fmt(e)}`,M+6,y+30);x.fillStyle="#6B7280";x.font=`400 18px ${F}`;x.fillText(`${+r.min||0} 分鐘`,M+6,y+56);
+      y+=6;
+      for(const l of lines){if(l.gap){y+=l.gap;continue;}if(y+l.h>BOT){newPage();}
+        if(l.lab){x.fillStyle=l.media?"#B91C1C":"#1D4ED8";x.font=`700 18px ${F}`;x.fillText(l.lab,BX,y+20);}
+        x.fillStyle=l.c;x.font=l.f;x.fillText(l.t,BX+(l.ind||0),y+20);y+=l.h;}
+      y+=16;x.strokeStyle="#D1D5DB";x.lineWidth=1;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();y+=8;
+    }
+    pdf.addImage(page.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297);
+    const blob=pdf.output("blob");const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_行程細流${role?"_"+role:""}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast("流程 PDF 已下載");
+  }catch(e){console.error(e);toast("流程 PDF 產生失敗");}finally{btn.disabled=false;btn.textContent=old;}
 }
 function openRow(id,afterId){
   const r=id?S.rundown.find(x=>x.id===id):null;
