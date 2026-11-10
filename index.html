@@ -1388,15 +1388,15 @@ async function flowPrint(btn){
     for(const {r,s,e} of tl){
       const roles=r.roles||{};
       if(role&&!(roles[role]||"").trim())continue;
-      if((r.phase||"")!==ph){ph=r.phase||"";if(ph){need(110);x.fillStyle="#F3F4F6";x.fillRect(M,y,PW-2*M,38);x.fillStyle="#111827";x.font=`700 20px ${F}`;x.fillText(ph,M+12,y+26);y+=48;}}
       const lines=[];
       x.font=`800 23px ${F}`;wrap(r.title||"未命名",BW).forEach(l=>lines.push({t:l,f:`800 23px ${F}`,c:"#111827",h:32}));
       if(r.content){x.font=`400 19px ${F}`;wrap(r.content,BW).forEach(l=>lines.push({t:l,f:`400 19px ${F}`,c:"#374151",h:28}));}
       const ks=role?[role]:ROLE_KEYS.filter(k=>(roles[k]||"").trim());
       ks.forEach(k=>{x.font=`400 18px ${F}`;const ls=wrap(roles[k],BW-120);lines.push({gap:6});ls.forEach((l,i)=>lines.push({t:l,f:`400 18px ${F}`,c:"#1F2937",h:26,ind:120,lab:i===0?k:"",media:k==="攝影組"}));});
       if(r.note&&!role){x.font=`400 17px ${F}`;lines.push({gap:6});wrap("備註："+r.note,BW).forEach(l=>lines.push({t:l,f:`400 17px ${F}`,c:"#92400E",h:25}));}
-      const H=lines.reduce((a,l)=>a+(l.gap||l.h),0)+22;
-      if(y+H>BOT&&H<BOT-M-120)newPage();else need(80);
+      const H=lines.reduce((a,l)=>a+(l.gap||l.h),0)+22;const fits=H<BOT-M-200;
+      if((r.phase||"")!==ph){ph=r.phase||"";if(ph){if(y+48+(fits?H:200)>BOT)newPage();x.fillStyle="#F3F4F6";x.fillRect(M,y,PW-2*M,38);x.fillStyle="#111827";x.font=`700 20px ${F}`;x.fillText(ph,M+12,y+26);y+=48;}}
+      if(y+H>BOT&&fits)newPage();else need(80);
       const top=y;x.fillStyle="#111827";x.font=`800 22px ${F}`;x.fillText(`${fmt(s)}–${fmt(e)}`,M+6,y+30);x.fillStyle="#6B7280";x.font=`400 18px ${F}`;x.fillText(`${+r.min||0} 分鐘`,M+6,y+56);
       y+=6;
       for(const l of lines){if(l.gap){y+=l.gap;continue;}if(y+l.h>BOT){newPage();}
