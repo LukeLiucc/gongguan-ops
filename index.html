@@ -670,6 +670,12 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
 
   <!-- 流程表 -->
   <section class="pane" id="p-flow" hidden>
+    <div class="bar" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--line,#e5e7eb);border-radius:12px;background:var(--surface,#fff)">
+      <b style="font-size:15px">下載／列印</b>
+      <button class="btn pri" id="fAll" type="button">下載全套 PDF（流程＋人力分工＋座位圖＋名單表）</button>
+      <button class="btn" id="fPrint" type="button">只下載流程 PDF</button>
+      <span class="muted" style="font-size:13px">下方「只看」選了組別時，只下載流程會只印那一組</span>
+    </div>
     <div id="fOutline"></div>
     <div class="ttl2" style="margin-top:6px"><h2>工作細流</h2><span class="hint">各組分工與時間，依每段時長自動推算</span></div>
     <div class="bar">
@@ -679,8 +685,6 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <select class="sel" id="fRole"></select>
       <label class="chk"><input type="checkbox" id="fCompact"> 收起各組工作</label>
       <span class="sp"></span>
-      <button class="btn" id="fPrint" type="button">列印流程 PDF</button>
-      <button class="btn" id="fAll" type="button">下載全套 PDF（流程＋人力分工＋座位圖＋名單表）</button>
       <button class="btn pri" id="fAdd" type="button">＋ 新增流程</button>
     </div>
     <div class="rd" id="fList"></div>
