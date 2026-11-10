@@ -2838,7 +2838,8 @@ function rcEntries(){
   return out;}
 function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={};RC_CATS.forEach(c=>byCat[c]=[]);
   es.forEach(e=>{const r=m[e.key];const c=r&&RC_CATS.includes(r.c)?r.c:rcDefaultCat(e);e.cat=c;e.o=r&&typeof r.o==="number"?r.o:null;byCat[c].push(e);});
-  const rank=e=>{if(e.cat==="主辦單位"){const i=RC_HOST.findIndex(u=>e.unit===u);if(i>=0)return i*1000+seatKey(e.seat)/1e6;}return 5000+seatKey(e.seat)/100;};
+  const sk=x=>{if(!x)return 1e6;const [r,c]=x.split("-").map(Number);return ROW_ORDER.indexOf(r)*100+c;};
+  const rank=e=>{if(e.cat==="主辦單位"){if(e.g0&&e.g0.name==="簡伯毅")return 2500;const i=RC_HOST.findIndex(u=>e.unit===u);if(i>=0)return i*1000+sk(e.seat)/1e4;}return 5000+sk(e.seat);};
   RC_CATS.forEach(c=>byCat[c].sort((a,b)=>(a.o??1e9)-(b.o??1e9)||rank(a)-rank(b)));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.forEach(c=>byCat[c].forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
