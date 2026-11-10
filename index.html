@@ -247,6 +247,7 @@ button.st.off.blk{cursor:pointer}
 .rt-save{display:inline-flex;align-items:center;gap:8px}.rt-save small{color:var(--ink-3);font-size:12.5px;white-space:nowrap}
 .st.aisle{background:transparent;border:1px dashed var(--line);cursor:default}
 .st.sel{outline:3px solid var(--accent);outline-offset:1px}
+body.solo nav.tabs,body.solo #banner{display:none!important}body.solo #rcReset{display:none}
 .rcsum{margin:8px 0 14px;font-size:14px;color:var(--ink-2)}.rccat{margin:0 0 18px}.rccat h3{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 6px;padding:6px 10px;border-radius:8px;background:var(--surface-2,#f3f4f6)}.rccat h3 .n{font-weight:500;font-size:13px;color:var(--ink-3)}.rccat h3 .sp{flex:1}.rccat h3 button{border:0;background:transparent;cursor:pointer;font-size:14px;color:var(--ink-2)}
 .rcrow{display:grid;grid-template-columns:44px 28px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line,#e5e7eb);border-radius:10px;margin:0 0 5px;background:var(--surface,#fff)}.rcrow.drag{opacity:.4}.rcrow.over{outline:2px dashed var(--accent)}.rcrow .no{font-weight:800;color:var(--ink-3);font-size:13px;text-align:right}.rcrow .gr{cursor:grab;color:var(--ink-3);text-align:center;user-select:none}.rcrow .tx{min-width:0}.rcrow .tx b{font-size:16px}.rcrow .tx span{display:block;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcrow .mv{display:flex;gap:2px}.rcrow .mv button{border:1px solid var(--line,#e5e7eb);background:var(--surface,#fff);border-radius:6px;width:28px;height:28px;cursor:pointer}.rcrow select{font-size:12.5px;max-width:130px}.rcrow.skip{opacity:.55}
 @media (max-width:640px){.rcrow{grid-template-columns:30px minmax(0,1fr) auto;}.rcrow .gr{display:none}.rcrow select{grid-column:2/-1}}
@@ -1243,7 +1244,7 @@ function renderAll(){
 /* ---------- tabs ---------- */
 const HIDE_TABS=window.OPS_HIDE||[];
 document.querySelectorAll("nav.tabs a").forEach(a=>{if(HIDE_TABS.includes(a.dataset.tab))a.remove();});
-function setTab(t){if(HIDE_TABS.includes(t))t="tasks";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
+function setTab(t){if(/[?&]view=roll/.test(location.search))t="roll";if(HIDE_TABS.includes(t))t="tasks";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
   if(!["tasks","guests","roster","media","roll","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
@@ -3204,7 +3205,9 @@ function sub(col){
   db.collection(col).onSnapshot(snap=>{S[col]=snap.docs.map(d=>({id:d.id,...d.data()}));S.loaded.add(col);setSync("on","已同步");schedule();},
     e=>{setSync("off","連線中斷，請重新整理");});
 }
-setTab(location.hash.slice(1)||"guests");
+const SOLO=/[?&]view=roll/.test(location.search);
+if(SOLO){document.body.classList.add("solo");document.title="唱名順序｜水源新天地與公館運動館開箱活動";const h=document.querySelector("#p-roll .ttl2 .hint");if(h)h.textContent="請直接拖拉，或按 ▲▼ 調整唱名順序；右邊下拉選單可以換分類，不需要唱名的移到「不唱名」。大家看到的是同一份，改了會即時同步。";}
+setTab(SOLO?"roll":(location.hash.slice(1)||"guests"));
 (async()=>{
   if(!window.claude||!window.claude.use){setSync("off","離線預覽");$("#banner").innerHTML=`<div class="banner">這是離線預覽，資料要在 claude.ai 開啟這頁才會出現</div>`;return;}
   db=await window.claude.use("db");
