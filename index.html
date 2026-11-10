@@ -789,6 +789,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <button class="btn" id="smShow" type="button">展示座位圖</button>
       <button class="btn" id="smDl" type="button">下載座位圖</button>
       <button class="btn" id="smPdf" type="button">匯出 PDF</button>
+      <button class="btn" id="smWide" type="button">16:9 座位圖</button>
       <button class="btn" id="smXls" type="button">下載 Excel</button>
       <button class="btn pri" id="smUsher" type="button">帶位座位表 PDF</button>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
@@ -2907,6 +2908,7 @@ function seatShow(on){
 $("#smShow").onclick=()=>seatShow(true);
 $("#smDl").onclick=e=>seatDownload(e.currentTarget);
 $("#smPdf").onclick=e=>seatDownload(e.currentTarget,"pdf");
+$("#smWide").onclick=e=>seatDownload(e.currentTarget,"wide");
 $("#smXls").onclick=e=>seatExcel(e.currentTarget);
 $("#smUsher").onclick=e=>seatDownload(e.currentTarget,"usher");
 function loadExcelJS(){if(window.ExcelJS)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc);});}
@@ -3034,7 +3036,8 @@ async function seatDownload(btn,fmt){
     const zm=zoneOfSeatMap();
     const colX=c=>{const bi=c<=6?0:c<=18?1:2;return M+RL+(c-1)*(CW+GX)+bi*(BG-GX);};
     const W=colX(24)+CW+M;
-    const rowY={};let y=TOP+70;for(const r of ROW_ORDER){rowY[r]=y;y+=CH+RG;}
+    let RO=ROW_ORDER;if(fmt==="wide"){const usedR=new Set();S.guests.forEach(g=>{if(g.seat)usedR.add(+g.seat.split("-")[0]);});blockedList().filter(b=>/保留/.test(b.why||"")).forEach(b=>usedR.add(+b.s.split("-")[0]));let last=0;ROW_ORDER.forEach((r,i)=>{if(usedR.has(r))last=i;});RO=ROW_ORDER.slice(0,last+1);}
+    const rowY={};let y=TOP+70;for(const r of RO){rowY[r]=y;y+=CH+RG;}
     const legendY=y+10;const zs=sortedZones();
     const cv=document.createElement("canvas");const SC=2;const H=legendY+40+Math.ceil(zs.length/5)*34+50;
     cv.width=W*SC;cv.height=H*SC;const x=cv.getContext("2d");x.scale(SC,SC);
@@ -3049,7 +3052,7 @@ async function seatDownload(btn,fmt){
     const seated=S.guests.filter(g=>g.seat&&!OFF.has(g.seat)).length;
     x.textAlign="right";x.font=`400 15px ${F}`;x.fillText(`已排座位 ${seated} 位`,W-M,M+34);x.fillText(`${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,W-M,M+58);x.textAlign="left";
     x.fillStyle="#111827";rr(M+RL,TOP,W-2*M-RL,46,8);x.fill();x.fillStyle="#fff";x.font=`700 20px ${F}`;x.textAlign="center";x.fillText("舞台",(M+RL+W-M)/2,TOP+30);x.textAlign="left";
-    for(const r of ROW_ORDER){const Y=rowY[r];
+    for(const r of RO){const Y=rowY[r];
       if(r===AISLE_ROW){x.fillStyle="#FDF2F8";rr(M+RL,Y+8,W-2*M-RL,CH-16,8);x.fill();x.strokeStyle="#EC4899";x.setLineDash([8,6]);x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle="#9D174D";x.font=`700 17px ${F}`;x.textAlign="center";x.fillText("橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋",(M+RL+W-M)/2,Y+CH/2+6);x.textAlign="left";continue;}
       x.fillStyle="#6B7280";x.font=`700 18px ${F}`;x.textAlign="center";x.fillText(ROW_LETTER[r],M+RL/2-4,Y+CH/2+6);x.textAlign="left";
       for(let c=1;c<=24;c++){const sid=r+"-"+c;if(VOID.has(sid))continue;const X=colX(c);
@@ -3072,13 +3075,14 @@ async function seatDownload(btn,fmt){
     zs.forEach(z=>{const t=z.name;const w=x.measureText(t).width+40;if(lx+w>W-M){lx=M+RL;ly+=34;}x.fillStyle=z.color;x.beginPath();x.arc(lx+9,ly,7,0,7);x.fill();x.fillStyle="#374151";x.fillText(t,lx+22,ly+5);lx+=w+12;});
     x.fillStyle="#9CA3AF";x.font=`500 15px ${F}`;x.textAlign="center";x.fillText("後方入口",W/2,H-22);x.textAlign="left";
     let blob,ext="png";
-    if(fmt==="usher"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);
+    if(fmt==="wide"){const WW=3840,WH=2160,pad=70;const c2=document.createElement("canvas");c2.width=WW;c2.height=WH;const y2=c2.getContext("2d");y2.fillStyle="#fff";y2.fillRect(0,0,WW,WH);const k=Math.min((WW-2*pad)/cv.width,(WH-2*pad)/cv.height);const w=cv.width*k,h=cv.height*k;y2.imageSmoothingQuality="high";y2.drawImage(cv,(WW-w)/2,(WH-h)/2,w,h);blob=await new Promise(r=>c2.toBlob(r,"image/png"));}
+    else if(fmt==="usher"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);
       pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",(PW-W*k)/2,(PH-H*k)/2,W*k,H*k);await usherPages(pdf,F,zm,occ,now);blob=pdf.output("blob");ext="pdf";}
     else if(fmt==="pdf"){await loadJsPDF();const pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a3"});const PW=420,PH=297,mg=8;const k=Math.min((PW-2*mg)/W,(PH-2*mg)/H);const w=W*k,h=H*k;
       pdf.addImage(cv.toDataURL("image/jpeg",0.93),"JPEG",(PW-w)/2,(PH-h)/2,w,h);blob=pdf.output("blob");ext="pdf";}
     else blob=await new Promise(r=>cv.toBlob(r,"image/png"));
     if(!blob)throw new Error("empty");
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fmt==="usher"?`公館開箱活動_帶位座位表_${stamp}.pdf`:`公館開箱活動_座位圖_${stamp}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fmt==="usher"?`公館開箱活動_帶位座位表_${stamp}.pdf`:fmt==="wide"?`公館開箱活動_座位圖_16x9_${stamp}.png`:`公館開箱活動_座位圖_${stamp}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
     toast(fmt==="usher"?"帶位座位表 PDF 已匯出":ext==="pdf"?"座位圖 PDF 已匯出":"座位圖已下載");
   }catch(e){console.error("seatDownload",e);toast("座位圖產生失敗，請改用「展示座位圖」→ 列印另存 PDF");}
   finally{if(btn){btn.disabled=false;btn.textContent=oldT;}}
