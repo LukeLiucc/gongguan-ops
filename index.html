@@ -672,7 +672,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <section class="pane" id="p-flow" hidden>
     <div class="bar" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--line,#e5e7eb);border-radius:12px;background:var(--surface,#fff)">
       <b style="font-size:15px">下載／列印</b>
-      <button class="btn pri" id="fAll" type="button">下載全套 PDF（人力分工＋流程＋名單表）</button>
+      <button class="btn pri" id="fAll" type="button">下載全套 PDF（人力分工＋流程）</button>
       <button class="btn" id="fPrint" type="button">只下載流程 PDF</button>
       <span class="muted" style="font-size:13px">下方「只看」選了組別時，只下載流程會只印那一組</span>
     </div>
@@ -1443,26 +1443,8 @@ async function flowPrint(btn,all){
       y=(pg===tp?Math.max(y,top+110):y)+18;x.strokeStyle="#9CA3AF";x.lineWidth=1.5;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();y+=18;
     }
 
-    if(all){
-      /* 名單表 */
-      DT="名單表";newPage();sec("名單表（貴賓名單）");
-      const R=rtRows();const cols=[["#",50],["座位區",190],["座位",80],["單位／機關",330],["姓名",130],["職稱",160],["出席",80],["帶位",0]];
-      const cx=[];{let a=M;cols.forEach(([n,w],i)=>{cx.push(a);a+=w;});}
-      const lastW=PW-M-cx[cols.length-1];
-      const hdr=()=>{x.fillStyle="#374151";x.fillRect(M,y,PW-2*M,36);x.fillStyle="#fff";x.font=`700 19px ${F}`;cols.forEach(([n],i)=>x.fillText(n,cx[i]+6,y+25));y+=40;};
-      for(const G of invGroups()){const gs=R.filter(g=>invKey(g.inviter)===G.k);if(!gs.length)continue;
-        const lab=G.label.replace(/^水處/,"臺北自來水事業處");const att=gs.filter(g=>g.status==="出席"||g.status==="代理出席").length;
-        need(130);x.fillStyle="#111827";x.font=`800 24px ${F}`;x.fillText(`${lab}｜${gs.length} 位（出席 ${att}）`,M,y+28);y+=42;hdr();
-        gs.forEach((g,i)=>{const z=zoneById(g.zone);const vals=[String(i+1),z?z.name:"未分區",g.seat?seatLabel(g.seat):"",g.unit||"",g.name||"",g.title||"",g.status||"未回覆",z?zOwnerNames(z):""];
-          x.font=`400 19px ${F}`;const cells=vals.map((v,ci)=>wrap(v,(cols[ci][1]||lastW)-12).slice(0,3));const h=Math.max(...cells.map(c=>c.length))*26+10;
-          if(y+h>BOT){newPage();hdr();}
-          if(i%2){x.fillStyle="#F9FAFB";x.fillRect(M,y,PW-2*M,h);}
-          cells.forEach((c,ci)=>{x.fillStyle=ci===4?"#111827":g.status==="不出席"?"#9CA3AF":"#374151";x.font=ci===4?`700 20px ${F}`:`400 19px ${F}`;c.forEach((l,li)=>x.fillText(l,cx[ci]+6,y+24+li*26));});
-          y+=h;x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y);x.lineTo(PW-M,y);x.stroke();});
-        y+=24;}
-    }
     flush();
-    const blob=pdf.output("blob");offerFile(blob,`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`,all?"活動執行手冊（人力分工＋流程＋名單表）":"行程細流",pdf.getNumberOfPages());
+    const blob=pdf.output("blob");offerFile(blob,`公館開箱活動_${all?"活動執行手冊":"行程細流"+(role?"_"+role:"")}_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`,all?"活動執行手冊（人力分工＋流程）":"行程細流",pdf.getNumberOfPages());
   }catch(e){console.error(e);toast("流程 PDF 產生失敗");}finally{btn.disabled=false;btn.textContent=old;}
 }
 function openRow(id,afterId){
