@@ -635,7 +635,6 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
 </header>
 <nav class="tabs" aria-label="功能">
   <div class="wrap">
-    <a href="#tasks" data-tab="tasks">交辦事項 <span class="ct" id="ctTasks">–</span></a>
     <a href="#guests" data-tab="guests">貴賓名單 <span class="ct" id="ctGuests">0</span></a>
     <a href="#roster" data-tab="roster">名單表</a>
     <a href="#media" data-tab="media">媒體名單 <span class="ct" id="ctMedia">–</span></a>
@@ -1236,7 +1235,7 @@ function renderAll(){
   clearTimeout(zcT);zcT=setTimeout(syncZoneCodes,1500);
   
   $("#ctGuests").textContent=S.guests.length;
-  {const open=S.tasks.filter(t=>t.status!=="已完成").length;$("#ctTasks").textContent=S.loaded.has("tasks")?open:"–";}
+  {const el=document.getElementById("ctTasks");if(el){const open=S.tasks.filter(t=>t.status!=="已完成").length;el.textContent=S.loaded.has("tasks")?open:"–";}}
   if(S.meta.name)$("#evName").textContent=S.meta.name;
   if(S.meta.sub)$("#evSub").textContent=S.meta.sub;
   ({roll:renderRoll,tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
@@ -1245,7 +1244,7 @@ function renderAll(){
 /* ---------- tabs ---------- */
 const HIDE_TABS=window.OPS_HIDE||[];
 document.querySelectorAll("nav.tabs a").forEach(a=>{if(HIDE_TABS.includes(a.dataset.tab))a.remove();});
-function setTab(t){if(/[?&]view=roll/.test(location.search))t="roll";if(HIDE_TABS.includes(t))t="tasks";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
+function setTab(t){if(/[?&]view=roll/.test(location.search))t="roll";if(HIDE_TABS.includes(t)||t==="tasks")t="guests";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
   if(!["tasks","guests","roster","media","roll","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
