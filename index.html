@@ -2970,32 +2970,53 @@ async function usherPages(pdf,F,zm,occ,now){
   const rr=(x,X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
   const tint=(hex,a)=>{const m=String(hex||"#888").replace("#","");const n=parseInt(m.length===3?m.split("").map(c=>c+c).join(""):m,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
   const imgs=window.__seatImgs||{};
-  const CWd=(PW-2*M-(COLS-1)*GAP)/COLS,HEAD=190,CHt=(PH-M-HEAD-60-(ROWS-1)*GAP)/ROWS,PHW=Math.round(CHt*0.78)-24,PHH=CHt-24;
+  const HEAD=190;
+  {// 總表：全部已排座位（含保留席），依座位排序
+    const all=Object.keys(occ).map(sid=>({sid,g:occ[sid]})).concat(blockedList().filter(b=>/保留/.test(b.why||"")).map(b=>({sid:b.s,g:null})));all.sort((a,b)=>key(a.sid)-key(b.sid));
+    const cols=[["座位",90],["座位區",230],["姓名",160],["職稱",170],["單位",340],["帶位人員",138]];const RH=40,TOP=M+150;const per=Math.floor((PH-TOP-90)/RH);const pages=Math.ceil(all.length/per);const nP=all.filter(t=>t.g).length;
+    for(let pg=0;pg<pages;pg++){const cv=document.createElement("canvas");cv.width=PW;cv.height=PH;const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);
+      x.fillStyle="#111827";x.font=`800 36px ${F}`;x.fillText(`出席座位總表${pages>1?`（${pg+1}/${pages}）`:""}`,M,M+40);
+      x.fillStyle="#4B5563";x.font=`400 21px ${F}`;x.fillText(`已排座位 ${nP} 位${all.length>nP?`＋保留 ${all.length-nP} 席`:""}｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,M,M+80);
+      let y=TOP;x.fillStyle="#111827";x.fillRect(M,y,PW-2*M,RH);x.fillStyle="#fff";x.font=`700 20px ${F}`;let cx=M;cols.forEach(([h,w])=>{x.fillText(h,cx+8,y+27);cx+=w;});y+=RH;
+      all.slice(pg*per,(pg+1)*per).forEach((t,i)=>{const z=t.g?zoneById(t.g.zone):zoneById(zm[t.sid]);if(i%2){x.fillStyle="#F9FAFB";x.fillRect(M,y,PW-2*M,RH);}
+        if(z){x.fillStyle=tint(z.color,.22);x.fillRect(M+90,y,230,RH);}
+        const v=[seatLabel(t.sid),z?z.name:"",t.g?(t.g.name||"單位代表"):blockedNote(t.sid),t.g?(t.g.title||""):"",t.g?(t.g.unit||""):"",z?zOwnerNames(z):""];cx=M;
+        v.forEach((s0,j)=>{x.fillStyle=!t.g&&j===2&&z?z.color:"#111827";x.font=`${j===0||j===2?700:400} ${j===2?20:18}px ${F}`;x.fillText(fit(x,s0,cols[j][1]-14),cx+8,y+27);cx+=cols[j][1];});
+        x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y+RH);x.lineTo(PW-M,y+RH);x.stroke();y+=RH;});
+      x.fillStyle="#9CA3AF";x.font=`400 18px ${F}`;x.fillText("水源新天地與公館運動館開箱活動｜2026/11/11（三）｜公館大樓 A 棟國際會議廳",M,PH-30);
+      pdf.addPage("a4","portrait");pdf.addImage(cv.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297);}
+  }
   for(const z of sortedZones()){
     const seats=new Set(z.seats||[]);S.guests.forEach(g=>{if(g.seat&&g.zone===z.id)seats.add(g.seat);});
     const items=[...seats].filter(sid=>(occ[sid]&&occ[sid].zone===z.id)||(isRsv(sid)&&zm[sid]===z.id)).sort((a,b)=>key(a)-key(b)).map(sid=>({sid,g:occ[sid]&&occ[sid].zone===z.id?occ[sid]:null}));
     if(!items.length)continue;
     const ppl=items.filter(t=>t.g).length,rsv=items.length-ppl;const att=items.filter(t=>t.g&&(t.g.status==="出席"||t.g.status==="代理出席")).length;
-    const per=COLS*ROWS,pages=Math.ceil(items.length/per);const col=z.color||"#374151";
+    const n=items.length;const COLS=n<=8?2:n<=15?3:n<=24?4:5;const ROWS=Math.max(COLS===2?Math.min(4,Math.ceil(n/2)):Math.ceil(n/COLS),COLS===2?4:Math.ceil(n/COLS));
+    const CWd=(PW-2*M-(COLS-1)*GAP)/COLS,CHt=(PH-M-HEAD-60-(ROWS-1)*GAP)/ROWS;const vert=COLS>=3;const k=Math.min(1,Math.max(.62,CHt/335));
+    const per=n,pages=1;const col=z.color||"#374151";
     for(let pg=0;pg<pages;pg++){
       const cv=document.createElement("canvas");cv.width=PW;cv.height=PH;const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);
-      x.fillStyle=col;rr(x,M,M,PW-2*M,78,12);x.fill();x.fillStyle="#fff";x.font=`800 38px ${F}`;x.fillText(fit(x,z.name+(pages>1?`（${pg+1}/${pages}）`:""),PW-2*M-40),M+24,M+52);
+      x.fillStyle=col;rr(x,M,M,PW-2*M,78,12);x.fill();x.fillStyle="#fff";x.font=`800 38px ${F}`;x.fillText(fit(x,z.name,PW-2*M-40),M+24,M+52);
       x.fillStyle="#111827";x.font=`700 26px ${F}`;x.fillText(`帶位人員：${zOwnerNames(z)||"—"}`,M,M+122);
       x.fillStyle="#4B5563";x.font=`400 21px ${F}`;x.fillText(`${ppl} 位${rsv?`＋保留 ${rsv} 席`:""}｜已確認出席 ${att} 位｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,M,M+158);
-      items.slice(pg*per,(pg+1)*per).forEach((t,i)=>{const cx=M+(i%COLS)*(CWd+GAP),cy=M+HEAD+Math.floor(i/COLS)*(CHt+GAP);
+      items.forEach((t,i)=>{const cx=M+(i%COLS)*(CWd+GAP),cy=M+HEAD+Math.floor(i/COLS)*(CHt+GAP);
         x.fillStyle="#fff";rr(x,cx,cy,CWd,CHt,14);x.fill();x.strokeStyle=tint(col,.55);x.lineWidth=2.5;x.stroke();
-        const px=cx+12,py=cy+12;const tx=px+PHW+20,tw=cx+CWd-tx-16;
+        let px,py,PHW,PHH,tx,tw,ty;
+        if(vert){px=cx+10;py=cy+10;PHW=CWd-20;PHH=Math.round(CHt*0.56);tx=cx+12;tw=CWd-24;ty=py+PHH+Math.round(34*k);}
+        else{px=cx+12;py=cy+12;PHH=CHt-24;PHW=Math.min(Math.round(PHH*0.78),Math.round(CWd*0.45));tx=px+PHW+20;tw=cx+CWd-tx-16;ty=cy+Math.round(118*k);}
         if(!t.g){x.setLineDash([10,7]);x.strokeStyle=col;x.lineWidth=2;rr(x,px,py,PHW,PHH,10);x.stroke();x.setLineDash([]);x.fillStyle=tint(col,.08);x.fill();
-          x.fillStyle=col;x.font=`800 30px ${F}`;x.textAlign="center";wrap(x,blockedNote(t.sid),PHW-30,3).forEach((l,k,a)=>x.fillText(l,px+PHW/2,py+PHH/2-(a.length-1)*20+k*40+10));x.textAlign="left";}
+          x.fillStyle=col;x.font=`800 ${Math.round(28*k)}px ${F}`;x.textAlign="center";wrap(x,blockedNote(t.sid),PHW-24,3).forEach((l,kk,a)=>x.fillText(l,px+PHW/2,py+PHH/2-(a.length-1)*18*k+kk*36*k+10));x.textAlign="left";}
         else{const im=imgs[t.g.id];x.save();rr(x,px,py,PHW,PHH,10);x.clip();
           if(im){const sc=Math.max(PHW/im.naturalWidth,PHH/im.naturalHeight);const w=im.naturalWidth*sc,h=im.naturalHeight*sc;x.drawImage(im,px+(PHW-w)/2,py+(PHH-h)*0.3,w,h);}
-          else{x.fillStyle=tint(col,.14);x.fillRect(px,py,PHW,PHH);x.fillStyle=col;x.font=`800 ${t.g.name&&t.g.name.length>=3?64:72}px ${F}`;x.textAlign="center";x.fillText((t.g.name||"代表").slice(0,3),px+PHW/2,py+PHH/2+22);x.font=`500 18px ${F}`;x.fillStyle="#6B7280";x.fillText("（尚無照片）",px+PHW/2,py+PHH-22);x.textAlign="left";}
+          else{x.fillStyle=tint(col,.14);x.fillRect(px,py,PHW,PHH);x.fillStyle=col;const nm=(t.g.name||"代表").slice(0,3);x.font=`800 ${Math.round(Math.min(72,PHW/(nm.length+0.4))*1)}px ${F}`;x.textAlign="center";x.fillText(nm,px+PHW/2,py+PHH/2+20);x.font=`500 ${Math.round(17*k)}px ${F}`;x.fillStyle="#6B7280";x.fillText("（尚無照片）",px+PHW/2,py+PHH-16);x.textAlign="left";}
           x.restore();}
-        x.fillStyle=col;rr(x,tx,cy+16,Math.min(tw,150),48,10);x.fill();x.fillStyle="#fff";x.font=`800 30px ${F}`;x.fillText(seatLabel(t.sid),tx+14,cy+51);
-        if(t.g){let y=cy+118;x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText(fit(x,t.g.name||"單位代表",tw),tx,y);y+=44;
-          x.fillStyle="#374151";x.font=`700 24px ${F}`;wrap(x,t.g.title||"",tw,2).forEach(l=>{x.fillText(l,tx,y);y+=32;});y+=6;
-          x.fillStyle="#4B5563";x.font=`400 21px ${F}`;wrap(x,t.g.unit||"",tw,4).forEach(l=>{x.fillText(l,tx,y);y+=28;});
-          if(t.g.status&&t.g.status!=="出席"&&t.g.status!=="代理出席"){x.fillStyle="#B45309";x.font=`700 20px ${F}`;x.fillText(t.g.status,tx,cy+CHt-20);}}
+        const bw=Math.round(Math.min(tw,150)*k);x.fillStyle=col;
+        if(vert){rr(x,px+8,py+8,Math.max(96,bw),Math.round(44*k),9);x.fill();x.fillStyle="#fff";x.font=`800 ${Math.round(28*k)}px ${F}`;x.fillText(seatLabel(t.sid),px+20,py+8+Math.round(32*k));}
+        else{rr(x,tx,cy+16,Math.min(tw,150),48,10);x.fill();x.fillStyle="#fff";x.font=`800 30px ${F}`;x.fillText(seatLabel(t.sid),tx+14,cy+51);}
+        if(t.g){let y=ty;x.fillStyle="#111827";x.font=`800 ${Math.round(40*k)}px ${F}`;x.fillText(fit(x,t.g.name||"單位代表",tw),tx,y);y+=Math.round(40*k);
+          x.fillStyle="#374151";x.font=`700 ${Math.round(23*k)}px ${F}`;wrap(x,t.g.title||"",tw,vert?1:2).forEach(l=>{x.fillText(l,tx,y);y+=Math.round(30*k);});y+=4;
+          x.fillStyle="#4B5563";x.font=`400 ${Math.round(20*k)}px ${F}`;wrap(x,t.g.unit||"",tw,vert?2:4).forEach(l=>{if(y<cy+CHt-8){x.fillText(l,tx,y);y+=Math.round(26*k);}});
+          if(t.g.status&&t.g.status!=="出席"&&t.g.status!=="代理出席"){x.fillStyle="#B45309";x.font=`700 ${Math.round(20*k)}px ${F}`;x.fillText(t.g.status,vert?cx+CWd-90:tx,cy+CHt-14);}}
       });
       x.fillStyle="#9CA3AF";x.font=`400 18px ${F}`;x.fillText("水源新天地與公館運動館開箱活動｜2026/11/11（三）｜公館大樓 A 棟國際會議廳",M,PH-30);
       pdf.addPage("a4","portrait");pdf.addImage(cv.toDataURL("image/jpeg",0.88),"JPEG",0,0,210,297);
