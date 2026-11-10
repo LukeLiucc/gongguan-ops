@@ -247,6 +247,9 @@ button.st.off.blk{cursor:pointer}
 .rt-save{display:inline-flex;align-items:center;gap:8px}.rt-save small{color:var(--ink-3);font-size:12.5px;white-space:nowrap}
 .st.aisle{background:transparent;border:1px dashed var(--line);cursor:default}
 .st.sel{outline:3px solid var(--accent);outline-offset:1px}
+.rcsum{margin:8px 0 14px;font-size:14px;color:var(--ink-2)}.rccat{margin:0 0 18px}.rccat h3{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 6px;padding:6px 10px;border-radius:8px;background:var(--surface-2,#f3f4f6)}.rccat h3 .n{font-weight:500;font-size:13px;color:var(--ink-3)}.rccat h3 .sp{flex:1}.rccat h3 button{border:0;background:transparent;cursor:pointer;font-size:14px;color:var(--ink-2)}
+.rcrow{display:grid;grid-template-columns:44px 28px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line,#e5e7eb);border-radius:10px;margin:0 0 5px;background:var(--surface,#fff)}.rcrow.drag{opacity:.4}.rcrow.over{outline:2px dashed var(--accent)}.rcrow .no{font-weight:800;color:var(--ink-3);font-size:13px;text-align:right}.rcrow .gr{cursor:grab;color:var(--ink-3);text-align:center;user-select:none}.rcrow .tx{min-width:0}.rcrow .tx b{font-size:16px}.rcrow .tx span{display:block;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcrow .mv{display:flex;gap:2px}.rcrow .mv button{border:1px solid var(--line,#e5e7eb);background:var(--surface,#fff);border-radius:6px;width:28px;height:28px;cursor:pointer}.rcrow select{font-size:12.5px;max-width:130px}.rcrow.skip{opacity:.55}
+@media (max-width:640px){.rcrow{grid-template-columns:30px minmax(0,1fr) auto;}.rcrow .gr{display:none}.rcrow select{grid-column:2/-1}}
 .padmap{position:relative;height:420px;margin:14px 0 8px;border-radius:12px;background:var(--surface-2,#f6f7f9)}.pad{position:absolute;transform:translateX(-50%);width:min(30%,190px);background:var(--surface,#fff);border:2px solid #1E5A7A;border-radius:14px;padding:10px 10px 8px;box-shadow:0 2px 6px rgba(0,0,0,.08)}.pad.mid{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}.pad .pdn{position:absolute;top:-11px;left:10px;background:#1E5A7A;color:#fff;font-style:normal;font-size:11px;font-weight:800;border-radius:999px;padding:1px 8px}.pad.mid .pdn{background:var(--accent)}.pad .pp{margin-top:4px;line-height:1.25}.pad .pp b{display:block;font-size:15px}.pad .pp span{display:block;font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.padlist{display:grid;gap:4px;font-size:13.5px}@media (max-width:760px){.padmap{height:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 12px;padding:20px 10px 12px}.pad{position:relative;left:auto!important;top:auto!important;transform:none;width:auto;min-width:0}.pad .pp b{font-size:14px}}
 .st.rsv{background:color-mix(in srgb,var(--zc,#888) 16%,var(--surface));border:1.5px dashed var(--zc,#888);color:var(--zc,#666);display:grid;place-items:center;cursor:default}.st.rsv .rsvt{font-size:11px;font-weight:800;line-height:1.15;text-align:center;padding:0 2px}button.st.rsv{cursor:pointer}
 .st.msel{outline:3px solid #f5b400;outline-offset:1px;box-shadow:0 0 0 5px rgba(245,180,0,.28)}
@@ -634,6 +637,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <a href="#guests" data-tab="guests">貴賓名單 <span class="ct" id="ctGuests">0</span></a>
     <a href="#roster" data-tab="roster">名單表</a>
     <a href="#media" data-tab="media">媒體名單 <span class="ct" id="ctMedia">–</span></a>
+    <a href="#roll" data-tab="roll">唱名清單</a>
     <a href="#flow" data-tab="flow">行程細流</a>
     <a href="#seats" data-tab="seats">座位分區</a>
     <a href="#press" data-tab="press">新聞稿</a>
@@ -680,6 +684,13 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   </section>
 
   <!-- 交辦事項 -->
+  <section class="pane" id="p-roll" hidden>
+    <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，右邊下拉選單可換分類；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
+      <button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
+    <div class="rcsum" id="rcSum"></div>
+    <div id="rcList"></div>
+  </section>
+
   <section class="pane" id="p-tasks" hidden>
     <div class="ttl2"><h2>副座交辦事項</h2><span class="hint">每項可改處理說明、負責人與狀態，大家看到的是同一份</span></div>
     <div id="tkList" class="tklist"></div>
@@ -1226,14 +1237,14 @@ function renderAll(){
   {const open=S.tasks.filter(t=>t.status!=="已完成").length;$("#ctTasks").textContent=S.loaded.has("tasks")?open:"–";}
   if(S.meta.name)$("#evName").textContent=S.meta.name;
   if(S.meta.sub)$("#evSub").textContent=S.meta.sub;
-  ({tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
+  ({roll:renderRoll,tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
 }
 
 /* ---------- tabs ---------- */
 const HIDE_TABS=window.OPS_HIDE||[];
 document.querySelectorAll("nav.tabs a").forEach(a=>{if(HIDE_TABS.includes(a.dataset.tab))a.remove();});
 function setTab(t){if(HIDE_TABS.includes(t))t="tasks";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
-  if(!["tasks","guests","roster","media","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
+  if(!["tasks","guests","roster","media","roll","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   document.querySelectorAll("section.pane").forEach(p=>p.hidden=p.id!=="p-"+t);
@@ -1384,7 +1395,7 @@ function initGuests(){
   L.addEventListener("click",e=>{
     const p=e.target.closest("[data-photo]");if(p){openPhoto(p.dataset.photo);return;}
     const ed=e.target.closest("[data-edit]");if(ed){openGuest(ed.dataset.edit);return;}
-    const ar=e.target.closest("[data-arrive]");if(ar){const g=S.guests.find(x=>x.id===ar.dataset.arrive);if(g){g.arrived=!g.arrived;upd("guests",g.id,{arrived:g.arrived});schedule();}return;}
+    const ar=e.target.closest("[data-arrive]");if(ar){const g=S.guests.find(x=>x.id===ar.dataset.arrive);if(g){g.arrived=!g.arrived;upd("guests",g.id,{arrived:g.arrived,arrivedAt:g.arrived?Date.now():0});schedule();}return;}
   });
   L.addEventListener("change",e=>{
     const s=e.target.closest("[data-gst]");if(s){const g=S.guests.find(x=>x.id===s.dataset.gst);if(g){g.status=s.value;upd("guests",g.id,{status:g.status});schedule();}return;}
@@ -2803,6 +2814,81 @@ function attGroups(){
   return {all:gs,yes:[...by("出席"),...by("代理出席")],no:by("不出席"),wait:by("未回覆")};
 }
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
+/* ================= 唱名清單 ================= */
+const RC_CATS=["府級長官","主辦單位","民意代表","市府局處首長","里長","法人團體","公司行號","聯新國際醫療集團同仁","不唱名"];
+function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
+function rcDefaultCat(e){const g=e.g0,u=e.unit,t=e.title||"";
+  if(g&&g.name==="蔣萬安")return "不唱名";
+  if(u==="臺北市政府")return "府級長官";
+  if(/臺北自來水事業處|臺北市政府體育局|聯新國際體育股份有限公司/.test(u)||(g&&g.name==="簡伯毅"))return "主辦單位";
+  if(/臺北市議會|立法院/.test(u))return "民意代表";
+  if(/^臺北市政府|區公所|臺北市商業處/.test(u))return "市府局處首長";
+  if(/里長/.test(t)||/里$/.test(u))return "里長";
+  if(/^聯新國際醫療集團/.test(u))return "聯新國際醫療集團同仁";
+  if(/協會|委員會|總會|賽車會|基金會|策進會|大學|EMBA|運動中心|運動館|游泳池|籃球館/.test(u))return "法人團體";
+  return "公司行號";}
+const RC_HOST=["臺北自來水事業處","臺北市政府體育局","聯新國際體育股份有限公司"];
+function rcEntries(){
+  const gs=S.guests.filter(g=>g.seat&&g.zone!=="z-media"&&g.status!=="不出席");const out=[];const grp={};
+  gs.forEach(g=>{const unnamed=!g.name||g.name==="單位代表";const emba=/EMBA/.test(g.unit||"");
+    if(unnamed||emba){const k="u:"+(g.unit||"");(grp[k]=grp[k]||[]).push(g);}else out.push({key:g.id,ids:[g.id],g0:g,unit:g.unit||"",title:g.title||"",label:(g.name||"")+(g.title?" "+g.title:""),seat:g.seat});});
+  Object.entries(grp).forEach(([k,list])=>{const g0=list[0];const emba=/EMBA/.test(g0.unit||"");const names=list.filter(x=>x.name&&x.name!=="單位代表").map(x=>x.name);
+    out.push({key:k,ids:list.map(x=>x.id),g0:null,unit:g0.unit||"",title:"",label:emba?`同學 ${list.length} 位`:`代表 ${list.length} 位`,sub:names.join("、"),seat:list.map(x=>x.seat).sort((a,b)=>seatKey(b)-seatKey(a)).pop()});});
+  out.forEach(e=>{e.text=rcUnit(e.unit);});
+  return out;}
+function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={};RC_CATS.forEach(c=>byCat[c]=[]);
+  es.forEach(e=>{const r=m[e.key];const c=r&&RC_CATS.includes(r.c)?r.c:rcDefaultCat(e);e.cat=c;e.o=r&&typeof r.o==="number"?r.o:null;byCat[c].push(e);});
+  const rank=e=>{if(e.cat==="主辦單位"){const i=RC_HOST.findIndex(u=>e.unit===u);if(i>=0)return i*1000+seatKey(e.seat)/1e6;}return 5000+seatKey(e.seat)/100;};
+  RC_CATS.forEach(c=>byCat[c].sort((a,b)=>(a.o??1e9)-(b.o??1e9)||rank(a)-rank(b)));
+  return byCat;}
+function rcSave(byCat){const m={};RC_CATS.forEach(c=>byCat[c].forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
+let rcInit=false,rcDrag=null;
+function renderRoll(){
+  const byCat=rcState();let n=0;const nums={};
+  RC_CATS.forEach(c=>{if(c==="不唱名")return;byCat[c].forEach(e=>{nums[e.key]=++n;});});
+  const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
+  $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項（不唱名 ${byCat["不唱名"].length} 項）｜依座位名單自動產生，新增或刪除貴賓會自動更新；媒體不列入`;
+  $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
+    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項</span></h3>${list.map((e,i)=>`<div class="rcrow${c==="不唱名"?" skip":""}" draggable="${canWrite?"true":"false"}" data-key="${esc(e.key)}" data-cat="${esc(c)}">
+      <span class="no">${c==="不唱名"?"—":nums[e.key]}</span><span class="gr" title="拖拉排序">⋮⋮</span>
+      <div class="tx"><b>${esc(e.label)}</b><span>${esc(e.text)}${e.sub?"｜"+esc(e.sub):""}${e.seat?"｜座位 "+esc(seatLabel(e.seat)):""}</span></div>
+      <div class="mv"><button type="button" data-rcmv="-1" aria-label="上移"${i===0?" disabled":""}>▲</button><button type="button" data-rcmv="1" aria-label="下移"${i===list.length-1?" disabled":""}>▼</button></div>
+      <select class="sel" data-rccat aria-label="分類">${RC_CATS.map(x=>`<option${x===c?" selected":""}>${esc(x)}</option>`).join("")}</select></div>`).join("")||`<div class="muted" style="font-size:13px;padding:4px 10px">（拖到這裡）</div>`}</div>`;}).join("");
+  if(rcInit)return;rcInit=true;
+  const L=$("#rcList");
+  L.addEventListener("click",ev=>{const b=ev.target.closest("[data-rcmv]");if(!b)return;const row=b.closest(".rcrow");const bc=rcState();const list=bc[row.dataset.cat];const i=list.findIndex(e=>e.key===row.dataset.key);const j=i+(+b.dataset.rcmv);if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];rcSave(bc);renderRoll();});
+  L.addEventListener("change",ev=>{const sel=ev.target.closest("[data-rccat]");if(!sel)return;const row=sel.closest(".rcrow");const bc=rcState();const from=bc[row.dataset.cat];const i=from.findIndex(e=>e.key===row.dataset.key);const [e]=from.splice(i,1);bc[sel.value].push(e);rcSave(bc);renderRoll();toast(`已移到「${sel.value}」`);});
+  L.addEventListener("dragstart",ev=>{const r=ev.target.closest(".rcrow");if(!r)return;rcDrag=r.dataset.key;r.classList.add("drag");ev.dataTransfer.effectAllowed="move";try{ev.dataTransfer.setData("text/plain",rcDrag);}catch(e){}});
+  L.addEventListener("dragend",ev=>{rcDrag=null;L.querySelectorAll(".drag,.over").forEach(x=>x.classList.remove("drag","over"));});
+  L.addEventListener("dragover",ev=>{if(!rcDrag)return;const t=ev.target.closest(".rcrow,.rccat");if(!t)return;ev.preventDefault();L.querySelectorAll(".over").forEach(x=>x.classList.remove("over"));t.classList.add("over");});
+  L.addEventListener("drop",ev=>{if(!rcDrag)return;ev.preventDefault();const t=ev.target.closest(".rcrow,.rccat");if(!t)return;const bc=rcState();let e=null;RC_CATS.forEach(c=>{const i=bc[c].findIndex(x=>x.key===rcDrag);if(i>=0)e=bc[c].splice(i,1)[0];});if(!e)return;
+    const cat=t.dataset.cat;const list=bc[cat];if(t.classList.contains("rcrow")){const j=list.findIndex(x=>x.key===t.dataset.key);const r=t.getBoundingClientRect();list.splice(ev.clientY>r.top+r.height/2?j+1:j,0,e);}else list.push(e);
+    rcSave(bc);rcDrag=null;renderRoll();});
+  $("#rcReset").onclick=ev=>confirmIn(ev.currentTarget,"確定依預設重排",()=>{S.meta.rcMap={};upd("meta","event",{rcMap:{}});renderRoll();});
+  $("#rcPrint").onclick=ev=>rcPrint(ev.currentTarget);
+}
+async function rcPrint(btn){
+  const old=btn.textContent;btn.disabled=true;btn.textContent="產生中…";
+  try{await loadJsPDF();const byCat=rcState();const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';const PW=1240,PH=1754,M=80,RH=74;
+    const now=new Date();const pad=x=>String(x).padStart(2,"0");
+    const rows=[];let n=0;RC_CATS.forEach(c=>{if(c==="不唱名"||!byCat[c].length)return;rows.push({h:c});byCat[c].forEach(e=>rows.push({n:++n,e}));});
+    const fit=(x,t,w)=>{if(x.measureText(t).width<=w)return t;let s=t;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…";};
+    let page=null,x=null,y=0,pg=0;const newPage=()=>{if(page){pdf.addImage(page.toDataURL("image/jpeg",0.92),"JPEG",0,0,210,297);pdf.addPage("a4","portrait");}page=document.createElement("canvas");page.width=PW;page.height=PH;x=page.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);pg++;
+      x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText("唱名稿｜水源新天地與公館運動館開箱活動",M,M+30);x.fillStyle="#6B7280";x.font=`400 20px ${F}`;x.fillText(`2026/11/11（三）｜市長入場時另行介紹｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本｜第 ${pg} 頁`,M,M+66);y=M+110;};
+    newPage();
+    for(const r of rows){const need=r.h?64:RH;if(y+need>PH-70)newPage();
+      if(r.h){x.fillStyle="#111827";x.fillRect(M,y+8,PW-2*M,46);x.fillStyle="#fff";x.font=`800 26px ${F}`;x.fillText(r.h,M+16,y+40);y+=64;continue;}
+      const e=r.e;x.strokeStyle="#9CA3AF";x.lineWidth=2;x.strokeRect(M+4,y+20,30,30);
+      x.fillStyle="#6B7280";x.font=`700 22px ${F}`;x.textAlign="right";x.fillText(String(r.n),M+92,y+45);x.textAlign="left";
+      x.fillStyle="#374151";x.font=`400 24px ${F}`;const ut=fit(x,e.text,560);x.fillText(ut,M+112,y+45);const uw=x.measureText(ut).width;
+      x.fillStyle="#111827";x.font=`800 32px ${F}`;x.fillText(fit(x,e.label,PW-2*M-112-uw-24),M+112+uw+20,y+46);
+      if(e.sub){x.fillStyle="#6B7280";x.font=`400 18px ${F}`;x.fillText(fit(x,e.sub,PW-2*M-112),M+112,y+68);}
+      x.strokeStyle="#E5E7EB";x.lineWidth=1;x.beginPath();x.moveTo(M,y+RH);x.lineTo(PW-M,y+RH);x.stroke();y+=RH;}
+    pdf.addImage(page.toDataURL("image/jpeg",0.92),"JPEG",0,0,210,297);
+    const blob=pdf.output("blob");const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`公館開箱活動_唱名稿_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.pdf`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast("唱名稿已下載");
+  }catch(e){console.error(e);toast("唱名稿產生失敗");}finally{btn.disabled=false;btn.textContent=old;}
+}
 function renderTasks(){
   if(S.loaded.has("tasks")&&!tkSeeded){tkSeeded=true;for(const t of TK_SEED){if(!S.tasks.find(x=>x.id===t.id)){const {id,...d}=t;S.tasks.push(t);put("tasks",id,d);}}}
   const L=$("#tkList");
