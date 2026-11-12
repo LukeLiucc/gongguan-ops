@@ -777,6 +777,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <label class="chk"><input type="checkbox" id="gNoMail"> 只看缺 mail</label>
       <span class="sp"></span>
       <button class="btn" id="gCsv" type="button">下載名單</button>
+      <button class="btn" id="gPq" type="button">補照片</button>
       <button class="btn pri" id="gAdd" type="button">＋ 新增貴賓</button>
     </div>
     <div id="gList"></div>
@@ -1537,6 +1538,7 @@ function initGuests(){
   $("#gvUsher").onclick=()=>{UI.gView="usher";keepUI();renderGuests();};
   $("#gAdd").onclick=()=>openGuest(null);
   $("#gCsv").onclick=exportCsv;
+  $("#gPq").onclick=()=>{pqSkip=new Set();openPhotoQueue();};
   const L=$("#gList");
   L.addEventListener("click",e=>{
     const p=e.target.closest("[data-photo]");if(p){openPhoto(p.dataset.photo);return;}
@@ -1680,6 +1682,29 @@ function openPhoto(id){
   if(dr){dr.addEventListener("dragover",e=>{e.preventDefault();dr.classList.add("on");});dr.addEventListener("dragleave",()=>dr.classList.remove("on"));dr.addEventListener("drop",e=>{e.preventDefault();dr.classList.remove("on");apply(e.dataTransfer.files[0]);});}
   pasteHandler=e=>{const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));if(it){e.preventDefault();apply(it.getAsFile());}};
   const pd=md.querySelector("#pDel");if(pd)pd.onclick=()=>{g.photo="";upd("guests",g.id,{photo:""});schedule();closeModal();};
+}
+let pqSkip=new Set();
+function photoQueue(){return sortedGuests().filter(g=>!g.photo&&g.status!=="不出席"&&g.category!=="兒少代表").sort((a,b)=>{const za=zoneById(a.zone),zb=zoneById(b.zone);return ((za&&za.area)?1:0)-((zb&&zb.area)?1:0)||((za?za.order:999)-(zb?zb.order:999))||((a.order??0)-(b.order??0));});}
+function openPhotoQueue(){
+  const all=photoQueue();const q=all.filter(g=>!pqSkip.has(g.id));
+  if(!q.length){closeModal();toast(all.length?`其餘 ${all.length} 位已跳過`:"照片都補齊了");return;}
+  const g=q[0];const z=zoneById(g.zone);
+  const qs=encodeURIComponent([g.name&&g.name!=="單位代表"?g.name:"",g.unit,g.title].filter(Boolean).join(" "));
+  const md=modal(`<h3>補照片｜還缺 ${all.length} 位</h3>
+    <div class="photo-md"><div class="pv">${photoBox(g)}<div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <div style="font-size:18px;font-weight:800">${esc(g.name||"單位代表")}</div>
+      <div style="font-size:14px"><b>${esc(g.title||"")}</b>${g.unit?"｜"+esc(g.unit):""}</div>
+      <div class="muted" style="font-size:13px">${z?esc(z.name):"未分區"}${g.note?"｜"+esc(g.note):""}</div>
+      <a class="btn" href="https://www.google.com/search?tbm=isch&q=${qs}" target="_blank" rel="noopener">在 Google 圖片搜尋這個人</a>
+      <div class="drop" id="pDrop" tabindex="0">找到照片後：在圖片上按右鍵「複製圖片」，回到這裡按 Ctrl+V（Mac 按 ⌘V）貼上，會自動跳到下一位<br>或把圖片檔拖進來</div>
+      <button class="btn" type="button" id="pPick">選擇照片檔案</button>
+    </div></div></div>
+    <div class="ft"><span class="muted l" style="font-size:12.5px">先補對號入座的區；兒少代表不列入</span><button class="btn" type="button" id="pSkip">跳過這位</button><button class="btn pri" type="button" data-close>先到這裡</button></div>`,"photo-md");
+  const apply=async f=>{if(!f||!/^image\//.test(f.type)){toast("請貼上或選擇圖片");return;}const res=await uploadImg(f,480);if(res){g.photo=res.id;upd("guests",g.id,{photo:res.id});toast("已放入 "+(g.name||"")+" 的照片");openPhotoQueue();}};
+  md.querySelector("#pPick").onclick=()=>pickFile(apply);
+  md.querySelector("#pSkip").onclick=()=>{pqSkip.add(g.id);openPhotoQueue();};
+  const dr=md.querySelector("#pDrop");dr.addEventListener("dragover",e=>{e.preventDefault();dr.classList.add("on");});dr.addEventListener("dragleave",()=>dr.classList.remove("on"));dr.addEventListener("drop",e=>{e.preventDefault();dr.classList.remove("on");apply(e.dataTransfer.files[0]);});
+  pasteHandler=e=>{const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));if(it){e.preventDefault();apply(it.getAsFile());}};
 }
 let pasteHandler=null;
 document.addEventListener("paste",e=>{if(pasteHandler&&!$("#ov").hidden)pasteHandler(e);});
