@@ -2047,7 +2047,7 @@ function renderZRoster(zs){
   const op=UI.zrOpen||{};const fz=UI.seatZone;
   el.innerHTML=`<div class="zrtop"><h2>各區名單</h2>${fz?`<button type="button" class="btn sm" data-zract="all">顯示全部區</button>`:`<span class="hint">點區名，座位圖會標出那一區</span>`}</div>`+zs.map(z=>{
     const gs=sortedGuests().filter(g=>g.zone===z.id&&g.status!=="不出席");const arr=gs.filter(g=>g.arrived).length;const cap=(z.seats||[]).length;
-    const open=fz===z.id?true:((z.id in op)?op[z.id]:gs.length<=30);
+    const open=fz===z.id?true:((z.id in op)?op[z.id]:true);
     return `<section class="zr${open?" open":""}${fz===z.id?" on":fz?" off":""}" data-zr="${esc(z.id)}" style="--zc:${esc(z.color)}">
       <header><button type="button" class="zrn" data-zract="focus" data-id="${esc(z.id)}" aria-pressed="${fz===z.id}" title="點一下在座位圖標出這一區"><b>${esc(z.name)}</b><span class="pill ${z.area?"mute":"acc"}">${z.area?"分區入座":"對號入座"}</span></button>
         <small>${gs.length} 位／${cap} 席${arr?`・已到 ${arr}`:""}</small>
