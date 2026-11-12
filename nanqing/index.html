@@ -558,6 +558,19 @@ table.rt th:first-child{left:0;z-index:3}
 .sedit .se-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sedit .se-a{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .sedit .sp{flex:1}
+@media (min-width:1280px){#p-seats .seatwrap{grid-template-columns:minmax(0,1fr) 330px;width:calc(100vw - 40px);max-width:1700px;margin-left:50%;transform:translateX(-50%)}#p-seats .seatwrap>.map{width:auto;max-width:none;margin-left:0;transform:none}.seatwrap>.map,.seatwrap>#side{grid-column:1}.seatwrap>.zroster{grid-column:2;grid-row:1/span 2;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}}
+.zroster{padding:12px;display:flex;flex-direction:column;gap:8px}
+.zr{border:1px solid var(--line);border-left:5px solid var(--zc);border-radius:8px;padding:6px 8px}
+.zr summary{display:flex;gap:6px;align-items:center;cursor:pointer;font-size:14px;flex-wrap:wrap}
+.zr summary small{margin-left:auto;color:var(--ink-3)}
+.zr ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
+.zr li{display:flex;gap:6px;align-items:baseline;font-size:13.5px}
+.zr li b{white-space:nowrap}
+.zr li span{color:var(--ink-3);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.zr li em{font-style:normal;font-weight:700;font-size:12px;white-space:nowrap}
+.zr li.arr b::before{content:"✓ ";color:#047857}
+.zr p{margin:6px 0 0;font-size:13px}
+body.showseat #zroster{display:none!important}
 .zbox.area{background:color-mix(in srgb,var(--zc) 22%,transparent);z-index:3}
 .zbox.area .zlab{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);max-width:92%;font-size:14px;text-align:center;padding:6px 12px;border-radius:8px;box-shadow:0 2px 8px rgba(15,27,43,.18)}
 .zbox.area .zlab .zcnt{display:block;margin:3px 0 0}
@@ -822,6 +835,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
         <div class="legend" id="legend"></div>
       </div>
       <aside class="card side" id="side"></aside>
+      <aside class="card zroster" id="zroster"></aside>
     </div>
   </section>
 
@@ -1931,7 +1945,17 @@ function renderSeats(){
   wb.innerHTML=onBlk.length?`<b>${onBlk.length} 位貴賓坐在不可排的座位，請移位：</b>${onBlk.map(g=>`<button type="button" class="btn sm" data-fixblk="${esc(g.id)}">${esc(seatText(g))} ${esc(g.name||g.unit)}</button>`).join("")}`:"";
   renderSide(zs);
 }
+function renderZRoster(zs){
+  const el=$("#zroster");if(!el)return;
+  if(!el.dataset.b){el.dataset.b="1";el.addEventListener("toggle",e=>{const d=e.target.closest&&e.target.closest("details[data-zr]");if(d){UI.zrOpen=UI.zrOpen||{};UI.zrOpen[d.dataset.zr]=d.open;}},true);}
+  const op=UI.zrOpen||{};
+  el.innerHTML=`<div class="ttl2" style="margin:0"><h2 style="font-size:17px">各區名單</h2><span class="hint">不含不出席</span></div>`+zs.map(z=>{
+    const gs=sortedGuests().filter(g=>g.zone===z.id&&g.status!=="不出席");const arr=gs.filter(g=>g.arrived).length;
+    const open=(z.id in op)?op[z.id]:gs.length<=30;
+    return `<details class="zr" data-zr="${esc(z.id)}"${open?" open":""} style="--zc:${esc(z.color)}"><summary><b>${esc(z.name)}</b><span class="pill ${z.area?"mute":"acc"}">${z.area?"分區入座":"對號入座"}</span><small>${gs.length} 位／${(z.seats||[]).length} 席${arr?`・已到 ${arr}`:""}</small></summary>${gs.length?`<ul>${gs.map(g=>`<li class="${g.arrived?"arr":""}"><b>${esc(g.name||"單位代表")}</b><span>${esc([g.title,g.unit].filter(Boolean).join("｜"))}</span>${!z.area&&g.seat?`<em>${esc(seatLabel(g.seat))}</em>`:""}</li>`).join("")}</ul>`:`<p class="muted">名單上還沒有人</p>`}</details>`;}).join("");
+}
 function renderSide(zs){
+  renderZRoster(zs);
   const side=$("#side");
   if(UI.seatMode==="paint"){
     side.innerHTML=`<div class="ttl2" style="margin:0"><h2 style="font-size:17px">座位區設定</h2></div><div class="zsum">${zs.map(z=>{const st=zoneStats(z);const on=zOwnerNames(z);return `<div class="zrow"><i class="zdot" style="background:${esc(z.color)}"></i><div><b>${esc(z.name)}</b><small>${st.cap} 席｜帶位 ${on?esc(on):"未指派"}｜每人帶 ${st.ratio} 位</small></div><button class="btn sm" type="button" data-sact="editz" data-z="${esc(z.id)}">設定</button></div>`;}).join("")}</div>`;
@@ -1940,7 +1964,7 @@ function renderSide(zs){
   const sel=S.guests.find(g=>g.id===UI.selGuest);
   const zf=UI.seatZone;const z=zoneById(zf);
   let gs=sortedGuests().filter(g=>g.status!=="不出席");
-  gs=zf?gs.filter(g=>g.zone===zf):gs.filter(g=>!g.seat);
+  gs=zf?gs.filter(g=>g.zone===zf):gs.filter(g=>!g.seat&&!(zoneById(g.zone)||{}).area);
   gs.sort((a,b)=>(a.seat?1:0)-(b.seat?1:0));
   side.innerHTML=`${sel?`<div class="selinfo sedit"><div class="se-h"><span>已選</span>${sel.seat?`<span class="seatb">${esc(seatLabel(sel.seat))}</span>`:`<span class="muted">未入座</span>`}<span class="muted" style="font-size:12.5px">點座位入座（有人的座位會互換）</span></div>
     <label>姓名<input class="inp" data-se="name" value="${esc(sel.name||"")}" placeholder="單位代表"></label>
@@ -1949,7 +1973,7 @@ function renderSide(zs){
     <label>出席<select class="sel" data-se="status" style="width:100%">${STATUS.map(x=>`<option${x===(sel.status||"未回覆")?" selected":""}>${x}</option>`).join("")}</select></label>
     <label>座位區<select class="sel" data-se="zone" style="width:100%"><option value="">未分區</option>${sortedZones().map(z=>`<option value="${esc(z.id)}"${z.id===sel.zone?" selected":""}>${esc(z.name)}</option>`).join("")}</select></label>
     <div class="se-a">${sel.seat?`<button class="btn sm" type="button" data-sact="unseat">移出座位</button>`:""}<button class="btn sm danger" type="button" data-sact="delg">刪除這位</button><span class="sp"></span><button class="btn sm pri" type="button" data-sact="cancel">完成</button></div></div>`:""}
-  <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm${zf?"":" pri"}" type="button" data-sact="zf" data-z="">全部未入座</button>${zs.map(x=>`<button class="btn sm${zf===x.id?" pri":""}" type="button" data-sact="zf" data-z="${esc(x.id)}"><i class="zdot" style="background:${esc(x.color)}"></i>${esc(x.name)}</button>`).join("")}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm${zf?"":" pri"}" type="button" data-sact="zf" data-z="">對號區未入座</button>${zs.map(x=>`<button class="btn sm${zf===x.id?" pri":""}" type="button" data-sact="zf" data-z="${esc(x.id)}"><i class="zdot" style="background:${esc(x.color)}"></i>${esc(x.name)}</button>`).join("")}</div>
   ${z?(()=>{const st=zoneStats(z);const on=zOwnerNames(z);return `<div class="zrow" style="grid-template-columns:12px minmax(0,1fr)"><i class="zdot" style="background:${esc(z.color)}"></i><div><b>${esc(z.name)}</b><small>帶位 ${on?esc(on):"未指派"}｜${st.seated}/${st.cap} 席已入座｜指名 ${st.named} 位${+z.est?`＋預估 ${+z.est} 位`:""}</small></div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm pri" type="button" data-sact="auto" data-z="${esc(z.id)}">依名單順序自動入座</button><button class="btn sm" type="button" data-sact="clear" data-z="${esc(z.id)}">清空本區座位</button><button class="btn sm ghost" type="button" data-sact="editz" data-z="${esc(z.id)}">設定</button></div>`;})():""}
   <div class="slist">${gs.length?gs.map(g=>{const gz=zoneById(g.zone);return `<button type="button" class="si${g.id===UI.selGuest?" on":""}${g.seat?" seated":""}" data-pick="${esc(g.id)}">${photoBoxSpan(g)}<span style="min-width:0"><b>${esc(g.name||"單位代表")}</b><small>${esc(g.title)}｜${esc(g.unit)}</small></span>${g.seat?`<span class="seatb">${esc(seatText(g))}</span>`:(gz&&!zf?`<i class="zdot" style="background:${esc(gz.color)}" title="${esc(gz.name)}"></i>`:"")}</button>`;}).join(""):`<div class="muted" style="font-size:13.5px;padding:8px">${zf?"這區沒有貴賓":"所有預計出席的貴賓都已入座"}</div>`}</div>`;
 }
