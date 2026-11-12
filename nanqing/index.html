@@ -1002,7 +1002,7 @@ async function uploadMedia(file){
 }
 const user={can:async()=>true,canEdit:()=>true,isOwner:()=>false};
 
-window.OPS_HIDE=["media","seats","howto"];
+window.OPS_HIDE=["media","press","howto"];
 window.claude={use:async n=>{await readyP;return({db,assets,downloads,user})[n]||null;}};
 
 /* ---- 登入與首次匯入 ---- */
@@ -1072,8 +1072,8 @@ document.addEventListener("DOMContentLoaded",start);
 "use strict";
 /* ---------- constants ---------- */
 const ROWS=16, BLOCKS=[[1,6],[7,18],[19,24]], RBLOCKS=[[19,24],[7,18],[1,6]];
-const BASE_OFF=[...Array.from({length:24},(_,i)=>"8-"+(i+1)),"1-1","1-7","1-23","2-18","4-18","6-18","10-18","12-18","14-18","16-18","16-19","16-21"];
-const GRAY={"1-2":"場地座位圖灰底，不可坐","1-8":"場地座位圖灰底，不可坐","1-24":"場地座位圖灰底，不可坐","16-20":"場地座位圖灰底，不可坐","16-22":"場地座位圖灰底，不可坐","16-23":"不可坐","16-24":"不可坐"};
+const BASE_OFF=[...Array.from({length:10},(_,i)=>(i+1)+"-24"),"11-1","11-2","11-19","11-24"];
+const GRAY={};
 const VOID=new Set(BASE_OFF);
 const OFF=new Set([...BASE_OFF,...Object.keys(GRAY)]);
 function syncOff(){OFF.clear();BASE_OFF.forEach(x=>OFF.add(x));Object.keys(GRAY).forEach(x=>OFF.add(x));blockedList().forEach(b=>OFF.add(b.s));}
@@ -1096,8 +1096,10 @@ function zoneRects(z){
 function isRsv(sid){const b=blockedList().find(x=>x.s===sid);return !!(b&&/保留/.test(b.why||""));}
 function blockedNote(sid){if(GRAY[sid])return GRAY[sid];const b=blockedList().find(x=>x.s===sid);return b?(b.why||"不可排位"):"";}
 const AISLE_ROW="aisle";
-const ROW_ORDER=[16,15,14,13,12,11,10,9,"aisle",7,6,5,4,3,2,1];
-const ROW_LETTER={1:"P",2:"N",3:"M",4:"L",5:"K",6:"J",7:"I",9:"H",10:"G",11:"F",12:"E",13:"D",14:"C",15:"B",16:"A"};
+const ROW_ORDER=[1,2,3,4,5,6,7,8,9,10,"aisle",11,12,13,14,15,16];
+const ROW_LETTER={};for(let i=1;i<=16;i++)ROW_LETTER[i]=String(i);
+const SN_STD=[24,22,20,18,16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,17,19,21,23];
+function SN(r,c){r=+r;c=+c;if(r<=10&&c===1)return 23;if(r===11&&c>=20&&c<=23)return [13,15,17,19][c-20];return SN_STD[c-1];}
 const GR=r=>ROW_ORDER.indexOf(r)+2;
 const ROLE_KEYS=["主持人","總控","貴賓組","舞台組","報到組","帶位組","攝影組","場地組","導覽組","音控視訊"];
 const GROUPS=["長官接待","總控","主持人","舞台組","帶位組","媒體組","機動組","交通組","導覽組","櫃台","音控視訊","攝影組","演出示範"];
@@ -1114,7 +1116,7 @@ function keepUI(){try{localStorage.setItem("opsUI_nq",JSON.stringify({role:UI.ro
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const seatLabel=id=>{if(!id)return"";const [r,c]=id.split("-");return `${ROW_LETTER[r]||r}-${c}`;};
+const seatLabel=id=>{if(!id)return"";const [r,c]=id.split("-");return `${r}-${SN(r,c)}`;};
 const imgSrc=v=>!v?"":(v.includes("/")?v:window.__PHOTO(v));
 const toMin=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||"");return m?(+m[1])*60+(+m[2]):540;};
 const fmt=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
@@ -1859,7 +1861,7 @@ function renderSeats(){
   for(const g of S.guests){if(!g.seat)continue;if(occ[g.seat])dup.add(g.seat);else occ[g.seat]=g;}
   let h=`<div class="stage" style="grid-row:1">舞台</div>`;
   for(const r of ROW_ORDER){
-    if(r===AISLE_ROW){h+=`<div class="rl" style="grid-row:${GR(r)};grid-column:1"></div><div class="mediaband" style="grid-row:${GR(r)};grid-column:2/-1">橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋</div>`;continue;}
+    if(r===AISLE_ROW){h+=`<div class="rl" style="grid-row:${GR(r)};grid-column:1"></div><div class="mediaband" style="grid-row:${GR(r)};grid-column:2/-1">橫向走道</div>`;continue;}
     h+=`<div class="rl" data-row="${r}" style="grid-row:${GR(r)};grid-column:1"${UI.seatMode==="multi"?` title="點一下選取 ${ROW_LETTER[r]} 排全部"`:""}>${ROW_LETTER[r]}</div>`;
     let col=2;
     BLOCKS.forEach((b,bi)=>{if(bi>0)col++;for(let c=b[0];c<=b[1];c++){const sid=r+"-"+c;const gc=col++;
@@ -1876,7 +1878,7 @@ function renderSeats(){
       const sq=(UI.seatQ||"").trim().toLowerCase();const hit=!!(sq&&g&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq));if(hit)cls.push("hit");
       const dim=(UI.seatMode==="seat"&&UI.seatZone&&zm[sid]!==UI.seatZone)||(sq&&!hit);
       const nm=g?(g.name||g.unit||"").replace(/[（(].*$/,"").trim():"";
-      const label=g?(UI.seatDetail!==false?`<span class="nmx">${esc(g.name||"單位代表")}</span><span class="tt2">${esc(g.title||"")}</span><span class="un2">${esc((g.unit||"").replace(/[（(].*$/,"").trim())}</span>`:`<span class="nmx${nm.length>3?" sm":""}">${esc(nm.slice(0,4))}</span>`):`<span class="no">${c}</span>`;
+      const label=g?(UI.seatDetail!==false?`<span class="nmx">${esc(g.name||"單位代表")}</span><span class="tt2">${esc(g.title||"")}</span><span class="un2">${esc((g.unit||"").replace(/[（(].*$/,"").trim())}</span>`:`<span class="nmx${nm.length>3?" sm":""}">${esc(nm.slice(0,4))}</span>`):`<span class="no">${SN(r,c)}</span>`;
       const tip=`${seatLabel(sid)}${z?"｜"+z.name:""}${g?"｜"+(g.name||"")+" "+(g.title||"")+"｜"+(g.unit||""):""}`;
       if(UI.seatMode==="block"){h+=`<button type="button" class="${cls.join(" ")}" data-blk="${sid}" style="grid-row:${GR(r)};grid-column:${gc};${z?`--zc:${esc(z.color)};`:""}" title="${esc(tip+"｜點一下標成不可排")}" aria-label="${esc(tip+"，點一下標成不可排")}">${label}</button>`;continue;}
       h+=`<button type="button" class="${cls.join(" ")}" data-s="${sid}" style="grid-row:${GR(r)};grid-column:${gc};${z?`--zc:${esc(z.color)};`:""}${dim?"opacity:.35;":""}" title="${esc(tip)}" aria-label="${esc(tip)}">${label}</button>`;}});
@@ -2547,7 +2549,7 @@ function renderHowto(){
       if(VOID.has(id)){h+=`<i class="ho-c off" style="visibility:hidden"></i>`;continue;}
       if(OFF.has(id)){h+=`<i class="ho-c off"></i>`;continue;}
       const z=sz[id];const on=z&&HO_ASSIGNED.includes(z.id);const u=used.has(id);
-      h+=`<i class="ho-c${z?" z":""}${on?" on":""}${u?" u":""}${res.has(id)&&z&&z.id==="z-council"?" res":""}" style="${z?`--zc:${esc(z.color)}`:""}" title="${esc(seatLabel(id)+(z?"｜"+z.name:""))}">${on?`<span>${ROW_LETTER[r]}-${c}</span>`:""}</i>`;}
+      h+=`<i class="ho-c${z?" z":""}${on?" on":""}${u?" u":""}${res.has(id)&&z&&z.id==="z-council"?" res":""}" style="${z?`--zc:${esc(z.color)}`:""}" title="${esc(seatLabel(id)+(z?"｜"+z.name:""))}">${on?`<span>${seatLabel(r+"-"+c)}</span>`:""}</i>`;}
       h+=`</div>`;});
     h+=`</div>`;
   }
@@ -2634,7 +2636,7 @@ function importSeat(list){
 /* ================= Excel 匯入比對 ================= */
 const CMP_F={unit:"單位／機關",name:"姓名",title:"職稱",status:"出席狀態",zone:"座位區",seat:"座位",category:"分類",proxy:"代理人",note:"備註",inviter:"邀約"};
 const nkey=v=>String(v||"").replace(/[（(].*?[）)]/g,"").replace(/\s+/g,"").trim();
-function seatFromLabel(v){const m=String(v||"").trim().toUpperCase().match(/^([A-P])\s*[-－]?\s*(\d{1,2})$/);if(!m)return null;const r=Object.keys(ROW_LETTER).find(k=>ROW_LETTER[k]===m[1]);return r?`${r}-${+m[2]}`:null;}
+function seatFromLabel(v){const m=String(v||"").trim().match(/^(\d{1,2})\s*[-－]\s*(\d{1,2})$/);if(!m)return null;const r=+m[1],n=+m[2];if(r<1||r>16)return null;for(let c=1;c<=24;c++){const id=r+"-"+c;if(!VOID.has(id)&&SN(r,c)===n)return id;}return null;}
 function zoneFromName(v){v=String(v||"").trim();if(!v||v==="未分區")return "";const z=S.zones.find(z=>z.name===v||z.name.split("｜").pop()===v||z.code===v||z.name.includes(v));return z?z.id:null;}
 function normStatus(v){v=String(v||"").trim();if(!v)return "";if(/不克|不出席|請假|婉謝|無法/.test(v))return "不出席";if(/代理/.test(v))return "代理出席";if(/出席|參加|會到/.test(v))return "出席";if(/未回|待/.test(v))return "未回覆";return STATUS.includes(v)?v:"";}
 async function xlsxCompare(file){
@@ -3072,13 +3074,13 @@ async function seatExcel(btn){
     ws.mergeCells(4,2,4,LAST);const st=ws.getCell(4,2);st.value="舞台";st.font={bold:true,size:14,color:{argb:"FFFFFFFF"}};st.fill=fill("111827");st.alignment={horizontal:"center",vertical:"middle"};ws.getRow(4).height=26;
     let R=6;
     for(const r of ROW_ORDER){
-      if(r===AISLE_ROW){ws.mergeCells(R,2,R,LAST);const a=ws.getCell(R,2);a.value="橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋";a.font={bold:true,color:{argb:"FF9D174D"}};a.fill=fill("FDF2F8");a.alignment={horizontal:"center",vertical:"middle"};ws.getRow(R).height=24;R+=2;continue;}
+      if(r===AISLE_ROW){ws.mergeCells(R,2,R,LAST);const a=ws.getCell(R,2);a.value="橫向走道";a.font={bold:true,color:{argb:"FF9D174D"}};a.fill=fill("FDF2F8");a.alignment={horizontal:"center",vertical:"middle"};ws.getRow(R).height=24;R+=2;continue;}
       const lc=ws.getCell(R,1);lc.value=ROW_LETTER[r];lc.font={bold:true,size:13,color:{argb:"FF6B7280"}};lc.alignment={horizontal:"center",vertical:"middle"};ws.getRow(R).height=58;
       for(let c=1;c<=24;c++){const sid=r+"-"+c;if(VOID.has(sid))continue;const cell=ws.getCell(R,colOf(c));cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};cell.border=bd;
         if(OFF.has(sid)){if(isRsv(sid)){const rz=zoneById(zm[sid]);const col=rz?rz.color:"#6B7280";cell.value=blockedNote(sid);cell.fill=fill(tint(col,.18));cell.font={bold:true,size:10,color:{argb:"FF"+hex(col)}};}else{cell.value="不可入座";cell.fill=fill("E5E7EB");cell.font={size:9,color:{argb:"FF9CA3AF"}};}continue;}
         const g=occ[sid];const z=(g&&zoneById(g.zone))||zoneById(zm[sid]);
         if(g){const un=(g.unit||"").replace(/[（(].*$/,"").trim();cell.value={richText:[{text:(g.name||"單位代表")+"\n",font:{bold:true,size:11,color:{argb:"FFFFFFFF"}}},{text:(g.title||"")+(un?"\n"+un:""),font:{size:8,color:{argb:"FFFFFFFF"}}}]};cell.fill=fill(z?hex(z.color):"6B7280");}
-        else{cell.value=`${ROW_LETTER[r]}-${c}`;cell.font={size:9,color:{argb:"FF9CA3AF"}};if(z)cell.fill=fill(tint(z.color,.14));}
+        else{cell.value=seatLabel(r+"-"+c);cell.font={size:9,color:{argb:"FF9CA3AF"}};if(z)cell.fill=fill(tint(z.color,.14));}
       }
       R+=2;
     }
@@ -3193,7 +3195,7 @@ async function seatDownload(btn,fmt){
     x.textAlign="right";x.font=`400 15px ${F}`;x.fillText(`已排座位 ${seated} 位`,W-M,M+34);x.fillText(`${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本`,W-M,M+58);x.textAlign="left";
     x.fillStyle="#111827";rr(M+RL,TOP,W-2*M-RL,46,8);x.fill();x.fillStyle="#fff";x.font=`700 20px ${F}`;x.textAlign="center";x.fillText("舞台",(M+RL+W-M)/2,TOP+30);x.textAlign="left";
     for(const r of RO){const Y=rowY[r];
-      if(r===AISLE_ROW){x.fillStyle="#FDF2F8";rr(M+RL,Y+8,W-2*M-RL,CH-16,8);x.fill();x.strokeStyle="#EC4899";x.setLineDash([8,6]);x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle="#9D174D";x.font=`700 17px ${F}`;x.textAlign="center";x.fillText("橫向走道｜文字記者坐 H 排，攝影記者在走道架腳架｜媒體區 唐瑋",(M+RL+W-M)/2,Y+CH/2+6);x.textAlign="left";continue;}
+      if(r===AISLE_ROW){x.fillStyle="#FDF2F8";rr(M+RL,Y+8,W-2*M-RL,CH-16,8);x.fill();x.strokeStyle="#EC4899";x.setLineDash([8,6]);x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle="#9D174D";x.font=`700 17px ${F}`;x.textAlign="center";x.fillText("橫向走道",(M+RL+W-M)/2,Y+CH/2+6);x.textAlign="left";continue;}
       x.fillStyle="#6B7280";x.font=`700 18px ${F}`;x.textAlign="center";x.fillText(ROW_LETTER[r],M+RL/2-4,Y+CH/2+6);x.textAlign="left";
       for(let c=1;c<=24;c++){const sid=r+"-"+c;if(VOID.has(sid))continue;const X=colX(c);
         if(OFF.has(sid)&&isRsv(sid)){const rz=zoneById(zm[sid]);const col=rz?rz.color:"#6B7280";x.fillStyle=tint(col,.14);rr(X,Y,CW,CH,6);x.fill();x.setLineDash([6,4]);x.strokeStyle=col;x.lineWidth=1.5;x.stroke();x.setLineDash([]);x.fillStyle=col;x.font=`800 14px ${F}`;x.textAlign="center";const bn=blockedNote(sid);const ls=wrap2(bn,CW-10,x.font);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+CH/2+5-(ls.length-1)*8+i*16));x.textAlign="left";continue;}
@@ -3203,7 +3205,7 @@ async function seatDownload(btn,fmt){
           x.font=`800 17px ${F}`;x.fillText(fit(g.name||"單位代表",CW-8,x.font),X+CW/2,Y+21);
           x.font=`500 11px ${F}`;x.fillText(fit(g.title||"",CW-8,x.font),X+CW/2,Y+37);
           const un=(g.unit||"").replace(/[（(].*$/,"").trim();const ls=wrap2(un,CW-8,`400 11px ${F}`);ls.forEach((l,i)=>x.fillText(l,X+CW/2,Y+52+i*13));x.textAlign="left";}
-        else{x.fillStyle=z?tint(z.color,.12):"#ffffff";rr(X,Y,CW,CH,6);x.fill();x.strokeStyle=z?tint(z.color,.45):"#D1D5DB";x.lineWidth=1;x.stroke();x.fillStyle="#9CA3AF";x.font=`500 14px ${F}`;x.textAlign="center";x.fillText(String(c),X+CW/2,Y+CH/2+5);x.textAlign="left";}
+        else{x.fillStyle=z?tint(z.color,.12):"#ffffff";rr(X,Y,CW,CH,6);x.fill();x.strokeStyle=z?tint(z.color,.45):"#D1D5DB";x.lineWidth=1;x.stroke();x.fillStyle="#9CA3AF";x.font=`500 14px ${F}`;x.textAlign="center";x.fillText(String(SN(r,c)),X+CW/2,Y+CH/2+5);x.textAlign="left";}
       }}
     for(const z of S.zones){const rects=zoneRects(z);
       const hasR=(z.seats||[]).some(isRsv);const zg=S.guests.filter(g=>g.zone===z.id&&g.status!=="不出席"&&(g.seat||!hasR));const nr=(z.seats||[]).filter(isRsv).length;const n=zg.length,a=zg.filter(g=>g.status==="出席"||g.status==="代理出席").length;const own=zOwnerNames(z);
