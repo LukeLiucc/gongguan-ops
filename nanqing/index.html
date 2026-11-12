@@ -1259,6 +1259,10 @@ function nqMigrate(){
   Object.keys(T2).forEach(id=>{const t=S.teams.find(x=>x.id===id);if(t){Object.assign(t,T2[id]);upd("teams",id,T2[id]);}});
   S.meta.seedV=2;upd("meta","event",{seedV:2});
 }
+function nqFixNames(){
+  if(!db||!canWrite||!S.loaded.has("guests"))return;
+  S.guests.forEach(g=>{if(g.unit==="聯新運動休閒事業群"){g.unit="聯新國際醫療集團運動休閒事業群";upd("guests",g.id,{unit:g.unit});}});
+}
 let nqMig4=false;
 function nqMigrate4(){
   if(nqMig4||!db||!canWrite||!S.loaded.has("meta")||!S.loaded.has("duty")||!S.meta.name)return;nqMig4=true;
@@ -1281,7 +1285,7 @@ function nqMigrate3(){
   S.meta.seedV=3;upd("meta","event",{seedV:3});
 }
 function renderAll(){
-  nqMigrate();if(nqMig)nqMigrate3();if(nqMig3)nqMigrate4();
+  nqMigrate();if(nqMig)nqMigrate3();if(nqMig3)nqMigrate4();nqFixNames();
   clearTimeout(zcT);zcT=setTimeout(syncZoneCodes,1500);
   
   $("#ctGuests").textContent=S.guests.length;
@@ -2218,7 +2222,7 @@ function renderStaff(){
   const ext=S.staff.filter(s=>!isCore(s)).sort((a,b)=>(a.order??0)-(b.order??0));
   $("#tExt").innerHTML=ext.map(s=>`<button type="button" class="extc" data-sedit="${esc(s.id)}"><b>${esc(s.name)}${(+s.count||1)>1?` ×${s.count}`:""}</b><small>${esc(s.org)}｜${esc((s.groups||[]).join("、"))}</small>${s.note?`<small>${esc(s.note)}</small>`:""}</button>`).join("")||'<span class="muted">—</span>';
   const ownOpts=`<option value="">未指派</option>`+core.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
-  $("#sUsher").innerHTML=`<thead><tr><th>座位區</th><th>預計到場</th><th>未指名預估</th><th>舉牌帶位（一區一人）</th><th>協助</th></tr></thead><tbody>`+sortedZones().map(z=>{const st=zoneStats(z);return `<tr><td><span style="display:inline-flex;gap:7px;align-items:center"><i class="zdot" style="background:${esc(z.color)}"></i><b>${esc(z.name)}</b></span>${z.ext?'<div class="muted" style="font-size:12px">主辦單位接待；聯新座位區管理協助</div>':""}</td><td class="n">${st.expected}</td><td><input class="inp num" type="number" min="0" value="${+z.est||0}" data-zest="${esc(z.id)}" id="zest-${esc(z.id)}" style="width:70px"></td><td><select class="inp" data-zown="${esc(z.id)}" aria-label="${esc(z.name)}座位區管理">${ownOpts.replace(`value="${esc(z.owner||"")}"`,`value="${esc(z.owner||"")}" selected`)}</select></td><td><select class="inp" data-zown2="${esc(z.id)}" aria-label="${esc(z.name)}協助">${ownOpts.replace(`value="${esc(z.owner2||"")}"`,`value="${esc(z.owner2||"")}" selected`)}</select></td></tr>`;}).join("")+`</tbody>`;
+  $("#sUsher").innerHTML=`<thead><tr><th>座位區</th><th>預計到場</th><th>未指名預估</th><th>舉牌帶位（一區一人）</th><th>協助</th></tr></thead><tbody>`+sortedZones().map(z=>{const st=zoneStats(z);return `<tr><td><span style="display:inline-flex;gap:7px;align-items:center"><i class="zdot" style="background:${esc(z.color)}"></i><b>${esc(z.name)}</b></span>${z.ext?'<div class="muted" style="font-size:12px">主辦單位接待；聯新國際體育座位區管理協助</div>':""}</td><td class="n">${st.expected}</td><td><input class="inp num" type="number" min="0" value="${+z.est||0}" data-zest="${esc(z.id)}" id="zest-${esc(z.id)}" style="width:70px"></td><td><select class="inp" data-zown="${esc(z.id)}" aria-label="${esc(z.name)}座位區管理">${ownOpts.replace(`value="${esc(z.owner||"")}"`,`value="${esc(z.owner||"")}" selected`)}</select></td><td><select class="inp" data-zown2="${esc(z.id)}" aria-label="${esc(z.name)}協助">${ownOpts.replace(`value="${esc(z.owner2||"")}"`,`value="${esc(z.owner2||"")}" selected`)}</select></td></tr>`;}).join("")+`</tbody>`;
   const tl=timeline();
   $("#sMatrix").innerHTML=`<thead><tr><th>時段</th>${ROLE_KEYS.map(k=>`<th>${k}</th>`).join("")}</tr></thead><tbody>`+tl.map(({r,s,e})=>`<tr><td class="tt"><span>${fmt(s)}–${fmt(e)}</span>${esc(r.title)}</td>${ROLE_KEYS.map(k=>{const t=(r.roles&&r.roles[k]||"").trim();return `<td class="${t?"on":""}">${esc(t)}</td>`;}).join("")}</tr>`).join("")+`</tbody>`;
 }
