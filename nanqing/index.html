@@ -560,16 +560,27 @@ table.rt th:first-child{left:0;z-index:3}
 .sedit .sp{flex:1}
 @media (min-width:1280px){#p-seats .seatwrap{grid-template-columns:minmax(0,1fr) 330px;width:calc(100vw - 40px);max-width:1700px;margin-left:50%;transform:translateX(-50%)}#p-seats .seatwrap>.map{width:auto;max-width:none;margin-left:0;transform:none}.seatwrap>.map,.seatwrap>#side{grid-column:1}.seatwrap>.zroster{grid-column:2;grid-row:1/span 2;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}}
 .zroster{padding:12px;display:flex;flex-direction:column;gap:8px}
-.zr{border:1px solid var(--line);border-left:5px solid var(--zc);border-radius:8px;padding:6px 8px}
-.zr summary{display:flex;gap:6px;align-items:center;cursor:pointer;font-size:14px;flex-wrap:wrap}
-.zr summary small{margin-left:auto;color:var(--ink-3)}
-.zr ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
-.zr li{display:flex;gap:6px;align-items:baseline;font-size:13.5px}
-.zr li b{white-space:nowrap}
-.zr li span{color:var(--ink-3);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.zr li em{font-style:normal;font-weight:700;font-size:12px;white-space:nowrap}
-.zr li.arr b::before{content:"✓ ";color:#047857}
+.zrtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.zrtop h2{font-size:17px;margin:0}.zrtop .hint{font-size:12px;color:var(--ink-3)}
+.zr{border:1px solid var(--line);border-left:5px solid var(--zc);border-radius:8px;padding:6px 8px;transition:opacity .15s,box-shadow .15s}
+.zr.on{box-shadow:0 0 0 2px var(--zc);background:color-mix(in srgb,var(--zc) 7%,var(--surface))}.zr.off{opacity:.55}.zr.over{outline:2px dashed var(--zc);outline-offset:1px}
+.zr header{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.zr header small{color:var(--ink-3);font-size:12px}
+.zrn{display:inline-flex;gap:6px;align-items:center;border:0;background:none;padding:2px 0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}
+.zrn:hover b{text-decoration:underline}
+.zra{margin-left:auto;display:inline-flex;gap:4px}
+.zra button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;font:inherit;font-size:12px;padding:2px 7px;cursor:pointer}
+.zra button:hover{border-color:var(--accent);color:var(--accent)}
+.zr ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:2px}
+.zr li{display:flex;gap:4px;align-items:center;font-size:13.5px;border-radius:6px;padding:1px 2px}
+.zr li:hover{background:var(--surface-2)}.zr li.sel{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.zrc{width:22px;height:22px;flex:none;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:transparent;font-size:12px;line-height:1;cursor:pointer;padding:0}
+.zrc[aria-pressed="true"]{background:#047857;border-color:#047857;color:#fff}
+.zrp{flex:1;min-width:0;display:flex;gap:6px;align-items:baseline;border:0;background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer;padding:3px 2px}
+.zrp b{white-space:nowrap}.zrp span{color:var(--ink-3);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zr li em{font-style:normal;font-weight:700;font-size:12px;white-space:nowrap}.zr li em.none{font-weight:500;color:var(--ink-3)}
+.zre{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:5px}.zre:hover{color:var(--accent);background:var(--surface)}
 .zr p{margin:6px 0 0;font-size:13px}
+.zbox.focus{border-width:4px;box-shadow:0 0 0 4px color-mix(in srgb,var(--zc) 30%,transparent)}.zbox.dimz{opacity:.3}
 body.showseat #zroster{display:none!important}
 .zbox.area{background:color-mix(in srgb,var(--zc) 22%,transparent);z-index:3}
 .zbox.area .zlab{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);max-width:92%;font-size:14px;text-align:center;padding:6px 12px;border-radius:8px;box-shadow:0 2px 8px rgba(15,27,43,.18)}
@@ -1574,9 +1585,9 @@ function card(g,z,zopts){
   </article>`;
 }
 const seatKey=s=>{if(!s)return 1e6;const [r,c]=s.split("-").map(Number);return r*100+c;};
-function openGuest(id){
+function openGuest(id,zid){
   const g=id?S.guests.find(x=>x.id===id):null;
-  const d=g?{...g}:{inviter:"",category:"",unit:"",name:"",title:"",address:"",assist:"",note:"",source:"手動新增",status:"未回覆",proxy:"",zone:"",seat:""};
+  const d=g?{...g}:{inviter:"",category:"",unit:"",name:"",title:"",address:"",assist:"",note:"",source:"手動新增",status:"未回覆",proxy:"",zone:zid||"",seat:""};
   const zs=sortedZones();
   const md=modal(`<h3>${g?"編輯貴賓":"新增貴賓"}</h3>
     <div class="fg">
@@ -1831,11 +1842,11 @@ function placeGuest(gid,sid){
   UI.selGuest=null;schedule();
   toast(`${sel.name||sel.unit} → ${seatLabel(sid)}${occ?`（與 ${occ.name||occ.unit} 互換）`:""}`);
 }
-function seatClick(sid){{const _z=zoneById(zoneOfSeatMap()[sid]);if(_z&&_z.area){toast("「"+_z.name+"」是分區入座，不排個人座位");return;}}
+function seatClick(sid){{const _z=zoneById(zoneOfSeatMap()[sid]);if(_z&&_z.area){focusZone(_z.id,true);return;}}
   if(Date.now()<ignoreClickUntil)return;
   const occ=S.guests.find(g=>g.seat===sid);
   const sel=S.guests.find(g=>g.id===UI.selGuest);
-  if(!sel){if(occ){UI.selGuest=occ.id;renderSeats();}return;}
+  if(!sel){if(occ){UI.selGuest=occ.id;renderSeats();}else{const _z2=zoneOfSeatMap()[sid];if(_z2)focusZone(_z2,true);}return;}
   if(occ&&occ.id===sel.id){UI.selGuest=null;renderSeats();return;}
   const zm=zoneOfSeatMap();
   const old=sel.seat||"";
@@ -1923,7 +1934,7 @@ function renderSeats(){
     const big=Math.max(0,...rects.map(q=>q.n));let labeled=false;
     rects.forEach(q=>{const showLab=!labeled&&q.n===big;if(showLab)labeled=true;
       const {r0,r1,c0,c1}=q;
-      h+=`<div class="zbox${z.area?" area":""}" style="--zc:${esc(z.color)};grid-row:${Math.min(GR(r0),GR(r1))}/${Math.max(GR(r0),GR(r1))+1};grid-column:${gcol(c0)}/${gcol(c1)+1}" aria-hidden="true">${showLab?`<div class="zlab" title="${esc(z.note||"")}">${esc(z.name)}${z.area?`<b class="zcnt">分區入座｜預計 ${o.n} 位／${(z.seats||[]).length} 席${S.guests.some(g=>g.zone===z.id&&g.arrived)?`・已到 ${S.guests.filter(g=>g.zone===z.id&&g.arrived).length}`:""}</b>${(z.seats||[]).length<Math.ceil(o.n*1.5)?`<b class="zcnt">建議畫到 ${Math.ceil(o.n*1.5)} 席</b>`:""}`:`<b class="zcnt">對號入座｜${o.n} 位${o.r?`＋保留 ${o.r} 席`:""}${o.a?`・出席 ${o.a}`:""}</b>`}${o.name?`<span>｜管理 ${esc(o.name)}</span>`:""}</div>`:""}</div>`;});
+      h+=`<div class="zbox${z.area?" area":""}${UI.seatZone===z.id?" focus":UI.seatZone?" dimz":""}" style="--zc:${esc(z.color)};grid-row:${Math.min(GR(r0),GR(r1))}/${Math.max(GR(r0),GR(r1))+1};grid-column:${gcol(c0)}/${gcol(c1)+1}" aria-hidden="true">${showLab?`<div class="zlab" title="${esc(z.note||"")}">${esc(z.name)}${z.area?`<b class="zcnt">分區入座｜預計 ${o.n} 位／${(z.seats||[]).length} 席${S.guests.some(g=>g.zone===z.id&&g.arrived)?`・已到 ${S.guests.filter(g=>g.zone===z.id&&g.arrived).length}`:""}</b>${(z.seats||[]).length<Math.ceil(o.n*1.5)?`<b class="zcnt">建議畫到 ${Math.ceil(o.n*1.5)} 席</b>`:""}`:`<b class="zcnt">對號入座｜${o.n} 位${o.r?`＋保留 ${o.r} 席`:""}${o.a?`・出席 ${o.a}`:""}</b>`}${o.name?`<span>｜管理 ${esc(o.name)}</span>`:""}</div>`:""}</div>`;});
   }
   $("#hall").innerHTML=h;
   $("#hall").classList.toggle("nolab",UI.seatMode==="paint");
@@ -1945,14 +1956,38 @@ function renderSeats(){
   wb.innerHTML=onBlk.length?`<b>${onBlk.length} 位貴賓坐在不可排的座位，請移位：</b>${onBlk.map(g=>`<button type="button" class="btn sm" data-fixblk="${esc(g.id)}">${esc(seatText(g))} ${esc(g.name||g.unit)}</button>`).join("")}`:"";
   renderSide(zs);
 }
+function focusZone(id,fromMap){UI.seatZone=(UI.seatZone===id&&!fromMap)?"":id;UI.zrOpen=UI.zrOpen||{};if(UI.seatZone)UI.zrOpen[id]=true;UI.zrScroll=fromMap?UI.seatZone:"";renderSeats();}
+let zrDrag=null;
 function renderZRoster(zs){
   const el=$("#zroster");if(!el)return;
-  if(!el.dataset.b){el.dataset.b="1";el.addEventListener("toggle",e=>{const d=e.target.closest&&e.target.closest("details[data-zr]");if(d){UI.zrOpen=UI.zrOpen||{};UI.zrOpen[d.dataset.zr]=d.open;}},true);}
-  const op=UI.zrOpen||{};
-  el.innerHTML=`<div class="ttl2" style="margin:0"><h2 style="font-size:17px">各區名單</h2><span class="hint">不含不出席</span></div>`+zs.map(z=>{
-    const gs=sortedGuests().filter(g=>g.zone===z.id&&g.status!=="不出席");const arr=gs.filter(g=>g.arrived).length;
-    const open=(z.id in op)?op[z.id]:gs.length<=30;
-    return `<details class="zr" data-zr="${esc(z.id)}"${open?" open":""} style="--zc:${esc(z.color)}"><summary><b>${esc(z.name)}</b><span class="pill ${z.area?"mute":"acc"}">${z.area?"分區入座":"對號入座"}</span><small>${gs.length} 位／${(z.seats||[]).length} 席${arr?`・已到 ${arr}`:""}</small></summary>${gs.length?`<ul>${gs.map(g=>`<li class="${g.arrived?"arr":""}"><b>${esc(g.name||"單位代表")}</b><span>${esc([g.title,g.unit].filter(Boolean).join("｜"))}</span>${!z.area&&g.seat?`<em>${esc(seatLabel(g.seat))}</em>`:""}</li>`).join("")}</ul>`:`<p class="muted">名單上還沒有人</p>`}</details>`;}).join("");
+  if(!el.dataset.b){el.dataset.b="1";
+    el.addEventListener("click",e=>{
+      const t=e.target.closest("[data-zract]");if(!t)return;const a=t.dataset.zract,id=t.dataset.id;
+      if(a==="focus")focusZone(id,false);
+      else if(a==="all"){UI.seatZone="";renderSeats();}
+      else if(a==="fold"){UI.zrOpen=UI.zrOpen||{};const cur=t.closest(".zr").classList.contains("open");UI.zrOpen[id]=!cur;renderSeats();}
+      else if(a==="add")openGuest(null,id);
+      else if(a==="set")openZone(id);
+      else if(a==="edit")openGuest(id);
+      else if(a==="arr"){const g=S.guests.find(x=>x.id===id);if(g&&guard()){g.arrived=!g.arrived;upd("guests",g.id,{arrived:g.arrived,arrivedAt:g.arrived?Date.now():0});schedule();}}
+      else if(a==="pick"){const g=S.guests.find(x=>x.id===id);if(!g)return;const z=zoneById(g.zone);if(z&&z.area){openGuest(id);return;}UI.seatMode="seat";UI.selGuest=UI.selGuest===id?null:id;if(UI.selGuest&&UI.seatZone!==g.zone)UI.seatZone=g.zone;renderSeats();if(UI.selGuest)toast(g.seat?"已選取，點別的座位可換位":"已選取，點座位圖上的空位入座");}
+    });
+    el.addEventListener("dragstart",e=>{const li=e.target.closest("li[data-g]");if(!li)return;zrDrag=li.dataset.g;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",zrDrag);}catch(_){}});
+    el.addEventListener("dragend",()=>{zrDrag=null;el.querySelectorAll(".zr.over").forEach(x=>x.classList.remove("over"));});
+    el.addEventListener("dragover",e=>{if(!zrDrag)return;const z=e.target.closest(".zr");if(!z)return;e.preventDefault();el.querySelectorAll(".zr.over").forEach(x=>x!==z&&x.classList.remove("over"));z.classList.add("over");});
+    el.addEventListener("drop",e=>{if(!zrDrag)return;const z=e.target.closest(".zr");if(!z)return;e.preventDefault();const gid=zrDrag;zrDrag=null;setGuestZone(gid,z.dataset.zr);});
+  }
+  const op=UI.zrOpen||{};const fz=UI.seatZone;
+  el.innerHTML=`<div class="zrtop"><h2>各區名單</h2>${fz?`<button type="button" class="btn sm" data-zract="all">顯示全部區</button>`:`<span class="hint">點區名，座位圖會標出那一區</span>`}</div>`+zs.map(z=>{
+    const gs=sortedGuests().filter(g=>g.zone===z.id&&g.status!=="不出席");const arr=gs.filter(g=>g.arrived).length;const cap=(z.seats||[]).length;
+    const open=fz===z.id?true:((z.id in op)?op[z.id]:gs.length<=30);
+    return `<section class="zr${open?" open":""}${fz===z.id?" on":fz?" off":""}" data-zr="${esc(z.id)}" style="--zc:${esc(z.color)}">
+      <header><button type="button" class="zrn" data-zract="focus" data-id="${esc(z.id)}" aria-pressed="${fz===z.id}" title="點一下在座位圖標出這一區"><b>${esc(z.name)}</b><span class="pill ${z.area?"mute":"acc"}">${z.area?"分區入座":"對號入座"}</span></button>
+        <small>${gs.length} 位／${cap} 席${arr?`・已到 ${arr}`:""}</small>
+        <span class="zra"><button type="button" data-zract="add" data-id="${esc(z.id)}" title="在這一區新增貴賓">＋ 新增</button><button type="button" data-zract="set" data-id="${esc(z.id)}" title="改區名、顏色、對號或分區">設定</button><button type="button" data-zract="fold" data-id="${esc(z.id)}" aria-label="${open?"收合":"展開"}">${open?"▾":"▸"}</button></span></header>
+      ${open?(gs.length?`<ul>${gs.map(g=>`<li data-g="${esc(g.id)}" draggable="${canWrite?"true":"false"}" class="${g.arrived?"arr":""}${g.id===UI.selGuest?" sel":""}"><button type="button" class="zrc" data-zract="arr" data-id="${esc(g.id)}" aria-pressed="${!!g.arrived}" title="${g.arrived?"已到場，點一下取消":"點一下標記已到場"}">✓</button><button type="button" class="zrp" data-zract="pick" data-id="${esc(g.id)}" title="${z.area?"點一下編輯":"點一下選取，再點座位入座"}"><b>${esc(g.name||"單位代表")}</b><span>${esc([g.title,g.unit].filter(Boolean).join("｜"))}</span></button>${!z.area?`<em class="${g.seat?"":"none"}">${g.seat?esc(seatLabel(g.seat)):"未排"}</em>`:""}<button type="button" class="zre" data-zract="edit" data-id="${esc(g.id)}" title="編輯資料" aria-label="編輯 ${esc(g.name||"單位代表")}">✎</button></li>`).join("")}</ul>`:`<p class="muted">這一區還沒有人，按「＋ 新增」或把別區的人拖進來</p>`):""}
+    </section>`;}).join("");
+  if(UI.zrScroll){const d=el.querySelector(`[data-zr="${UI.zrScroll}"]`);UI.zrScroll="";if(d)d.scrollIntoView({block:"nearest",behavior:"smooth"});}
 }
 function renderSide(zs){
   renderZRoster(zs);
