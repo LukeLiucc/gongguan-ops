@@ -232,7 +232,38 @@ function a1f(){
   o+=lab(1080,290,'1F 大廳',30)+lab(1580,610,'洗手間',22);
   return o;
 }
-window.NQ_PLANS={b1f:b1f,b2f:b2f,ab1:ab1,a1f:a1f};
+
+function bays(x0,y0,x1,y1,n){
+  var o='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="#F5F7FA" stroke="'+NAVY+'" stroke-width="1.3"/>';
+  for(var i=1;i<n;i++){var v=x0+(x1-x0)*i/n;o+='<line x1="'+v+'" y1="'+y0+'" x2="'+v+'" y2="'+y1+'" stroke="'+NAVY+'" stroke-width="1.3"/>';}
+  return o;
+}
+function room(x0,y0,x1,y1,dark){return '<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="'+(dark?'#C9CFD8':GRAY)+'" stroke="'+NAVY+'" stroke-width="1.6"/>';}
+function lane(x,y,deg){return '<path transform="translate('+x+','+y+') rotate('+deg+')" d="M-20 0H16M7 -7L17 0L7 7" fill="none" stroke="#B3BDCA" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';}
+function parking(){
+  var K=1.5453,o='<g transform="scale('+K+')">';
+  o+='<rect x="95" y="12" width="795" height="378" fill="#FFFFFF"/>';
+  o+=room(95,12,256,66)+room(316,12,430,66)+room(432,12,492,56,true);
+  o+=room(95,70,160,110)+room(95,112,160,192)+room(95,198,140,282,true)+room(95,286,140,314)+room(95,318,112,390);
+  o+=bays(500,14,740,62,7);
+  o+=bays(165,120,240,182,3)+bays(262,120,345,182,3)+bays(362,120,418,182,2)+bays(436,120,492,182,2);
+  o+=bays(165,182,240,246,3)+bays(262,182,345,246,3)+bays(362,182,430,246,3)+bays(436,182,504,246,3);
+  o+=bays(618,118,700,180,3)+bays(618,180,700,246,3);
+  o+=bays(780,250,856,296,2);
+  o+=bays(118,322,205,388,3)+bays(217,322,335,388,4)+bays(350,322,422,388,3)+bays(432,322,505,388,3)+bays(517,322,565,388,2);
+  o+=room(722,105,778,190)+room(630,300,760,390)+room(760,300,888,390)+room(745,12,800,58);
+  o+='<rect x="806" y="14" width="82" height="92" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="1.6"/>';
+  for(var i=1;i<8;i++){var y=14+92*i/8;o+='<line x1="806" y1="'+y+'" x2="888" y2="'+y+'" stroke="'+LINE+'" stroke-width="1"/>';}
+  o+=stubs([[249,116,6,30],[351,116,6,30],[249,218,6,30],[351,218,6,30],[426,116,6,30],[508,128,6,30],[606,108,6,30],[606,200,6,30],[209,330,5,30],[341,330,5,30],[426,330,5,30],[509,330,5,30],[570,330,5,30]]);
+  o+=lane(330,92,180)+lane(420,92,0)+lane(660,92,0)+lane(560,150,270)+lane(560,215,90)+lane(320,283,180)+lane(400,283,0)+lane(680,270,180)+lane(840,180,270);
+  o+='<rect x="95" y="12" width="795" height="378" fill="none" stroke="'+NAVY+'" stroke-width="4.5"/>';
+  o+='</g>';
+  o+=stair(405,34,74,66,true,false)+stair(1123,297,71,46,true,false);
+  o+=exit(442,22)+exit(1158,360);
+  o+=lab(1309,170,'車道出入口',19)+lab(714,58,'機房',18)+lab(865,150,'車道',20)+lab(560,445,'車道',20);
+  return o;
+}
+window.NQ_PLANS={b1f:b1f,b2f:b2f,ab1:ab1,a1f:a1f,parking:parking};
 })();
 </script>
 <script id="app">(function(){
