@@ -837,7 +837,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
         <button type="button" id="smBlock" aria-pressed="false">標不可排</button>
       </div>
       <button class="btn" type="button" id="smUndo" disabled title="復原上一步（Ctrl+Z）">↶ 復原上一步</button>
-      <button class="btn" type="button" id="smReset" title="座位區範圍與 10 位啟動貴賓座位回到預設">還原預設分區</button>
+      <button class="btn" type="button" id="smReset" title="各座位區的範圍回到預設；已排在自己區內的座位不動">還原預設分區</button>
       <div class="seg" role="group" aria-label="座位顯示"><button type="button" id="sdDetail" aria-pressed="true">顯示單位職稱</button></div>
       <input class="inp" id="smQ" type="search" list="smUnits" placeholder="找人或單位" style="width:200px">
       <datalist id="smUnits"></datalist>
@@ -1294,10 +1294,8 @@ function seatResetDefault(){
   S.zones.forEach(z=>{const d=Z[z.id];const ns=d?d[0]:(z.seats||[]).filter(s=>!def.has(s));const p={};
     if((z.seats||[]).join(",")!==ns.join(","))p.seats=ns;if(d&&!!z.area!==d[1])p.area=d[1];
     if(Object.keys(p).length){Object.assign(z,p);upd("zones",z.id,p);}});
-  const used=new Set(),launch=new Set(OL_SEED.launch||[]);
-  if(zoneById("z-vip"))(OL_SEED.launch||[]).forEach((gid,i)=>{const g=S.guests.find(x=>x.id===gid);if(!g)return;const s="1-"+(8+i);const p={};if(g.seat!==s)p.seat=s;if(g.zone!=="z-vip")p.zone="z-vip";used.add(s);if(Object.keys(p).length){Object.assign(g,p);upd("guests",g.id,p);}});
-  const zm=zoneOfSeatMap();
-  S.guests.forEach(g=>{if(!g.seat||(launch.has(g.id)&&zoneById("z-vip")))return;const z=zoneById(g.zone);
+  const zm=zoneOfSeatMap();const used=new Set();
+  S.guests.forEach(g=>{if(!g.seat)return;const z=zoneById(g.zone);
     if(used.has(g.seat)||zm[g.seat]!==g.zone||(z&&z.area)){g.seat="";upd("guests",g.id,{seat:""});}else used.add(g.seat);});
   UI.selGuest=null;UI.seatMode="seat";toast("已還原預設分區，按「復原上一步」可以退回");renderAll();
 }
