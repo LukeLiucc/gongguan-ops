@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>南青開幕典禮入場動線圖</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet"><style id="css">:root{
+  /* 版面：上方標題列＋樓層分頁，中間左圖右人力表，下方現場照片 */
+  --bg:#F3F6FA; --panel:#FFFFFF; --ink:#16233A; --muted:#5B6B82; --line:#D6DEE9;
+  --accent:#0B6FB8; --accent-ink:#FFFFFF; --warn:#C8102E; --soft:#E7F0F9;
+  --f:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0F1724;--panel:#172233;--ink:#E8EEF6;--muted:#9AA9BD;--line:#2A3A52;--accent:#4FA8E8;--accent-ink:#0F1724;--warn:#FF6B7F;--soft:#1E2E45;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0F1724;--panel:#172233;--ink:#E8EEF6;--muted:#9AA9BD;--line:#2A3A52;--accent:#4FA8E8;--accent-ink:#0F1724;--warn:#FF6B7F;--soft:#1E2E45;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.55}
+#root{max-width:1320px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:14px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between}
+header.top h1{margin:0;font-size:26px;font-weight:900;letter-spacing:.02em;text-wrap:balance}
+header.top .sub{margin:4px 0 0;color:var(--muted);font-size:14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 14px;font-weight:700}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--warn)}
+.btn.sm{padding:4px 10px;font-size:13px;font-weight:500}
+.status{font-size:13px;color:var(--muted);min-height:1.2em}
+.status.dirty{color:var(--warn);font-weight:700}
+nav.floors{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:8px}
+nav.floors button{display:flex;gap:10px;align-items:center;text-align:left;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px}
+nav.floors button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+nav.floors .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--accent);font-weight:900;display:grid;place-items:center}
+nav.floors button[aria-selected="true"] .n{background:var(--accent);color:var(--accent-ink)}
+nav.floors b{display:block;font-size:16px}
+nav.floors small{color:var(--muted);font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:6px 6px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.tools .lbl{font-size:12.5px;color:var(--muted);font-weight:700;margin:0 2px 0 6px}
+.tools .lbl:first-child{margin-left:0}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+.stagewrap{background:#FFFFFF;border:1px solid var(--line);border-radius:12px;padding:8px;overflow:hidden}
+#stage{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.edit #stage [data-id],.edit #stage [data-h]{cursor:grab}
+.edit #stage [data-rt]{cursor:move}
+.view #stage [data-photo]{cursor:zoom-in}
+.cap{margin:6px 4px 0;font-size:12.5px;color:#5B6B82}
+aside.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{margin:0 0 10px;font-size:15px;font-weight:900;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 span{font-size:12.5px;color:var(--muted);font-weight:500}
+.insp{display:flex;flex-direction:column;gap:8px}
+.insp label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted);font-weight:700}
+.insp input,.insp select{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 8px;font-size:14px;font-weight:500}
+.insp .row{display:flex;flex-wrap:wrap;gap:6px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+table.staff{width:100%;border-collapse:collapse;font-size:13.5px}
+table.staff th{font-size:12px;color:var(--muted);text-align:left;font-weight:700;padding:0 6px 6px 0;border-bottom:1px solid var(--line)}
+table.staff td{padding:8px 6px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.staff td.c{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:900;font-size:16px;text-align:center}
+table.staff .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+table.staff .pn{font-weight:700}
+table.staff .tk{color:var(--muted);font-size:12.5px;margin-top:2px}
+table.staff .tm{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
+.step{display:inline-flex;gap:4px;align-items:center;margin-top:4px}
+.step button{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--bg);font-weight:900;line-height:1;padding:0}
+.total{display:flex;justify-content:space-between;margin-top:10px;font-weight:900;font-variant-numeric:tabular-nums}
+.total span{color:var(--muted);font-weight:500}
+[contenteditable="true"]{border-radius:4px;outline:1px dashed transparent;outline-offset:2px}
+.edit [contenteditable="true"]:hover{outline-color:var(--line)}
+.edit [contenteditable="true"]:focus{outline:2px solid var(--accent);background:var(--bg)}
+.photos h2{margin:6px 0 10px;font-size:17px;font-weight:900}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.hl{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.pcard .ph{aspect-ratio:4/3;background:var(--soft);display:grid;place-items:center;position:relative}
+.pcard .ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.pcard .drop{width:100%;height:100%;border:2px dashed var(--line);border-radius:0;background:transparent;color:var(--muted);font-weight:700;display:grid;place-items:center;text-align:center;padding:12px}
+.pcard .drop:hover{border-color:var(--accent);color:var(--accent)}
+.pcard .pact{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
+.pcard .pb{padding:10px 12px 12px;display:flex;gap:10px;align-items:flex-start}
+.pcard .num{flex:none;width:26px;height:26px;border-radius:50%;background:#111827;color:#fff;font-weight:900;display:grid;place-items:center;font-size:13px}
+.pcard .tt{font-weight:700}
+.pcard .nt{font-size:13px;color:var(--muted);min-height:1.2em}
+.edit .nt:empty::before{content:attr(data-ph);opacity:.7}
+dialog.lb{border:0;padding:0;background:transparent;max-width:min(96vw,1200px);max-height:94vh}
+dialog.lb::backdrop{background:rgba(8,14,24,.82)}
+dialog.lb img{display:block;max-width:100%;max-height:84vh;border-radius:8px;margin:0 auto}
+dialog.lb p{color:#fff;text-align:center;margin:10px 0 0;font-weight:700}
+.view .editonly{display:none !important}
+@media (max-width:980px){.main{grid-template-columns:1fr}nav.floors{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none !important}}
+
+.back{display:inline-block;font-size:13px;color:var(--accent);text-decoration:none;font-weight:700;margin-bottom:4px}
+.back:hover{text-decoration:underline}
+</style></head><body><div id="root"></div>
+<script src="../config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script>(function(){
+var SB_URL="https://zpvmogykgpiacyxmlwpx.supabase.co";
+if(!window.supabase||!window.OPS_KEY)return;
+var sb=window.supabase.createClient(SB_URL,window.OPS_KEY,{auth:{persistSession:false}});
+var T="ops_docs",COL="nq_route",ID="state";
+function hex(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),function(b){return b.toString(16).padStart(2,"0");}).join("");}
+window.NQ_STORE={
+  load:function(){return sb.from(T).select("data").eq("col",COL).eq("id",ID).maybeSingle().then(function(r){if(r.error)throw r.error;return r.data?r.data.data:null;});},
+  save:function(s){return sb.from(T).upsert({col:COL,id:ID,data:s,updated_at:new Date().toISOString()}).then(function(r){if(r.error)throw r.error;});},
+  upload:function(blob){var id=hex();return sb.storage.from("ops-photos").upload(id,blob,{contentType:"image/jpeg",cacheControl:"31536000"}).then(function(r){if(r.error)throw r.error;return SB_URL+"/storage/v1/object/public/ops-photos/"+id;});},
+  watch:function(cb){sb.channel("nq-route").on("postgres_changes",{event:"*",schema:"public",table:T},function(p){var row=p.new;if(row&&row.col===COL&&row.id===ID)cb(row.data);}).subscribe();}
+};
+})();</script>
+<script id="state" type="application/json">{"rev": 4, "meta": {"title": "南青開幕典禮入場動線圖", "sub": "桃園市南區青少年活動中心開幕營運啟動典禮｜115 年 11 月 26 日（四）09:30 報到、10:00 典禮開始｜B 棟 2F 演藝廳", "time": "09:00–10:10"}, "cats": [{"id": "gen", "name": "一般來賓", "color": "#F28C00"}, {"id": "vip", "name": "長官貴賓", "color": "#C8102E"}, {"id": "med", "name": "媒體", "color": "#7B3FBF"}, {"id": "veh", "name": "車輛", "color": "#2B4C7E"}], "teams": [{"id": "site", "name": "場地組", "color": "#0E8F8A"}, {"id": "chk", "name": "報到組", "color": "#1F6FD0"}, {"id": "ush", "name": "帶位組", "color": "#D6338A"}, {"id": "vipt", "name": "貴賓組", "color": "#B8860B"}], "floors": [{"id": "site", "kind": "site", "name": "戶外", "desc": "車輛進場、戶外走廊", "w": 1400, "h": 1000, "base": "", "note": "戶外配置依建築平面圖繪製成示意圖。貴賓車輛停一樓戶外貴賓停車位，其餘車輛由 B 棟東側車道進地下停車場；從 A 棟上來的來賓走戶外走廊到 B 棟大門。"}, {"id": "parking", "kind": "parking", "name": "地下停車場", "desc": "兩座樓梯上樓", "w": 1400, "h": 900, "base": "", "note": "停車場為示意繪製。往 B 棟的樓梯最快但被水塔擋住視線，需立牌與人員指引；往 A 棟的樓梯較明顯，上樓後經戶外走廊到 B 棟。"}, {"id": "ab1", "kind": "img", "name": "A 棟 B1", "desc": "停車場進 A 棟、上樓", "w": 1680, "h": 1100, "base": "", "note": "從停車場進 A 棟 B1 後，直接走樓梯或搭電梯上 1F，不在本層停留。"}, {"id": "a1f", "kind": "img", "name": "A 棟 1F", "desc": "出 A 棟接戶外走廊", "w": 1720, "h": 840, "base": "", "note": "上到 A 棟 1F 後由出口接戶外走廊，步行到 B 棟大門。"}, {"id": "b1f", "kind": "img", "name": "B 棟 1F", "desc": "大門右側進場、報到", "w": 1600, "h": 1380, "base": "", "note": "來賓由大門右側進場，左側門封閉。報到後走樓梯上 2F，長者與行動不便來賓搭電梯；由停車場樓梯直接上來的來賓先到報到桌報到。"}, {"id": "b2f", "kind": "img", "name": "B 棟 2F", "desc": "演藝廳右側入口入場", "w": 1360, "h": 1420, "base": "", "note": "由演藝廳右側入口進場，左側門封閉，進場後由帶位人員依分區帶位。"}], "posts": [{"id": "o1", "floor": "site", "name": "車道口引導", "team": "site", "task": "貴賓車輛引導往戶外貴賓停車位，其餘車輛引導進地下停車場"}, {"id": "o2", "floor": "site", "name": "貴賓停車位引導", "team": "vipt", "task": "核對貴賓車輛、指引停車，帶往 B 棟大門"}, {"id": "o3", "floor": "site", "name": "戶外走廊指引", "team": "ush", "task": "A 棟出來的來賓沿戶外走廊帶往 B 棟大門"}, {"id": "p1", "floor": "parking", "name": "車道出入口", "team": "site", "task": "引導車輛往內停放，告知往 B 棟的樓梯方向"}, {"id": "p2", "floor": "parking", "name": "水塔轉角", "team": "site", "task": "水塔會擋住視線，站在轉角指往 B 棟樓梯"}, {"id": "p3", "floor": "parking", "name": "往 A 棟樓梯口", "team": "site", "task": "停在西側的來賓由此上樓，告知上樓後走戶外走廊到 B 棟"}, {"id": "c1", "floor": "a1f", "name": "B 棟入口指引", "team": "site", "task": "樓梯上來的來賓指往出口，接戶外走廊到 B 棟"}, {"id": "a1", "floor": "b1f", "name": "大門外迎賓", "team": "vipt", "task": "迎賓，其中 1 人專門接市長與市府長官座車"}, {"id": "a2", "floor": "b1f", "name": "報到桌", "team": "chk", "task": "貴賓與民意代表 2 人、一般來賓 1 人、媒體簽到 1 人，同時發伴手禮"}, {"id": "a3", "floor": "b1f", "name": "樓梯口", "team": "ush", "task": "報到後指引來賓上 2F；停車場上來的來賓先帶到報到桌"}, {"id": "a4", "floor": "b1f", "name": "B棟側門入口", "team": "site", "task": "陪同長者與行動不便來賓搭電梯"}, {"id": "b1", "floor": "b2f", "name": "演藝廳右側入口", "team": "site", "task": "確認來賓已報到，分流到各區"}, {"id": "xo3hahln", "floor": "ab1", "name": "場地指引", "team": "site", "task": "工作內容"}], "items": [{"id": "s1", "floor": "site", "type": "person", "post": "o1", "name": "", "x": 960, "y": 885}, {"id": "s3", "floor": "site", "type": "person", "post": "o3", "name": "", "x": 455, "y": 470}, {"id": "s4", "floor": "site", "type": "door", "x": 677, "y": 641, "text": "開幕會場入口"}, {"id": "s5", "floor": "site", "type": "label", "x": 240, "y": 662, "text": "貴賓停車位 14 位"}, {"id": "s6", "floor": "site", "type": "label", "x": 1010, "y": 740, "text": "地下停車場車道"}, {"id": "s7", "floor": "site", "type": "label", "x": 452, "y": 280, "text": "戶外走廊"}, {"id": "s13", "floor": "site", "type": "photo", "x": 133, "y": 662, "title": "戶外貴賓停車位", "note": "", "img": ""}, {"id": "s14", "floor": "site", "type": "photo", "x": 470, "y": 560, "title": "A 棟到 B 棟的戶外走廊", "note": "", "img": ""}, {"id": "s15", "floor": "site", "type": "photo", "x": 770, "y": 760, "title": "開幕會場入口", "note": "", "img": ""}, {"id": "s16", "floor": "site", "type": "photo", "x": 1010, "y": 860, "title": "地下停車場車道入口", "note": "", "img": ""}, {"id": "s18", "floor": "parking", "type": "person", "post": "p2", "name": "", "x": 1117, "y": 591}, {"id": "s19", "floor": "parking", "type": "person", "post": "p3", "name": "", "x": 450, "y": 220}, {"id": "s20", "floor": "parking", "type": "stair", "x": 1255, "y": 610, "text": "樓梯往 B棟1F"}, {"id": "s21", "floor": "parking", "type": "stair", "x": 374, "y": 191, "text": "樓梯往 A棟1F"}, {"id": "s23", "floor": "parking", "type": "label", "x": 1246, "y": 480, "text": "水塔"}, {"id": "s24", "floor": "parking", "type": "label", "x": 590, "y": 782, "text": "員工停車位"}, {"id": "s25", "floor": "parking", "type": "label", "x": 1234, "y": 782, "text": "停車位"}, {"id": "s26", "floor": "parking", "type": "sign", "x": 919, "y": 592, "text": "立牌 開幕典禮往 B 棟樓梯（最快）"}, {"id": "s27", "floor": "parking", "type": "sign", "x": 581, "y": 218, "text": "立牌 開幕典禮由此上樓"}, {"id": "s31", "floor": "parking", "type": "photo", "x": 1154, "y": 634, "title": "樓梯往 B棟1F", "note": "", "img": ""}, {"id": "s32", "floor": "parking", "type": "photo", "x": 470, "y": 130, "title": "樓梯往 A棟1F", "note": "", "img": ""}, {"id": "s33", "floor": "ab1", "type": "door", "x": 1581, "y": 683, "text": "A棟停車場出入口"}, {"id": "s34", "floor": "ab1", "type": "stair", "x": 1560, "y": 455, "text": "樓梯 往 1F"}, {"id": "s35", "floor": "ab1", "type": "elev", "x": 1385, "y": 454, "text": "電梯 往 1F"}, {"id": "s37", "floor": "ab1", "type": "photo", "x": 1465, "y": 682, "title": "停車場進 A 棟的門", "note": "", "img": ""}, {"id": "s38", "floor": "a1f", "type": "person", "post": "c1", "name": "", "x": 1280, "y": 235}, {"id": "s39", "floor": "a1f", "type": "stair", "x": 1543, "y": 183, "text": "A棟停車場B1 樓梯"}, {"id": "s40", "floor": "a1f", "type": "elev", "x": 1459, "y": 288, "text": "電梯"}, {"id": "s41", "floor": "a1f", "type": "door", "x": 1180, "y": 109, "text": "A棟出口 往 B棟入口"}, {"id": "s43", "floor": "a1f", "type": "photo", "x": 1258, "y": 37, "title": "A 棟 1F 往戶外走廊的出口", "note": "", "img": ""}, {"id": "s46", "floor": "b1f", "type": "person", "post": "a2", "name": "", "x": 1415, "y": 511}, {"id": "s47", "floor": "b1f", "type": "person", "post": "a2", "name": "", "x": 1355, "y": 514}, {"id": "s52", "floor": "b1f", "type": "door", "x": 1516, "y": 832, "text": "B棟大門入口"}, {"id": "s53", "floor": "b1f", "type": "closed", "x": 1329, "y": 1120, "text": "左側門封閉"}, {"id": "s55", "floor": "b1f", "type": "desk", "x": 1390, "y": 562, "text": "報到桌"}, {"id": "s56", "floor": "b1f", "type": "stair", "x": 1396, "y": 438, "text": "通往停車場B棟B1、2F樓梯"}, {"id": "s61", "floor": "b1f", "type": "photo", "x": 1422, "y": 831, "title": "B 棟 1F 大門入口", "note": "", "img": ""}, {"id": "s69", "floor": "b2f", "type": "stair", "x": 1110, "y": 290, "text": "樓梯 來自 1F"}, {"id": "s71", "floor": "b2f", "type": "door", "x": 672, "y": 435, "text": "演藝廳右側入口"}, {"id": "s72", "floor": "b2f", "type": "closed", "x": 1034, "y": 910, "text": "左側門封閉"}, {"id": "xewqrbhq", "floor": "site", "type": "closed", "x": 520, "y": 612, "text": "左側封閉門"}, {"id": "xspjn23i", "floor": "site", "type": "desk", "x": 812, "y": 627, "text": "報到桌"}, {"id": "x8gxo2rg", "floor": "site", "type": "stair", "x": 882, "y": 559, "text": "通往2F演藝廳樓梯"}, {"id": "xqh584b3", "floor": "ab1", "type": "label", "x": 1010, "y": 439, "text": "游泳池出入口"}, {"id": "xmc299by", "floor": "parking", "type": "person", "post": "p1", "name": "", "x": 1014, "y": 209}, {"id": "xllatjhs", "floor": "ab1", "type": "person", "post": "xo3hahln", "name": "", "x": 1339, "y": 670}, {"id": "xfa1ego2", "floor": "b2f", "type": "closed", "x": 612, "y": 932, "text": "左側門封閉"}, {"id": "xjrtiruv", "floor": "b1f", "type": "sign", "x": 1248, "y": 829, "text": "60吋電視"}, {"id": "xx0yaxyu", "floor": "b1f", "type": "label", "x": 393, "y": 819, "text": "健身房"}, {"id": "xzffreey", "floor": "b1f", "type": "door", "x": 739, "y": 1352, "text": "B棟側門入口/通往A棟出口"}, {"id": "xaur8dif", "floor": "b1f", "type": "elev", "x": 687, "y": 222, "text": "電梯"}, {"id": "xj4bf4eq", "floor": "b2f", "type": "person", "post": "b1", "name": "", "x": 1089, "y": 622}, {"id": "xexfcmwj", "floor": "b1f", "type": "person", "post": "a4", "name": "", "x": 520, "y": 1233}, {"id": "x38ily0c", "floor": "b1f", "type": "label", "x": 1099, "y": 949, "text": "交誼廳"}, {"id": "xs5t0uk8", "floor": "b1f", "type": "photo", "x": 1098, "y": 998, "title": "現場照片", "note": "", "img": ""}], "routes": [{"id": "s9", "floor": "site", "cat": "veh", "pts": [[800, 955], [770, 832], [480, 832], [452, 650], [415, 650]]}, {"id": "s10", "floor": "site", "cat": "veh", "pts": [[980, 955], [871, 900], [871, 630]]}, {"id": "s12", "floor": "site", "cat": "gen", "pts": [[430, 358], [521, 360], [745, 576]]}, {"id": "s28", "floor": "parking", "cat": "gen", "pts": [[765, 666], [1205, 665]]}, {"id": "s29", "floor": "parking", "cat": "gen", "pts": [[640, 290], [376, 291], [375, 225]]}, {"id": "s36", "floor": "ab1", "cat": "gen", "pts": [[1665, 650], [1570, 651], [1570, 575]]}, {"id": "s42", "floor": "a1f", "cat": "gen", "pts": [[1388, 179], [1185, 180], [1187, 28]]}, {"id": "s58", "floor": "b1f", "cat": "gen", "pts": [[1497, 741], [1285, 741], [1284, 491]]}, {"id": "s74", "floor": "b2f", "cat": "gen", "pts": [[1025, 405], [1022, 510], [858, 359], [617, 361], [617, 404]]}, {"id": "x2re628a", "floor": "b1f", "cat": "gen", "pts": [[579, 1368], [583, 1222], [791, 1220], [1284, 742]]}], "savedAt": "2026-11-13T04:19:29.393Z"}</script>
+<script>(function(){
+'use strict';
+var NAVY='#1B2A4A',GRAY='#E4E7EB',LINE='#8A96A8',GREEN='#2FA24A',MUTED='#7B8797';
+var FONT="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif";
+function g(d){return '<path d="'+d+'" fill="'+GRAY+'"/>';}
+function w(d,sw){return '<path d="'+d+'" fill="none" stroke="'+NAVY+'" stroke-width="'+(sw||7)+'" stroke-linecap="square" stroke-linejoin="miter"/>';}
+function t(d,sw){return '<path d="'+d+'" fill="none" stroke="'+NAVY+'" stroke-width="'+(sw||2.5)+'"/>';}
+function cols(a,s){s=s||24;return a.map(function(p){return '<rect x="'+(p[0]-s/2)+'" y="'+(p[1]-s/2)+'" width="'+s+'" height="'+s+'" fill="'+NAVY+'"/>';}).join('');}
+function stubs(a){return a.map(function(p){return '<rect x="'+p[0]+'" y="'+p[1]+'" width="'+p[2]+'" height="'+p[3]+'" fill="'+NAVY+'"/>';}).join('');}
+function stair(x,y,wd,ht,vert,mid){
+  var o='<rect x="'+x+'" y="'+y+'" width="'+wd+'" height="'+ht+'" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/>',n=Math.max(3,Math.round((vert?wd:ht)/11)),i,v;
+  for(i=1;i<n;i++){
+    if(vert){v=x+wd*i/n;o+='<line x1="'+v+'" y1="'+y+'" x2="'+v+'" y2="'+(y+ht)+'" stroke="'+NAVY+'" stroke-width="1.6"/>';}
+    else{v=y+ht*i/n;o+='<line x1="'+x+'" y1="'+v+'" x2="'+(x+wd)+'" y2="'+v+'" stroke="'+NAVY+'" stroke-width="1.6"/>';}
+  }
+  if(mid){
+    if(vert)o+='<line x1="'+x+'" y1="'+(y+ht/2)+'" x2="'+(x+wd)+'" y2="'+(y+ht/2)+'" stroke="'+NAVY+'" stroke-width="4"/>';
+    else o+='<line x1="'+(x+wd/2)+'" y1="'+y+'" x2="'+(x+wd/2)+'" y2="'+(y+ht)+'" stroke="'+NAVY+'" stroke-width="4"/>';
+  }
+  return o;
+}
+function xbox(x,y,wd,ht){return '<rect x="'+x+'" y="'+y+'" width="'+wd+'" height="'+ht+'" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/><path d="M'+x+' '+y+'L'+(x+wd)+' '+(y+ht)+'M'+(x+wd)+' '+y+'L'+x+' '+(y+ht)+'" stroke="'+NAVY+'" stroke-width="1.8"/>';}
+function lift(x,y,wd,ht){return '<rect x="'+x+'" y="'+y+'" width="'+wd+'" height="'+ht+'" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/><path transform="translate('+(x+wd/2)+','+(y+ht/2)+')" d="M-9 -3L0 -13L9 -3M-9 3L0 13L9 3" fill="none" stroke="'+NAVY+'" stroke-width="2.5" stroke-linejoin="round"/>';}
+function exit(x,y){return '<g transform="translate('+x+','+y+')"><rect x="-19" y="-19" width="38" height="38" rx="4" fill="'+GREEN+'"/><path d="M-9 0H7M1 -7L8 0L1 7" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>';}
+function lab(x,y,s,fs){return '<text x="'+x+'" y="'+y+'" font-size="'+(fs||26)+'" font-family="'+FONT+'" font-weight="700" fill="'+MUTED+'" text-anchor="middle">'+s+'</text>';}
+function info(x,y){return '<circle cx="'+x+'" cy="'+y+'" r="19" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/><text x="'+x+'" y="'+(y+8)+'" font-size="24" font-family="Georgia,serif" font-weight="700" fill="'+NAVY+'" text-anchor="middle">i</text>';}
+
+function b1f(){
+  var o='';
+  o+=g('M93 368H715V1160H472V1290H93Z');
+  o+=g('M445 118H697V365H445Z');
+  o+=g('M830 118H988V368H1228V742H830Z');
+  o+=g('M865 1290V1215Q865 1175 905 1175H1160V1165H1255V1290Z');
+  o+=t('M715 368V1160M830 118V742H1228V368M988 368V742M830 245H988M830 368H988M830 555H988',2.5);
+  o+=t('M700 140H740V300H700',2.5);
+  o+=t('M845 1290V1215Q845 1155 905 1155H1160V1200',3.5);
+  o+=t('M472 1290V1160H715M615 1160V1138H715',3.5);
+  o+=t('M1312 485H1480M1255 1178H1440M1228 368V493',3);
+  o+=stair(1345,368,68,117,true,true);
+  o+=stair(1325,1178,66,112,true,true);
+  o+=xbox(1160,368,88,54)+xbox(1165,1235,90,55)+xbox(93,1178,117,92);
+  o+=w('M90 365H442V115H700M760 115H988V365H1500V705M1500 780V880M1500 955V1292H610M550 1292H90V365');
+  o+=cols([[452,126],[704,126],[976,126],[1490,378],[704,493],[976,493],[1236,493],[1490,493],[704,830],[972,830],[1244,830],[1490,830],[704,1166],[972,1164],[1244,1166],[1490,1166],[218,1280],[460,1280],[704,1280]]);
+  o+=stubs([[93,484,78,18],[93,821,78,18],[93,1157,78,18]]);
+  o+=exit(738,84)+exit(1500,742)+exit(1500,917)+exit(580,1290);
+  o+=info(1012,1228)+lab(1090,1238,'服務台',24)+lab(1100,960,'大廳',30);
+  return o;
+}
+function b2f(){
+  var o='';
+  o+=g('M97 312H358V420H385V510L405 545V800L385 850V935H320V1010H130V940H97Z');
+  o+=g('M385 420H860L875 435V905L860 920H385V850L405 800V545L385 510Z');
+  o+=g('M875 455Q1000 560 1000 670Q1000 780 930 885H875Z');
+  o+=g('M370 118H555V310H370Z')+g('M560 118H790V215H560Z')+g('M670 222H790V310H670Z');
+  o+=g('M218 1030H318V1165H468V1293H218Z')+g('M365 1018H468V1095H365Z');
+  o+=t('M385 420V510L405 545V800L385 850V920M875 435V905',3);
+  o+=t('M875 455Q1000 560 1000 670Q1000 780 930 885',3)+t('M905 470Q975 570 975 670Q975 770 915 865',2);
+  o+=t('M875 570H915M875 600H915M875 630H915M875 690H915M875 720H915M875 750H915M875 780H915',2.5);
+  o+=t('M555 118V310M560 215H790M670 222V310M600 215H670',2.5);
+  o+=t('M318 1030V1165M250 1165H468M468 1018V1293M295 1165V1293M395 1195V1293M365 1095H468M370 1120H415V1165',2.5);
+  o+=t('M1180 420H1222V918H1180',2.5);
+  o+=w('M385 410H590M635 410H865M385 930H590M635 930H865',5);
+  o+=t('M590 410V470M590 870V930',3);
+  o+=t('M1048 420V400H1170M1048 920V940H1170',4);
+  o+=stair(1082,312,58,84,false,true)+stair(1082,946,58,82,false,true);
+  o+=xbox(925,312,75,40)+xbox(925,988,75,40)+xbox(338,398,28,54)+xbox(338,888,28,54)+xbox(527,290,28,20);
+  o+=w('M95 310H368V115H790V310H1192V420M1180 420V918M1192 918V1030H585V1293M680 1293H548M500 1293H215V1012H128V938H95V310M1000 310V420M1000 918V1030');
+  o+=cols([[376,125],[566,125],[780,125],[566,408],[780,408],[990,408],[1182,408],[990,670],[1180,670],[566,932],[780,932],[990,930],[1180,930],[190,1022],[378,1020],[570,1020]],22);
+  o+=stubs([[97,400,56,18],[97,662,56,18],[97,926,56,18]]);
+  o+=exit(1162,352)+exit(1162,986);
+  o+=lab(640,610,'演藝廳',34)+lab(940,675,'洗手間',20)+lab(1090,675,'前廳',26);
+  return o;
+}
+function ab1(){
+  var o='';
+  o+=g('M70 405H622V712H1612V1045Q1000 1010 605 940L70 832Z');
+  o+=g('M598 70H1366V380H1300V405H1128V485H888V405H598Z');
+  o+=g('M1378 385H1470V655H1378Z');
+  o+=t('M645 70V195M680 70V130M720 70V195M760 70V130M800 70V195M850 70V130M890 70V195M930 70V195M1010 70V195M1090 70V195M1140 70V195M1190 70V130M1250 70V195M1290 70V130M1330 70V195',3);
+  o+=t('M598 200H650M710 200H890M1140 200H1340M1340 200V350H1185',2.5);
+  o+=t('M1005 220V395M940 405H1075',3);
+  o+='<rect x="935" y="200" width="155" height="18" fill="'+NAVY+'" opacity="0.8"/><rect x="885" y="276" width="255" height="22" fill="'+NAVY+'" opacity="0.8"/>';
+  o+=t('M795 245H843V395H795ZM795 295H843M795 345H843M1185 245H1233V395H1185ZM1185 295H1233M1185 345H1233M1233 350H1283V395',2.5);
+  o+=t('M888 405V485H1128V405',4);
+  o+='<rect x="958" y="470" width="14" height="32" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/><rect x="998" y="470" width="14" height="32" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/><rect x="1038" y="470" width="14" height="32" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/>';
+  o+=stair(625,460,55,120,false,false)+stair(680,410,60,50,true,false);
+  o+=t('M720 500V520Q720 548 768 548Q815 548 815 520V500M738 500V518Q738 532 768 532Q798 532 798 518V500',2.5);
+  o+=t('M598 235H625V580H598M622 405V712',3);
+  o+=lift(1385,505,78,68)+lift(1385,580,78,68);
+  o+=t('M1378 385H1470V655H1378ZM1378 498H1470',3);
+  o+=stair(1470,515,140,95,false,true);
+  o+=t('M622 712H930M1090 712H1612M605 712V940M1008 712V1000M1555 712V1040',4);
+  o+=xbox(628,715,42,22);
+  o+=w('M68 380H380V405H598V68H888M930 68H1095M1142 68H1368V380H1612V650M1612 712V1045Q1000 1010 605 940L68 832V380');
+  o+=cols([[82,392],[368,392],[612,392],[1005,395],[1295,392],[1455,392],[82,560],[82,818],[362,880],[612,722],[612,930],[1010,722],[1010,985],[1295,722],[1462,722],[1600,722],[1288,1014],[1600,1035]],24);
+  o+=exit(768,438)+exit(1540,462);
+  o+=lab(700,320,'淋浴・更衣區',22)+lab(1000,620,'B1 大廳',28);
+  return o;
+}
+function a1f(){
+  var o='';
+  o+=g('M85 108H628V430H1345V757Q700 700 85 560Z');
+  o+=g('M1348 432H1438V665H1495V432H1662V777L1345 757Z');
+  o+=g('M1422 170H1515V375H1422Z');
+  o+='<rect x="630" y="100" width="198" height="200" fill="#FFFFFF"/><rect x="630" y="300" width="170" height="130" fill="#FFFFFF"/>';
+  o+=stair(690,120,65,62,true,false)+stair(632,185,58,95,false,false)+stair(708,300,88,128,true,false);
+  o+=t('M742 185V225Q742 268 785 268H826M758 185V222Q758 252 788 252H826M774 185V220Q774 236 792 236H826',2.5);
+  o+=t('M628 108V330M828 100V300H690V185',4);
+  o+=t('M812 430V702M1045 430V722M1345 430V757M1348 570H1438M1348 665H1495M1438 432V665M1495 432V760M1500 565H1662M628 520V640',3);
+  o+=t('M800 430H980M1060 430H1180',3);
+  o+=lift(1430,212,78,74)+lift(1430,292,78,74);
+  o+=t('M1422 170H1515V375H1422ZM1422 205H1515',3);
+  o+=stair(1520,240,140,105,false,true);
+  o+=xbox(1230,432,110,48);
+  o+=w('M370 95H1125M1255 95H1665V777L1345 757Q700 700 82 560V105H370V95');
+  o+=cols([[98,118],[385,108],[640,108],[1047,108],[1328,108],[1512,108],[1650,108],[98,282],[98,545],[385,610],[640,440],[640,660],[1047,440],[1047,716],[1330,440],[1330,745],[1510,440],[1650,440],[1650,765]],26);
+  o+=exit(1188,112);
+  o+=lab(1080,290,'1F 大廳',30)+lab(1580,610,'洗手間',22);
+  return o;
+}
+window.NQ_PLANS={b1f:b1f,b2f:b2f,ab1:ab1,a1f:a1f};
+})();
+</script>
+<script id="app">(function(){
+'use strict';
+var S=JSON.parse(document.getElementById('state').textContent);
+var KEY='nq-entry-route';
+var FONT="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif";
+var TYPES={
+  desk:{n:'報到桌',bg:'#0B6FB8',fg:'#FFFFFF'},
+  door:{n:'入口',bg:'#1E8E4E',fg:'#FFFFFF'},
+  stair:{n:'樓梯',bg:'#2F3D50',fg:'#FFFFFF'},
+  elev:{n:'電梯',bg:'#2F3D50',fg:'#FFFFFF'},
+  sign:{n:'立牌',bg:'#F5B700',fg:'#16233A'},
+  label:{n:'文字'},closed:{n:'封閉門'},photo:{n:'照片點'}
+};
+var root=document.getElementById('root');
+var ui={floor:S.floors[0].id,mode:'view',sel:null,msg:''};
+var artifact=null,downloads=null,dirty=false,drag=null,lastDown={t:0,r:null},raf=0,draftT=0,fileTarget=null;
+
+var STORE=window.NQ_STORE||null;
+function applyDraft(){try{var d0=JSON.parse(localStorage.getItem(KEY+'-draft')||'null');if(d0&&d0.baseRev===(S.rev||0)&&d0.state){S=d0.state;dirty=true;}}catch(e){}}
+S.floors.forEach(function(f){if(window.NQ_PLANS&&window.NQ_PLANS[f.id]&&f.base&&f.base.indexOf('data:image/png')===0)f.base='';});
+
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function uid(){return 'x'+Math.random().toString(36).slice(2,9);}
+function fl(){return S.floors.filter(function(f){return f.id===ui.floor;})[0]||S.floors[0];}
+function K(f){return f.w/1000;}
+function items(fid,type){return S.items.filter(function(i){return i.floor===fid&&(!type||i.type===type);});}
+function item(id){return S.items.filter(function(i){return i.id===id;})[0];}
+function post(id){return S.posts.filter(function(p){return p.id===id;})[0];}
+function team(id){return S.teams.filter(function(t){return t.id===id;})[0]||S.teams[0];}
+function cat(id){return S.cats.filter(function(c){return c.id===id;})[0]||S.cats[0];}
+function route(id){return S.routes.filter(function(r){return r.id===id;})[0];}
+function count(pid){return S.items.filter(function(i){return i.type==='person'&&i.post===pid;}).length;}
+function floorCount(fid){return items(fid,'person').length;}
+function tw(s,fs){var n=0;for(var i=0;i<s.length;i++)n+=s.charCodeAt(i)>255?fs:fs*0.6;return n;}
+function isEdit(){return ui.mode==='edit';}
+function readHash(){var h=location.hash.replace('#','');if(S.floors.some(function(f){return f.id===h;}))ui.floor=h;}
+
+function touch(){
+  dirty=true;setStatus();
+  clearTimeout(draftT);
+  draftT=setTimeout(function(){try{localStorage.setItem(KEY+'-draft',JSON.stringify({baseRev:S.rev||0,state:S}));}catch(e){}},800);
+}
+function setStatus(){
+  var el=document.getElementById('status');if(!el)return;
+  var t=ui.msg||(dirty?(artifact?'有未儲存的修改，按「儲存」後所有人才看得到':'修改暫存在這台電腦的瀏覽器'):'');
+  el.textContent=t;el.className='status'+(dirty&&!ui.msg?' dirty':'');
+}
+
+/* ---------- SVG ---------- */
+function T(x,y,fs,txt,fill,extra){
+  return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'" font-family="'+FONT+'" font-weight="700" fill="'+fill+'" '+(extra||'')+'>'+esc(txt)+'</text>';
+}
+function halo(x,y,fs,txt,fill,anchor){
+  return T(x,y,fs,txt,fill,'text-anchor="'+(anchor||'middle')+'" stroke="#FFFFFF" stroke-width="'+(fs*0.32)+'" stroke-linejoin="round" paint-order="stroke"');
+}
+function bayRow(x0,x1,y0,y1,n,fill){
+  var s='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="'+(fill||'#E3E6EA')+'" stroke="#1B2A4A" stroke-width="2"/>';
+  for(var j=1;j<n;j++){var xx=x0+(x1-x0)*j/n;s+='<line x1="'+xx+'" y1="'+y0+'" x2="'+xx+'" y2="'+y1+'" stroke="#1B2A4A" stroke-width="2"/>';}
+  return s;
+}
+function hatch(x,y,w,h,vertical){
+  var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#FFFFFF" stroke="#1B2A4A" stroke-width="2"/>',n=Math.round((vertical?h:w)/20);
+  for(var i=1;i<n;i++){
+    if(vertical){var yy=y+h*i/n;s+='<line x1="'+x+'" y1="'+yy+'" x2="'+(x+w)+'" y2="'+yy+'" stroke="#9AA6B5" stroke-width="1.5"/>';}
+    else{var xx=x+w*i/n;s+='<line x1="'+xx+'" y1="'+y+'" x2="'+xx+'" y2="'+(y+h)+'" stroke="#9AA6B5" stroke-width="1.5"/>';}
+  }
+  return s;
+}
+function laneArrow(x,y,deg){return '<path transform="translate('+x+','+y+') rotate('+deg+')" d="M-34 0H26M12 -12L28 0L12 12" fill="none" stroke="#B3BDCA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';}
+function parkingSvg(f){
+  var o='';
+  o+='<rect x="60" y="60" width="1280" height="780" fill="#FAFBFC" stroke="#1B2A4A" stroke-width="8"/>';
+  o+=bayRow(480,980,68,168,7);
+  o+=bayRow(300,1040,360,450,10);
+  o+=bayRow(300,1040,450,540,10);
+  o+=bayRow(90,1090,732,832,14,'#F3ECD6');
+  o+=bayRow(1161,1307,732,832,2);
+  o+=hatch(1060,68,272,172,false);
+  o+=halo(1196,150,24,'車道出入口','#1B2A4A');
+  o+='<rect x="1160" y="345" width="172" height="268" fill="#C9CFD8" stroke="#1B2A4A" stroke-width="3"/>';
+  o+=hatch(322,68,98,100,true);
+  o+=hatch(1200,632,110,66,false);
+  o+=T(730,128,20,'停車區','#7B8797','text-anchor="middle"');
+  o+=T(670,460,20,'停車區','#7B8797','text-anchor="middle"');
+  o+=T(700,278,20,'車道','#9AA6B5','text-anchor="middle"');
+  o+=T(640,648,20,'車道','#9AA6B5','text-anchor="middle"');
+  [[1000,268,180],[860,268,180],[440,268,180],[190,450,90],[420,640,0],[860,640,0],[1100,470,270]].forEach(function(a){o+=laneArrow(a[0],a[1],a[2]);});
+  return o;
+}
+function siteSvg(f){
+  var o='';
+  o+='<rect x="0" y="0" width="1400" height="1000" fill="#F4F6F9"/>';
+  o+='<rect x="0" y="905" width="1400" height="95" fill="#DDE2E8"/><line x1="0" y1="952" x2="1400" y2="952" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="36 28"/>';
+  o+='<rect x="0" y="872" width="1400" height="33" fill="#ECEFF3"/>';
+  o+=T(1180,985,22,'延平路一段','#5B6B82','text-anchor="middle"');
+  o+='<rect x="45" y="528" width="390" height="268" rx="26" fill="#FFFFFF" stroke="#1B2A4A" stroke-width="2.5"/>';
+  o+=bayRow(60,412,542,612,8,'#F6E3C2');
+  o+=bayRow(60,324,712,782,6,'#F6E3C2');
+  o+='<rect x="486" y="420" width="34" height="452" fill="#E9EDF2" stroke="#7B8797" stroke-width="2" stroke-dasharray="8 6"/>';
+  o+='<rect x="425" y="300" width="95" height="120" fill="#E9EDF2" stroke="#7B8797" stroke-width="2" stroke-dasharray="8 6"/>';
+  o+='<path d="M295 60H425V520H215Z" fill="#D9DEE5" stroke="#1B2A4A" stroke-width="5" stroke-linejoin="round"/>';
+  o+='<rect x="520" y="220" width="310" height="450" fill="#D9DEE5" stroke="#1B2A4A" stroke-width="5"/>';
+  o+='<rect x="830" y="330" width="110" height="190" fill="#D9DEE5" stroke="#1B2A4A" stroke-width="5"/>';
+  o+=hatch(560,672,230,34,true);
+  o+=hatch(838,600,66,272,true);
+  o+=T(330,300,44,'A 棟','#1B2A4A','text-anchor="middle"');
+  o+=T(675,420,44,'B 棟','#1B2A4A','text-anchor="middle"');
+  o+=T(675,458,20,'1F 報到・2F 演藝廳','#5B6B82','text-anchor="middle"');
+  o+='<g transform="translate(1320,80)"><circle r="34" fill="#FFFFFF" stroke="#1B2A4A" stroke-width="3"/><path d="M0 -24L10 8H-10Z" fill="#1B2A4A"/>'+T(0,26,18,'N','#1B2A4A','text-anchor="middle"')+'</g>';
+  return o;
+}
+function baseSvg(f){
+  var H=f.h+70*K(f);
+  var o='<rect x="0" y="0" width="'+f.w+'" height="'+H+'" fill="#FFFFFF"/>';
+  if(f.base)o+='<image href="'+f.base+'" x="0" y="0" width="'+f.w+'" height="'+f.h+'" preserveAspectRatio="xMidYMid meet"/>';
+  else if(window.NQ_PLANS&&window.NQ_PLANS[f.id])o+=window.NQ_PLANS[f.id](f);
+  else o+=(f.kind==='site'?siteSvg(f):parkingSvg(f));
+  return o;
+}
+function tagSvg(it,k){
+  var ty=TYPES[it.type],fs=13,w=tw(it.text||ty.n,fs)+18;
+  return '<rect x="'+(-w/2)+'" y="-12" width="'+w+'" height="24" rx="6" fill="'+ty.bg+'" stroke="#FFFFFF" stroke-width="2"/>'+
+    T(0,4.8,fs,it.text||ty.n,ty.fg,'text-anchor="middle"');
+}
+function itemSvg(it,f,clean,photoNo){
+  var k=K(f),o='',sel=!clean&&ui.sel&&ui.sel.t==='item'&&ui.sel.id===it.id,r=18;
+  if(it.type==='person'){
+    var p=post(it.post),c=team(p?p.team:null).color;
+    o+='<circle r="17" fill="#FFFFFF" fill-opacity="0.01"/>';
+    o+='<path d="M-10 13Q-10 -3 0 -3Q10 -3 10 13Z" fill="'+c+'" stroke="#FFFFFF" stroke-width="2"/><circle cy="-11" r="7" fill="'+c+'" stroke="#FFFFFF" stroke-width="2"/>';
+    if(it.name)o+=halo(0,27,11,it.name,'#16233A');
+    r=22;
+  }else if(it.type==='closed'){
+    o+='<circle r="12" fill="#C8102E" stroke="#FFFFFF" stroke-width="2"/><rect x="-7" y="-2.2" width="14" height="4.4" rx="1" fill="#FFFFFF"/>';
+    if(it.text)o+=halo(0,29,12,it.text,'#C8102E');
+    r=20;
+  }else if(it.type==='label'){
+    o+='<rect x="'+(-tw(it.text||'文字',14)/2-4)+'" y="-12" width="'+(tw(it.text||'文字',14)+8)+'" height="24" fill="#FFFFFF" fill-opacity="0.01"/>'+halo(0,5,14,it.text||'文字','#16233A');
+    r=Math.max(18,tw(it.text||'文字',14)/2+6);
+  }else if(it.type==='photo'){
+    o+='<circle r="12" fill="#111827" stroke="#FFFFFF" stroke-width="2.5"/>'+T(0,4.6,13,String(photoNo),'#FFFFFF','text-anchor="middle"');
+    r=19;
+  }else{
+    o+=tagSvg(it,k);r=Math.max(18,tw(it.text||TYPES[it.type].n,13)/2+14);
+  }
+  if(sel)o+='<circle r="'+r+'" fill="none" stroke="#0B6FB8" stroke-width="1.6" stroke-dasharray="4 3"/>';
+  return '<g data-id="'+it.id+'"'+(it.type==='photo'?' data-photo="'+it.id+'"':'')+' transform="translate('+it.x+','+it.y+') scale('+k+')">'+o+'</g>';
+}
+function routeSvg(r,f,clean){
+  var k=K(f),c=cat(r.cat).color,pts=r.pts.map(function(p){return p[0]+','+p[1];}).join(' ');
+  var o='<g data-rt="'+r.id+'">';
+  o+='<polyline points="'+pts+'" fill="none" stroke="#FFFFFF" stroke-width="'+(8.5*k)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  o+='<polyline points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="'+(4.5*k)+'" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ar-'+r.cat+')"/>';
+  o+='<circle cx="'+r.pts[0][0]+'" cy="'+r.pts[0][1]+'" r="'+(6*k)+'" fill="'+c+'" stroke="#FFFFFF" stroke-width="'+(2*k)+'"/>';
+  o+='</g>';
+  if(!clean&&isEdit()){
+    r.pts.forEach(function(p,i){
+      var on=ui.sel&&ui.sel.t==='node'&&ui.sel.r===r.id&&ui.sel.i===i;
+      o+='<circle data-h="'+r.id+':'+i+'" cx="'+p[0]+'" cy="'+p[1]+'" r="'+(6.5*k)+'" fill="'+(on?c:'#FFFFFF')+'" stroke="'+c+'" stroke-width="'+(2.5*k)+'"/>';
+    });
+  }
+  return o;
+}
+function legendSvg(f){
+  var k=K(f),y=f.h+38*k,x=24*k,o='<line x1="'+(16*k)+'" y1="'+(f.h+8*k)+'" x2="'+(f.w-16*k)+'" y2="'+(f.h+8*k)+'" stroke="#D6DEE9" stroke-width="'+(1.5*k)+'"/>';
+  var fs=13*k;
+  S.cats.forEach(function(c){
+    if(!S.routes.some(function(r){return r.floor===f.id&&r.cat===c.id;}))return;
+    o+='<line x1="'+x+'" y1="'+y+'" x2="'+(x+34*k)+'" y2="'+y+'" stroke="'+c.color+'" stroke-width="'+(4.5*k)+'" stroke-linecap="round" marker-end="url(#ar-'+c.id+')"/>';
+    x+=46*k;o+=T(x,y+fs*0.36,fs,c.name+'動線','#16233A');x+=tw(c.name+'動線',fs)+22*k;
+  });
+  S.teams.forEach(function(t){
+    var n=items(f.id,'person').filter(function(i){var p=post(i.post);return p&&p.team===t.id;}).length;
+    if(!n)return;
+    o+='<g transform="translate('+(x+8*k)+','+(y+1*k)+') scale('+(k*0.8)+')"><path d="M-10 13Q-10 -3 0 -3Q10 -3 10 13Z" fill="'+t.color+'"/><circle cy="-11" r="7" fill="'+t.color+'"/></g>';
+    x+=22*k;var s=t.name+' '+n+' 人';o+=T(x,y+fs*0.36,fs,s,'#16233A');x+=tw(s,fs)+22*k;
+  });
+  if(items(f.id,'closed').length){
+    o+='<g transform="translate('+(x+9*k)+','+y+') scale('+(k*0.8)+')"><circle r="12" fill="#C8102E"/><rect x="-7" y="-2.2" width="14" height="4.4" rx="1" fill="#FFFFFF"/></g>';
+    x+=24*k;o+=T(x,y+fs*0.36,fs,'封閉不開放','#16233A');
+  }
+  return o;
+}
+function ovSvg(f,clean){
+  var o='<defs>';
+  S.cats.forEach(function(c){o+='<marker id="ar-'+c.id+'" viewBox="0 0 6 6" refX="4.6" refY="3" markerWidth="3.4" markerHeight="3.4" orient="auto"><path d="M0 0L6 3L0 6Z" fill="'+c.color+'"/></marker>';});
+  o+='</defs>';
+  S.routes.forEach(function(r){if(r.floor===f.id)o+=routeSvg(r,f,clean);});
+  var order=['door','stair','elev','desk','sign','closed','label','person','photo'],n=0,nos={};
+  items(f.id,'photo').forEach(function(p){nos[p.id]=++n;});
+  order.forEach(function(ty){
+    items(f.id,ty).forEach(function(it){
+      if(ty==='photo'&&!it.img&&(clean||!isEdit()))return;
+      o+=itemSvg(it,f,clean,nos[it.id]);
+    });
+  });
+  o+=legendSvg(f);
+  return o;
+}
+function renderOv(){var g=document.getElementById('ov');if(g)g.innerHTML=ovSvg(fl(),false);}
+function schedOv(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;renderOv();});}
+
+/* ---------- 頁面 ---------- */
+function ce(){return isEdit()?' contenteditable="true" spellcheck="false"':'';}
+function render(){
+  var f=fl(),ed=isEdit(),h='';
+  root.className=ui.mode;
+  h+='<header class="top"><div><a class="back" href="../">← 南青開幕典禮工作平台</a><h1 data-bind="meta.title"'+ce()+'>'+esc(S.meta.title)+'</h1><p class="sub" data-bind="meta.sub"'+ce()+'>'+esc(S.meta.sub)+'</p></div>';
+  h+='<div class="actions"><span id="status" class="status" role="status"></span>';
+  h+='<div class="seg" role="group" aria-label="模式"><button data-act="mode:edit" aria-pressed="'+ed+'">編輯</button><button data-act="mode:view" aria-pressed="'+!ed+'">瀏覽</button></div>';
+  h+='<button class="btn" data-act="export" id="bExport"'+(downloads?'':' hidden')+'>匯出這層圖片</button>';
+  h+='<button class="btn primary editonly" data-act="save" id="bSave"'+(artifact?'':' hidden')+'>儲存</button></div></header>';
+  h+='<nav class="floors" role="tablist" aria-label="樓層">';
+  S.floors.forEach(function(x,i){
+    h+='<button role="tab" data-act="floor:'+x.id+'" aria-selected="'+(x.id===f.id)+'"><span class="n">'+(i+1)+'</span><span><b>'+esc(x.name)+'</b><small>'+esc(x.desc)+'・'+floorCount(x.id)+' 人</small></span></button>';
+  });
+  h+='</nav>';
+  h+='<div class="tools editonly"><span class="lbl">加入</span>';
+  ['desk','door','closed','sign','stair','elev','label','photo'].forEach(function(t){h+='<button class="btn sm" data-act="add:'+t+'">'+TYPES[t].n+'</button>';});
+  h+='<span class="lbl">加動線</span>';
+  S.cats.forEach(function(c){h+='<button class="btn sm" data-act="addroute:'+c.id+'"><span style="display:inline-block;width:14px;height:4px;border-radius:2px;background:'+c.color+';vertical-align:middle;margin-right:6px"></span>'+esc(c.name)+'</button>';});
+  h+='<span class="lbl">底圖</span><button class="btn sm" data-act="base">更換這層平面圖</button>'+(f.base?'<button class="btn sm" data-act="unbase">改回示意圖</button>':'')+'</div>';
+  h+='<div class="main"><div><div class="stagewrap"><svg id="stage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+f.w+' '+(f.h+70*K(f))+'" role="img" aria-label="'+esc(f.name)+'動線圖"><g id="base">'+baseSvg(f)+'</g><g id="ov"></g></svg>';
+  h+='<p class="cap" data-bind="floor.note"'+ce()+'>'+esc(f.note||'')+'</p></div></div>';
+  h+='<aside class="side"><div class="card editonly" id="insp"></div><div class="card" id="staff"></div></aside></div>';
+  h+='<section class="photos" id="photos"></section>';
+  h+='<dialog class="lb" id="lb"><img alt=""><p></p></dialog><input type="file" id="file" accept="image/*" hidden>';
+  root.innerHTML=h;
+  renderOv();renderInsp();renderStaff();renderPhotos();setStatus();
+}
+function renderInsp(){
+  var el=document.getElementById('insp');if(!el)return;
+  var s=ui.sel,h='<h2>選取的物件</h2><div class="insp">';
+  if(s&&s.t==='item'&&item(s.id)){
+    var it=item(s.id);
+    if(it.type==='person'){
+      h+='<label>崗位<select id="f-post" data-f="post">'+S.posts.filter(function(p){return p.floor===it.floor;}).map(function(p){return '<option value="'+p.id+'"'+(p.id===it.post?' selected':'')+'>'+esc(p.name)+'</option>';}).join('')+'</select></label>';
+      h+='<label>姓名（顯示在小人下方，可留空）<input id="f-name" data-f="name" value="'+esc(it.name||'')+'"></label>';
+    }else if(it.type==='photo'){
+      h+='<label>照片標題<input id="f-title" data-f="title" value="'+esc(it.title||'')+'"></label>';
+    }else{
+      h+='<label>'+TYPES[it.type].n+'文字<input id="f-text" data-f="text" value="'+esc(it.text||'')+'"></label>';
+    }
+    h+='<div class="row"><button class="btn sm danger" data-act="del">刪除</button></div>';
+  }else if(s&&(s.t==='node'||s.t==='route')&&route(s.r)){
+    var r=route(s.r);
+    h+='<label>動線類別<select id="f-cat" data-f="cat">'+S.cats.map(function(c){return '<option value="'+c.id+'"'+(c.id===r.cat?' selected':'')+'>'+esc(c.name)+'</option>';}).join('')+'</select></label>';
+    h+='<div class="row">'+(s.t==='node'&&r.pts.length>2?'<button class="btn sm" data-act="delnode">刪除這個轉折點</button>':'')+'<button class="btn sm danger" data-act="delroute">刪除整條動線</button></div>';
+    h+='<p class="hint">拖圓點改路線，拖線段整條移動，在線上連點兩下加轉折點。</p>';
+  }else{
+    h+='<p class="hint">點圖上的小人、標籤或動線來修改。拖曳可移動位置，在動線上連點兩下可加轉折點，按 Delete 可刪除選取的物件。</p>';
+  }
+  el.innerHTML=h+'</div>';
+}
+function renderStaff(){
+  var el=document.getElementById('staff');if(!el)return;
+  var f=fl(),ed=isEdit(),tot=S.items.filter(function(i){return i.type==='person';}).length;
+  var h='<h2>'+esc(f.name)+' 人力配置<span data-bind="meta.time"'+ce()+'>'+esc(S.meta.time)+'</span></h2>';
+  h+='<table class="staff"><thead><tr><th>崗位與工作</th><th style="text-align:center">人數</th></tr></thead><tbody>';
+  S.posts.filter(function(p){return p.floor===f.id;}).forEach(function(p){
+    var t=team(p.team);
+    h+='<tr><td><div><span class="dot" style="background:'+t.color+'"></span><span class="pn" data-bind="post:'+p.id+'.name"'+ce()+'>'+esc(p.name)+'</span>';
+    h+=ed?' <select class="tm" aria-label="組別" data-postteam="'+p.id+'">'+S.teams.map(function(x){return '<option value="'+x.id+'"'+(x.id===p.team?' selected':'')+'>'+esc(x.name)+'</option>';}).join('')+'</select>':'<span class="tm">'+esc(t.name)+'</span>';
+    h+='</div><div class="tk" data-bind="post:'+p.id+'.task"'+ce()+'>'+esc(p.task)+'</div></td>';
+    h+='<td class="c">'+count(p.id)+'<div class="step editonly"><button data-act="post-:'+p.id+'" aria-label="減一人">−</button><button data-act="post+:'+p.id+'" aria-label="加一人">＋</button></div>'+(ed&&!count(p.id)?'<div><button class="btn sm danger" data-act="delpost:'+p.id+'">刪除</button></div>':'')+'</td></tr>';
+  });
+  h+='</tbody></table><div class="editonly" style="margin-top:8px"><button class="btn sm" data-act="addpost">新增崗位</button></div>';
+  h+='<div class="total"><span>本層 '+floorCount(f.id)+' 人</span>全場合計 '+tot+' 人</div>';
+  el.innerHTML=h;
+}
+function renderPhotos(){
+  var el=document.getElementById('photos');if(!el)return;
+  var f=fl(),ed=isEdit(),n=0,h='',any=false;
+  items(f.id,'photo').forEach(function(p){
+    n++;if(!p.img&&!ed)return;any=true;
+    h+='<article class="pcard" id="pc-'+p.id+'"><div class="ph">';
+    if(p.img)h+='<img src="'+p.img+'" alt="'+esc(p.title)+'" data-act="zoom:'+p.id+'"><div class="pact editonly"><button class="btn sm" data-act="upload:'+p.id+'">更換</button><button class="btn sm danger" data-act="rmphoto:'+p.id+'">移除照片</button></div>';
+    else h+='<button class="drop" data-act="upload:'+p.id+'">點這裡放上現場照片</button>';
+    h+='</div><div class="pb"><span class="num">'+n+'</span><div style="flex:1;min-width:0"><div class="tt" data-bind="item:'+p.id+'.title"'+ce()+'>'+esc(p.title)+'</div><div class="nt" data-ph="補充說明" data-bind="item:'+p.id+'.note"'+ce()+'>'+esc(p.note||'')+'</div></div></div></article>';
+  });
+  el.innerHTML=any?'<h2>'+esc(f.name)+' 現場照片</h2><div class="pgrid">'+h+'</div>':'';
+}
+
+/* ---------- 編輯動作 ---------- */
+function addItem(type){
+  var f=fl(),it={id:uid(),floor:f.id,type:type,x:Math.round(f.w/2+(Math.random()-0.5)*80),y:Math.round(f.h/2+(Math.random()-0.5)*80)};
+  if(type==='photo'){it.title='現場照片';it.note='';it.img='';}
+  else if(type==='closed')it.text='封閉';
+  else it.text=TYPES[type].n;
+  S.items.push(it);ui.sel={t:'item',id:it.id};touch();renderOv();renderInsp();renderPhotos();
+}
+function addPerson(pid){
+  var f=fl(),k=K(f),mine=S.items.filter(function(i){return i.type==='person'&&i.post===pid;}),last=mine[mine.length-1];
+  var it={id:uid(),floor:f.id,type:'person',post:pid,name:'',x:last?Math.min(f.w-20,last.x+30*k):f.w/2,y:last?last.y:f.h/2};
+  S.items.push(it);ui.sel={t:'item',id:it.id};touch();render();
+}
+function delSel(){
+  var s=ui.sel;if(!s)return;
+  if(s.t==='item')S.items=S.items.filter(function(i){return i.id!==s.id;});
+  else S.routes=S.routes.filter(function(r){return r.id!==s.r;});
+  ui.sel=null;touch();render();
+}
+function insertNode(r,p){
+  var best=0,bd=1e18;
+  for(var i=0;i<r.pts.length-1;i++){
+    var a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-a[0])*dx+(p.y-a[1])*dy)/L));
+    var qx=a[0]+t*dx,qy=a[1]+t*dy,dd=(p.x-qx)*(p.x-qx)+(p.y-qy)*(p.y-qy);
+    if(dd<bd){bd=dd;best=i;}
+  }
+  r.pts.splice(best+1,0,[Math.round(p.x),Math.round(p.y)]);
+  ui.sel={t:'node',r:r.id,i:best+1};
+}
+function loadImg(file,max,cb){
+  var u=URL.createObjectURL(file),im=new Image();
+  im.onload=function(){
+    var s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    var x=c.getContext('2d');x.fillStyle='#FFFFFF';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);var fb=function(){cb(c.toDataURL('image/jpeg',0.82));};
+    if(STORE&&c.toBlob){ui.msg='圖片上傳中';setStatus();c.toBlob(function(b){if(!b){fb();return;}STORE.upload(b).then(function(url){ui.msg='';cb(url);}).catch(function(){ui.msg='';fb();});},'image/jpeg',0.82);}else fb();
+  };
+  im.onerror=function(){URL.revokeObjectURL(u);ui.msg='這個檔案不是可讀取的圖片，請改用 JPG 或 PNG';setStatus();};
+  im.src=u;
+}
+function setPath(path,val){
+  var m;
+  if(path==='meta.title')S.meta.title=val;
+  else if(path==='meta.sub')S.meta.sub=val;
+  else if(path==='meta.time')S.meta.time=val;
+  else if(path==='floor.note')fl().note=val;
+  else if((m=/^post:(\w+)\.(\w+)$/.exec(path))){var p=post(m[1]);if(p)p[m[2]]=val;}
+  else if((m=/^item:(\w+)\.(\w+)$/.exec(path))){var it=item(m[1]);if(it)it[m[2]]=val;}
+}
+function buildDoc(){
+  var json=JSON.stringify(S).replace(/</g,'\\u003c');
+  var close='<'+'/script>';
+  return '<!DOCTYPE html>\n<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(S.meta.title)+'</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">'+
+    '<style id="css">'+document.getElementById('css').textContent+'</style></head><body><div id="root"></div>'+
+    '<script id="state" type="application/json">'+json+close+'<script src="plans.js">'+close+'<script id="app">'+document.getElementById('app').textContent+close+'</body></html>';
+}
+function save(){
+  if(!STORE)return;
+  ui.msg='儲存中';setStatus();
+  STORE.load().then(function(r){
+    var remoteRev=r?(r.rev||0):0;
+    if(remoteRev>(S.rev||0)&&!window.confirm('你編輯的這段時間，有其他人存過新版本。\n按「確定」用你的版本蓋過去；按「取消」先不存，你的修改會留在畫面上。')){ui.msg='沒有儲存';setStatus();return null;}
+    S.rev=Math.max(remoteRev,S.rev||0)+1;S.savedAt=new Date().toISOString();
+    return STORE.save(S).then(function(){dirty=false;try{localStorage.removeItem(KEY+'-draft');}catch(e){}ui.msg='已儲存';setStatus();});
+  }).catch(function(){ui.msg='儲存沒有成功，請確認網路後再按一次儲存';setStatus();});
+}
+function onRemote(r){
+  if(!r||(r.rev||0)<=(S.rev||0))return;
+  if(dirty||drag){ui.msg='其他人剛存了新版本，你按儲存時會詢問要不要蓋過去';setStatus();return;}
+  var a=document.activeElement;if(a&&(a.isContentEditable||a.tagName==='INPUT'))return;
+  S=r;ui.sel=null;if(!S.floors.some(function(f){return f.id===ui.floor;}))ui.floor=S.floors[0].id;render();ui.msg='已更新成其他人剛存的版本';setStatus();
+}
+function exportPng(){
+  if(!downloads)return;
+  var f0=fl();
+  if(f0.base&&/^https?:/.test(f0.base)){fetch(f0.base).then(function(r){return r.blob();}).then(function(b){var fr=new FileReader();fr.onload=function(){doExport(fr.result);};fr.readAsDataURL(b);}).catch(function(){doExport(null);});}
+  else doExport(null);
+}
+function doExport(inl){
+  var f=fl(),keep=f.base;if(inl)f.base=inl;
+  var H=f.h+70*K(f),W=2400,Hh=Math.round(W*H/f.w);
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+Hh+'" viewBox="0 0 '+f.w+' '+H+'">'+baseSvg(f)+ovSvg(f,true)+'</svg>';
+  f.base=keep;
+  var im=new Image();
+  im.onload=function(){
+    var c=document.createElement('canvas');c.width=W;c.height=Hh;c.getContext('2d').drawImage(im,0,0,W,Hh);
+    c.toBlob(function(b){
+      downloads.save({filename:'南青開幕入場動線_'+f.name.replace(/\s/g,'')+'.png',data:b}).then(function(){ui.msg='圖片已匯出';setStatus();}).catch(function(e){ui.msg=(e&&e.code==='declined')?'':'這個畫面目前無法匯出圖片';setStatus();});
+    },'image/png');
+  };
+  im.onerror=function(){ui.msg='這個畫面目前無法匯出圖片';setStatus();};
+  im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+function zoom(id){
+  var it=item(id);if(!it||!it.img)return;
+  var lb=document.getElementById('lb');lb.querySelector('img').src=it.img;lb.querySelector('p').textContent=it.title||'';
+  if(lb.showModal)lb.showModal();
+}
+
+/* ---------- 事件 ---------- */
+root.addEventListener('click',function(e){
+  var lb=e.target.closest('dialog.lb');if(lb){lb.close();return;}
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.getAttribute('data-act').split(':'),v=a[1];
+  ui.msg='';
+  switch(a[0]){
+    case 'floor':ui.floor=v;ui.sel=null;try{location.hash=v;}catch(x){}render();break;
+    case 'mode':ui.mode=v;ui.sel=null;try{localStorage.setItem(KEY+'-mode',v);}catch(x){}render();break;
+    case 'add':addItem(v);break;
+    case 'addroute':var f=fl(),r={id:uid(),floor:f.id,cat:v,pts:[[Math.round(f.w*0.3),Math.round(f.h*0.5)],[Math.round(f.w*0.5),Math.round(f.h*0.5)],[Math.round(f.w*0.7),Math.round(f.h*0.5)]]};S.routes.push(r);ui.sel={t:'route',r:r.id};touch();renderOv();renderInsp();break;
+    case 'base':fileTarget={kind:'base'};document.getElementById('file').click();break;
+    case 'unbase':fl().base='';touch();render();break;
+    case 'upload':fileTarget={kind:'photo',id:v};document.getElementById('file').click();break;
+    case 'rmphoto':var it=item(v);if(it){it.img='';touch();render();}break;
+    case 'zoom':zoom(v);break;
+    case 'post+':addPerson(v);break;
+    case 'post-':var mine=S.items.filter(function(i){return i.type==='person'&&i.post===v;});if(mine.length){var last=mine[mine.length-1];S.items=S.items.filter(function(i){return i!==last;});ui.sel=null;touch();render();}break;
+    case 'addpost':S.posts.push({id:uid(),floor:fl().id,name:'新崗位',team:S.teams[0].id,task:'工作內容'});touch();renderStaff();break;
+    case 'delpost':S.posts=S.posts.filter(function(p){return p.id!==v;});touch();renderStaff();break;
+    case 'del':delSel();break;
+    case 'delnode':if(ui.sel&&ui.sel.t==='node'){var rr=route(ui.sel.r);if(rr&&rr.pts.length>2){rr.pts.splice(ui.sel.i,1);ui.sel={t:'route',r:rr.id};touch();renderOv();renderInsp();}}break;
+    case 'delroute':delSel();break;
+    case 'save':save();break;
+    case 'export':exportPng();break;
+  }
+});
+root.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.id==='file'){
+    var file=t.files&&t.files[0],tg=fileTarget;t.value='';if(!file||!tg)return;
+    loadImg(file,tg.kind==='base'?2200:1400,function(url){
+      if(tg.kind==='base')fl().base=url;else{var it=item(tg.id);if(it)it.img=url;}
+      touch();render();
+    });
+    return;
+  }
+  if(t.hasAttribute('data-postteam')){var p=post(t.getAttribute('data-postteam'));if(p){p.team=t.value;touch();renderOv();renderStaff();}}
+});
+root.addEventListener('input',function(e){
+  var t=e.target,fld=t.getAttribute&&t.getAttribute('data-f');if(!fld||!ui.sel)return;
+  if(ui.sel.t==='item'){var it=item(ui.sel.id);if(!it)return;it[fld]=t.value;touch();renderOv();if(fld==='post')renderStaff();if(fld==='title')renderPhotos();}
+  else{var r=route(ui.sel.r);if(r){r[fld]=t.value;touch();renderOv();}}
+});
+root.addEventListener('focusout',function(e){
+  var t=e.target,p=t.getAttribute&&t.getAttribute('data-bind');if(!p||!isEdit())return;
+  var v=t.textContent.replace(/\s+/g,' ').trim();setPath(p,v);touch();
+  if(p==='meta.title')document.title=v;
+  if(/^item:/.test(p))renderInsp();
+});
+root.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&e.target.getAttribute&&e.target.getAttribute('data-bind')){e.preventDefault();e.target.blur();}
+});
+document.addEventListener('keydown',function(e){
+  if(!isEdit()||!ui.sel)return;
+  var a=document.activeElement,tag=a&&a.tagName;
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA'||(a&&a.isContentEditable))return;
+  if(e.key==='Delete'||e.key==='Backspace'){
+    e.preventDefault();
+    if(ui.sel.t==='node'){var r=route(ui.sel.r);if(r&&r.pts.length>2){r.pts.splice(ui.sel.i,1);ui.sel={t:'route',r:r.id};touch();renderOv();renderInsp();return;}}
+    delSel();
+  }
+});
+function pt(e){
+  var svg=document.getElementById('stage'),m=svg.getScreenCTM();if(!m)return {x:0,y:0};
+  var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;p=p.matrixTransform(m.inverse());return {x:p.x,y:p.y};
+}
+root.addEventListener('pointerdown',function(e){
+  var svg=e.target.closest&&e.target.closest('#stage');if(!svg)return;
+  if(!isEdit()){var ph=e.target.closest('[data-photo]');if(ph)zoom(ph.getAttribute('data-photo'));return;}
+  var p=pt(e),h=e.target.closest('[data-h]'),g=e.target.closest('[data-id]'),rt=e.target.closest('[data-rt]');
+  ui.msg='';
+  if(h){var a=h.getAttribute('data-h').split(':');ui.sel={t:'node',r:a[0],i:+a[1]};drag={k:'node',moved:false};}
+  else if(g){var it=item(g.getAttribute('data-id'));ui.sel={t:'item',id:it.id};drag={k:'item',dx:p.x-it.x,dy:p.y-it.y,moved:false};}
+  else if(rt){
+    var r=route(rt.getAttribute('data-rt')),now=Date.now();
+    if(lastDown.r===r.id&&now-lastDown.t<380){insertNode(r,p);touch();drag={k:'node',moved:false};lastDown={t:0,r:null};}
+    else{ui.sel={t:'route',r:r.id};drag={k:'route',lx:p.x,ly:p.y,moved:false};lastDown={t:now,r:r.id};}
+  }else{ui.sel=null;drag=null;}
+  if(drag){try{svg.setPointerCapture(e.pointerId);}catch(x){}e.preventDefault();}
+  renderOv();renderInsp();
+  if(ui.sel&&ui.sel.t==='item'&&item(ui.sel.id).type==='photo'){
+    Array.prototype.forEach.call(document.querySelectorAll('.pcard'),function(c){c.classList.toggle('hl',c.id==='pc-'+ui.sel.id);});
+  }
+});
+root.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  var f=fl(),p=pt(e),H=f.h;
+  function cx(v){return Math.max(0,Math.min(f.w,Math.round(v)));}
+  function cy(v){return Math.max(0,Math.min(H,Math.round(v)));}
+  if(drag.k==='item'){var it=item(ui.sel.id);if(!it)return;it.x=cx(p.x-drag.dx);it.y=cy(p.y-drag.dy);}
+  else if(drag.k==='node'){var r=route(ui.sel.r);if(!r)return;r.pts[ui.sel.i]=[cx(p.x),cy(p.y)];}
+  else if(drag.k==='route'){var r2=route(ui.sel.r);if(!r2)return;var dx=p.x-drag.lx,dy=p.y-drag.ly;r2.pts=r2.pts.map(function(q){return [cx(q[0]+dx),cy(q[1]+dy)];});drag.lx=p.x;drag.ly=p.y;}
+  drag.moved=true;schedOv();
+});
+function endDrag(){if(drag&&drag.moved){touch();renderStaff();}drag=null;}
+root.addEventListener('pointerup',endDrag);
+root.addEventListener('pointercancel',endDrag);
+window.addEventListener('hashchange',function(){var b=ui.floor;readHash();if(b!==ui.floor){ui.sel=null;render();}});
+
+downloads={save:function(o){var u=URL.createObjectURL(o.data instanceof Blob?o.data:new Blob([o.data])),el=document.createElement('a');el.href=u;el.download=o.filename;document.body.appendChild(el);el.click();el.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);return Promise.resolve();}};
+readHash();
+if(STORE){
+  artifact={};
+  root.innerHTML='<p class="hint" style="padding:40px 0">讀取資料中</p>';
+  STORE.load().then(function(r){
+    if(r&&r.floors)S=r;
+    applyDraft();readHash();render();STORE.watch(onRemote);
+  }).catch(function(){artifact=null;render();ui.msg='連不到資料庫，目前顯示的是內建版本，修改不會存到雲端';setStatus();});
+}else{applyDraft();render();}
+})();
+</script></body></html>
