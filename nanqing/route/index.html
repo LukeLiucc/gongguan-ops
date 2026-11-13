@@ -332,8 +332,11 @@ function siteSvg(f){
   o+='<rect x="0" y="872" width="1400" height="33" fill="#ECEFF3"/>';
   o+=T(1180,985,22,'延平路一段','#5B6B82','text-anchor="middle"');
   o+='<rect x="45" y="528" width="390" height="268" rx="26" fill="#FFFFFF" stroke="#1B2A4A" stroke-width="2.5"/>';
-  o+=bayRow(60,412,542,612,8,'#F6E3C2');
-  o+=bayRow(60,324,712,782,6,'#F6E3C2');
+  o+=bayRow(60,420,540,596,9,'#F6E3C2');
+  o+=bayRow(60,340,646,702,7,'#F6E3C2');
+  o+=bayRow(60,300,724,780,6,'#E3E6EA');
+  o+='<path d="M60 724L300 780M300 724L60 780" stroke="#C8102E" stroke-width="5" stroke-linecap="round"/>';
+  o+=halo(180,759,17,'不開放停車','#C8102E');
   o+='<rect x="486" y="420" width="34" height="452" fill="#E9EDF2" stroke="#7B8797" stroke-width="2" stroke-dasharray="8 6"/>';
   o+='<rect x="425" y="300" width="95" height="120" fill="#E9EDF2" stroke="#7B8797" stroke-width="2" stroke-dasharray="8 6"/>';
   o+='<path d="M295 60H425V520H215Z" fill="#D9DEE5" stroke="#1B2A4A" stroke-width="5" stroke-linejoin="round"/>';
@@ -596,7 +599,7 @@ function onRemote(r){
 function exportPng(){
   if(!downloads)return;
   var f0=fl();
-  if(f0.base&&/^https?:/.test(f0.base)){fetch(f0.base).then(function(r){return r.blob();}).then(function(b){var fr=new FileReader();fr.onload=function(){doExport(fr.result);};fr.readAsDataURL(b);}).catch(function(){doExport(null);});}
+  if(f0.base&&f0.base.indexOf('data:')!==0){fetch(f0.base).then(function(r){return r.blob();}).then(function(b){var fr=new FileReader();fr.onload=function(){doExport(fr.result);};fr.readAsDataURL(b);}).catch(function(){doExport(null);});}
   else doExport(null);
 }
 function doExport(inl){
