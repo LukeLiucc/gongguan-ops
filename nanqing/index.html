@@ -1270,6 +1270,10 @@ function nqFixNames(){
     S.guests.forEach(g=>{if(g.name==="林頌凱"){const p={name:"許詩典",title:"院長",unit:"聯新國際醫院"};Object.assign(g,p);upd("guests",g.id,p);}});
     S.meta.seedV=5;upd("meta","event",{seedV:5});
   }
+  if(S.loaded.has("meta")&&S.meta.name&&(S.meta.seedV||1)===5){
+    S.guests.forEach(g=>{if(g.name==="許詩典"&&g.unit==="聯新國際醫院"){const p={title:"執行長",unit:"聯新國際醫療集團醫療機構事業群"};Object.assign(g,p);upd("guests",g.id,p);}});
+    S.meta.seedV=6;upd("meta","event",{seedV:6});
+  }
 }
 let seatSnapLast=null,seatUndo=[],seatUndoTick=false,seatUndoing=false;
 function seatSnap(){return {g:Object.fromEntries(S.guests.map(g=>[g.id,[g.seat||"",g.zone||""]])),z:Object.fromEntries(S.zones.map(z=>[z.id,(z.seats||[]).join(",")]))};}
