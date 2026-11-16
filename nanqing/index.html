@@ -1266,6 +1266,10 @@ function nqMigrate(){
 function nqFixNames(){
   if(!db||!canWrite||!S.loaded.has("guests"))return;
   S.guests.forEach(g=>{if(g.unit==="聯新運動休閒事業群"){g.unit="聯新國際醫療集團運動休閒事業群";upd("guests",g.id,{unit:g.unit});}});
+  if(S.loaded.has("meta")&&S.meta.name&&(S.meta.seedV||1)===4){
+    S.guests.forEach(g=>{if(g.name==="林頌凱"){const p={name:"許詩典",title:"院長",unit:"聯新國際醫院"};Object.assign(g,p);upd("guests",g.id,p);}});
+    S.meta.seedV=5;upd("meta","event",{seedV:5});
+  }
 }
 let seatSnapLast=null,seatUndo=[],seatUndoTick=false,seatUndoing=false;
 function seatSnap(){return {g:Object.fromEntries(S.guests.map(g=>[g.id,[g.seat||"",g.zone||""]])),z:Object.fromEntries(S.zones.map(z=>[z.id,(z.seats||[]).join(",")]))};}
@@ -3077,7 +3081,7 @@ function attGroups(){
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
 /* ================= 唱名清單 ================= */
 const RC_CATS=["市長","主辦單位","民意代表","市府局處首長","區公所","中央部會","社會局委員","兒少代表","聯新國際醫療集團","其他貴賓"];
-const RC_LSTOP=["張煥禎","簡伯毅","林頌凱","饒瑞瑛","許俊麒"];
+const RC_LSTOP=["張煥禎","簡伯毅","許詩典","饒瑞瑛","許俊麒"];
 const RC_WSD=[];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
 function rcDefaultCat(e){const g=e.g0,u=e.unit||"";
