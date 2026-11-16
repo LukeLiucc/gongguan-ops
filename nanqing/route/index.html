@@ -268,7 +268,85 @@ function parking(){
   o+=lab(1309,170,'車道出入口',19)+lab(714,58,'機房',18)+lab(865,150,'車道',20)+lab(560,445,'車道',20);
   return o;
 }
-window.NQ_PLANS={b1f:b1f,b2f:b2f,ab1:ab1,a1f:a1f,parking:parking};
+
+function a4f(){
+  var o='';
+  o+=g('M68 463H722V595H612V1020L68 905Z');
+  o+=g('M615 598H1302V1105Q950 1075 615 1022Z');
+  o+=g('M785 73H1030V460H785Z')+g('M1035 100H1332V460H1035Z');
+  o+=g('M1325 785H1420V1010H1478V800H1645V1125L1325 1105Z');
+  o+=g('M1405 530H1500V725H1405Z');
+  o+=t('M612 70Q600 150 690 190Q760 260 690 340Q620 400 500 330Q380 290 250 370Q130 420 65 360V460',2.2);
+  o+=t('M612 595V1020M612 595H1170M1302 598V785M1220 598V645H1260V598M785 73V460M1033 73V460M1005 75V160H1033M1005 238V318H1033',3);
+  o+=t('M1325 785V1105M1420 785V1010M1478 800V1115M1325 920H1420M1325 1010H1478M1480 910H1645M1215 785H1325M1215 830H1325',3);
+  o+=xbox(1040,75,58,25)+xbox(1098,75,58,25)+xbox(1156,75,58,25)+xbox(1214,75,58,25)+xbox(1272,75,58,25);
+  o+=lift(1412,585,78,62)+lift(1412,655,78,62);
+  o+=t('M1405 530H1500V725H1405ZM1405 578H1500',3);
+  o+=stair(1505,600,140,95,false,true);
+  o+=w('M612 70H1335V460H1648V1125Q1500 1125 1310 1105Q950 1075 610 1020L65 905V460H722M782 460H965M1020 460H1255M1300 460H1335');
+  o+=cols([[82,477],[377,475],[628,475],[1034,472],[1318,472],[1498,472],[82,635],[82,892],[377,960],[628,1005],[1034,797],[1034,1065],[1318,795],[1318,1090],[1492,795],[1632,795],[1632,1112],[1034,55],[1322,55]],26);
+  o+=exit(1575,727);
+  o+=lab(1000,535,'4F 走廊',24)+lab(1562,975,'洗手間',22);
+  return o;
+}
+function a5f(){
+  var o='';
+  o+=g('M73 70H697V668L73 565Z');
+  o+=g('M1405 175H1520V505H1405Z')+g('M1165 560H1350V738L1165 722Z')+g('M1350 618H1455V748L1350 738Z')+g('M1455 540H1535V757L1455 748Z');
+  o+=t('M697 70V668',2.5);
+  [[778,205,85,65],[950,205,85,65],[778,332,85,62],[950,332,85,62],[1165,402,97,43],[778,462,288,32],[700,72,75,35],[930,72,95,35],[1030,72,55,35],[1095,72,175,35]].forEach(function(r){o+='<rect x="'+r[0]+'" y="'+r[1]+'" width="'+r[2]+'" height="'+r[3]+'" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/>';});
+  o+=t('M778 572H1065M700 678H1065V715',3.5);
+  o+=xbox(1162,507,105,53)+xbox(1300,507,50,53)+xbox(427,485,82,20);
+  o+=t('M1165 560V722M1265 560V730M1350 615V738M1405 505V560H1465V540H1505V505M1400 618V640H1455V748',2.5);
+  o+=lift(1418,228,78,66)+lift(1418,322,78,66);
+  o+=t('M1405 175H1520V505H1405ZM1405 212H1520M1405 305H1520M1405 410H1520',3);
+  o+=stair(1520,295,130,85,false,true);
+  o+=w('M70 68H778M905 68H1655V482H1535V757Q1300 745 1065 715Q700 670 70 565V360M70 235V68');
+  o+=cols([[85,82],[413,82],[918,82],[1283,82],[1522,82],[85,493],[413,493],[927,493],[1283,493],[1522,492]],26);
+  o+=exit(1585,422);
+  o+=lab(920,630,'樓頂花園',28)+lab(1462,462,'洗手間',18);
+  return o;
+}
+function apool(){
+  var o='';
+  o+=g('M300 88H548V682H505V890H318V682H300Z')+g('M228 305H300V497H228Z')+g('M553 88H712V175L553 195Z');
+  o+=g('M735 33H1175V100L1105 145H712V85H735Z')+g('M97 700H318V770H97Z')+g('M553 620H620V680H553Z');
+  o+='<rect x="730" y="205" width="805" height="407" fill="#D6E6F2" stroke="'+LINE+'" stroke-width="2.5"/>';
+  o+=t('M448 88V320M448 500V680M500 88V680M300 240H415V278H300M300 535H415V570H330V650H448M448 130H485M448 215H485M448 290H485M510 125H548M510 210H548M510 290H548M448 545H485M448 610H485M510 540H548M510 610H548M500 345H548M500 380H548M500 430H548M500 468H548M300 402H548',2.5);
+  o+='<rect x="373" y="312" width="22" height="188" fill="'+NAVY+'" opacity="0.75"/><rect x="436" y="348" width="16" height="118" fill="'+NAVY+'" opacity="0.75"/>';
+  o+='<rect x="215" y="364" width="28" height="10" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2"/><rect x="215" y="396" width="28" height="10" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2"/><rect x="215" y="428" width="28" height="10" rx="3" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2"/>';
+  o+=t('M228 305H300M228 497H300M228 305V497M1105 145H712M1175 100L1105 145M318 682V890M402 682V890M165 700V770M230 700V770',3);
+  o+=stair(178,100,70,40,true,false)+stair(248,140,42,45,false,false)+stair(138,770,72,120,true,true);
+  o+=t('M183 245V205Q183 172 215 172H250M198 245V208Q198 187 218 187H250M250 245H183',2.5);
+  o+=t('M1298 88H1375V110H1298ZM1298 110V130H1322V110',2);
+  o+=w('M42 890V97H300M300 85H730V30H1225M1272 30H1300V88H1632V682H1305M1275 682H505V890H80M548 85V682M300 85V300M300 500V640');
+  o+=cols([[305,92],[720,92],[720,114],[1015,95],[1015,118],[1620,97],[613,185],[1620,408],[303,402],[305,630],[613,628],[720,626],[1017,626],[1317,626],[1620,626],[305,880]],22);
+  o+=lab(1132,420,'游泳池',34)+lab(940,100,'機房',20);
+  return o;
+}
+function b3f(){
+  var o='';
+  o+=g('M60 388H650V497H430V1198H550V1305H60Z');
+  o+=g('M410 138H950V265H650V385H410Z')+g('M800 268H948V388H800Z');
+  o+=g('M430 595H925V1100H430Z');
+  o+=g('M1145 528L1380 503V610L1320 665H1180Z')+g('M1180 1038H1310L1375 1100V1195L1145 1170Z')+g('M1178 738H1310V965H1178Z');
+  o+=t('M430 388V1305M410 138L650 385M650 138L410 385M650 138V385M650 265H950M800 268V388M800 268L948 388M948 268L800 388',2.5);
+  o+=t('M430 595H925V1100H430ZM430 595L925 1100M925 595L430 1100M430 620L460 690V1010L430 1075',2.5);
+  [[430,497,435,28],[950,503,250,22],[430,1170,432,28],[950,1170,250,28]].forEach(function(r){o+='<rect x="'+r[0]+'" y="'+r[1]+'" width="'+r[2]+'" height="'+r[3]+'" fill="#FFFFFF" stroke="'+NAVY+'" stroke-width="2.5"/>';});
+  o+=t('M1000 525V1170M1025 525V1170M1050 525V1170M1080 525V1170M1110 525V1170',2.2);
+  o+=t('M985 750H1115M985 785H1115M985 905H1115M985 945H1115M985 1085H1115',2);
+  o+=t('M1145 528L1180 665H1320L1380 610M1180 1038L1145 1170M1310 1038L1375 1100M1178 738H1310V965H1178Z',2.5);
+  o+=t('M1445 528H1502V1168H1445',2.5);
+  o+=stair(1060,388,30,110,false,true)+stair(1265,388,95,110,true,true)+stair(1045,1198,30,108,false,true)+stair(1280,1198,95,108,true,true)+stair(682,1198,30,108,false,true);
+  o+=xbox(1125,390,98,50)+xbox(1125,1255,98,50)+xbox(372,497,36,73)+xbox(372,1125,36,72)+xbox(72,1200,45,95);
+  o+=w('M58 385H408V135H952V385H1468V528M1468 1168V1308H660M545 1308H58V385M1445 528V1168');
+  o+=cols([[422,150],[662,150],[938,150],[665,512],[937,514],[1210,514],[1452,514],[1452,848],[665,1184],[937,1184],[1212,1184],[1452,1182],[183,1296],[430,1298],[672,1298]],24);
+  o+=stubs([[60,503,72,22],[60,838,72,22],[60,1177,72,22]]);
+  o+=exit(1312,443)+exit(1325,1250);
+  o+=lab(678,560,'演藝廳上空',26);
+  return o;
+}
+window.NQ_PLANS={b1f:b1f,b2f:b2f,ab1:ab1,a1f:a1f,parking:parking,a4f:a4f,a5f:a5f,apool:apool,b3f:b3f};
 })();
 </script>
 <script id="app">(function(){
@@ -727,7 +805,7 @@ root.addEventListener('click',function(e){
     case 'zoom':zoom(v);break;
     case 'post+':addPerson(v);break;
     case 'post-':var mine=S.items.filter(function(i){return i.type==='person'&&i.post===v;});if(mine.length){var last=mine[mine.length-1];S.items=S.items.filter(function(i){return i!==last;});ui.sel=null;touch();render();}break;
-    case 'addpost':S.posts.push({id:uid(),floor:fl().id,name:'新崗位',team:team(null).id,task:'工作內容'});touch();renderStaff();break;
+    case 'addpost':S.posts.push({id:uid(),floor:fl().id,name:'新崗位',team:(S.defaultTeam&&team(S.defaultTeam).id===S.defaultTeam?S.defaultTeam:team(null).id),task:'工作內容'});touch();renderStaff();break;
     case 'addteam':if(ROSTER&&STORE){var mo=ROSTER.teams.reduce(function(a,t){return Math.max(a,t.order||0);},0)+10;ui.msg='新增組別中';setStatus();STORE.addTeam('新組別',mo).then(function(){return STORE.roster();}).then(function(r){ROSTER=r;ui.msg='已新增組別，人力分工也會出現，請直接改名稱';renderStaff();setStatus();}).catch(function(){ui.msg='新增組別沒有成功，請再試一次';setStatus();});break;}
       var pal=['#4B5CD6','#C2410C','#0F766E','#9D174D','#4D7C0F','#6D28D9','#B45309','#0369A1'],usedc=S.teams.map(function(t){return t.color.toUpperCase();}),nc=pal.filter(function(c){return usedc.indexOf(c)<0;})[0]||pal[S.teams.length%pal.length];S.teams.push({id:uid(),name:'新組別',color:nc});touch();renderStaff();break;
     case 'delteam':if(S.teams.length>1&&!S.posts.some(function(p){return p.team===v;})){S.teams=S.teams.filter(function(t){return t.id!==v;});touch();renderStaff();}break;

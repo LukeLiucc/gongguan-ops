@@ -681,6 +681,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <a href="#staff" data-tab="staff">人力分工</a>
     <a href="#howto" data-tab="howto">帶位作法</a>
     <a href="route/">入場動線圖</a>
+    <a href="tour/">導覽地圖</a>
   </div>
 </nav>
 
@@ -2189,8 +2190,8 @@ const STS=["已確認","建議分工","待指派"];
 const STS_CLS={"已確認":"ok","建議分工":"acc","待指派":"warn"};
 const isCore=s=>ORGS.includes(s.org);
 /* 入場動線圖（route/）上的站位：小人指定了這個人就列出樓層與崗位 */
-function routeSpots(pid){const R=S.route;if(!R||!Array.isArray(R.items))return[];return R.items.filter(i=>i.type==="person"&&i.staff===pid).map(i=>{const f=(R.floors||[]).find(x=>x.id===i.floor),po=(R.posts||[]).find(x=>x.id===i.post);return{fid:i.floor,txt:(f?f.name:"")+(po&&po.name?"｜"+po.name:"")};});}
-function routeLine(p){const sp=routeSpots(p.id);return sp.length?`<div class="slot"><span class="tk">📍 動線圖站位：${sp.map(x=>`<a href="route/#${esc(x.fid)}">${esc(x.txt)}</a>`).join("、")}</span></div>`:"";}
+function routeSpots(pid){const out=[];[["route","動線圖",S.route],["tour","導覽地圖",S.tour]].forEach(([dir,label,R])=>{if(!R||!Array.isArray(R.items))return;R.items.filter(i=>i.type==="person"&&i.staff===pid).forEach(i=>{const f=(R.floors||[]).find(x=>x.id===i.floor),po=(R.posts||[]).find(x=>x.id===i.post);out.push({dir,label,fid:i.floor,txt:(f?f.name:"")+(po&&po.name?"｜"+po.name:"")});});});return out;}
+function routeLine(p){const sp=routeSpots(p.id);return sp.length?`<div class="slot"><span class="tk">📍 ${sp.map(x=>`${esc(x.label)}站位：<a href="${x.dir}/#${esc(x.fid)}">${esc(x.txt)}</a>`).join("、")}</span></div>`:"";}
 const teamById=id=>S.teams.find(t=>t.id===id);
 const TEAM_ORDER=["t-ctrl","t-vip","t-stage","t-checkin","t-usher","t-photo","t-site","t-tour"];
 const tRank=t=>{const i=TEAM_ORDER.indexOf(t.id);return i<0?99:i;};
@@ -2292,7 +2293,7 @@ function openPerson(id){
       <div><small>可支援時間</small><b>${esc(p.avail||"—")}</b></div>
       <div><small>回報組長</small><b>${esc(pname(p.reportTo)||"—")}</b></div>
       <div><small>交接對象</small><b>${esc(pname(p.handoff)||p.handoffText||"—")}</b></div>
-      ${routeSpots(p.id).length?`<div style="grid-column:1/-1"><small>入場動線圖站位</small><b>${routeSpots(p.id).map(x=>`<a href="route/#${esc(x.fid)}">${esc(x.txt)}</a>`).join("、")}</b></div>`:""}
+      ${routeSpots(p.id).length?`<div style="grid-column:1/-1"><small>動線圖／導覽地圖站位</small><b>${routeSpots(p.id).map(x=>`<a href="${x.dir}/#${esc(x.fid)}">${esc(x.label)}：${esc(x.txt)}</a>`).join("、")}</b></div>`:""}
       ${areaTxt(p)?`<div style="grid-column:1/-1"><small>負責座位區</small><b>${esc(areaTxt(p))}</b></div>`:""}
     </div>
     <div><small class="muted" style="font-weight:700">當日工作</small>
@@ -3517,6 +3518,7 @@ setTab(SOLO?"roll":(location.hash.slice(1)||"guests"));
   mcp=await window.claude.use("mcp");startMediaWatch();
   db.doc("meta/event").onSnapshot(s=>{S.meta=s.exists?{...s.data()}:{};syncOff();S.loaded.add("meta");schedule();},()=>setSync("off","連線中斷，請重新整理"));
   db.doc("route/state").onSnapshot(s=>{S.route=s.exists?{...s.data()}:null;schedule();},()=>{});
+  db.doc("tour/state").onSnapshot(s=>{S.tour=s.exists?{...s.data()}:null;schedule();},()=>{});
 })();
 })();
 </script>
