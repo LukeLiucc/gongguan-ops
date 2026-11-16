@@ -2188,6 +2188,9 @@ const CATS=["公關","典禮","場地","導覽"];
 const STS=["已確認","建議分工","待指派"];
 const STS_CLS={"已確認":"ok","建議分工":"acc","待指派":"warn"};
 const isCore=s=>ORGS.includes(s.org);
+/* 入場動線圖（route/）上的站位：小人指定了這個人就列出樓層與崗位 */
+function routeSpots(pid){const R=S.route;if(!R||!Array.isArray(R.items))return[];return R.items.filter(i=>i.type==="person"&&i.staff===pid).map(i=>{const f=(R.floors||[]).find(x=>x.id===i.floor),po=(R.posts||[]).find(x=>x.id===i.post);return{fid:i.floor,txt:(f?f.name:"")+(po&&po.name?"｜"+po.name:"")};});}
+function routeLine(p){const sp=routeSpots(p.id);return sp.length?`<div class="slot"><span class="tk">📍 動線圖站位：${sp.map(x=>`<a href="route/#${esc(x.fid)}">${esc(x.txt)}</a>`).join("、")}</span></div>`:"";}
 const teamById=id=>S.teams.find(t=>t.id===id);
 const TEAM_ORDER=["t-ctrl","t-vip","t-stage","t-checkin","t-usher","t-photo","t-site","t-tour"];
 const tRank=t=>{const i=TEAM_ORDER.indexOf(t.id);return i<0?99:i;};
@@ -2268,7 +2271,7 @@ function renderStaff(){
   let list=core.slice().sort((a,b)=>(ORGS.indexOf(a.org)-ORGS.indexOf(b.org))||((a.order??0)-(b.order??0)));
   if(UI.sf==="衝突"){const ids=new Set(cf.map(c=>c.p.id));list=list.filter(p=>ids.has(p.id));}
   else if(UI.sf)list=list.filter(p=>stOf(p)===UI.sf);
-  $("#sTable").innerHTML=`<thead><tr><th>姓名</th><th>單位／職稱</th><th>可支援</th><th>組別</th><th>狀態</th><th>當日工作</th><th></th></tr></thead><tbody>`+(list.map(p=>{const t=teamById(p.team);const lead=t&&(t.lead||[]).includes(p.id);return `<tr><td>${pbtn(p,lead)}</td><td>${esc(ORG_SHORT[p.org]||p.org)}<div class="muted" style="font-size:12.5px">${esc(p.title||"")}</div></td><td class="nw">${esc(p.avail||"")}</td><td>${t?`<b>${esc(t.name)}</b>`:'<span class="muted">—</span>'}</td><td>${stPill(p)}</td><td class="slots">${slotsOf(p).map(d=>slotLine(d,p.team)).join("")||'<span class="muted">—</span>'}</td><td><button class="btn sm" type="button" data-sedit="${esc(p.id)}">編輯</button></td></tr>`;}).join("")||`<tr><td colspan="7" class="muted">沒有符合的人員</td></tr>`)+`</tbody>`;
+  $("#sTable").innerHTML=`<thead><tr><th>姓名</th><th>單位／職稱</th><th>可支援</th><th>組別</th><th>狀態</th><th>當日工作</th><th></th></tr></thead><tbody>`+(list.map(p=>{const t=teamById(p.team);const lead=t&&(t.lead||[]).includes(p.id);return `<tr><td>${pbtn(p,lead)}</td><td>${esc(ORG_SHORT[p.org]||p.org)}<div class="muted" style="font-size:12.5px">${esc(p.title||"")}</div></td><td class="nw">${esc(p.avail||"")}</td><td>${t?`<b>${esc(t.name)}</b>`:'<span class="muted">—</span>'}</td><td>${stPill(p)}</td><td class="slots">${(slotsOf(p).map(d=>slotLine(d,p.team)).join("")+routeLine(p))||'<span class="muted">—</span>'}</td><td><button class="btn sm" type="button" data-sedit="${esc(p.id)}">編輯</button></td></tr>`;}).join("")||`<tr><td colspan="7" class="muted">沒有符合的人員</td></tr>`)+`</tbody>`;
   const ext=S.staff.filter(s=>!isCore(s)).sort((a,b)=>(a.order??0)-(b.order??0));
   $("#tExt").innerHTML=ext.map(s=>`<button type="button" class="extc" data-sedit="${esc(s.id)}"><b>${esc(s.name)}${(+s.count||1)>1?` ×${s.count}`:""}</b><small>${esc(s.org)}｜${esc((s.groups||[]).join("、"))}</small>${s.note?`<small>${esc(s.note)}</small>`:""}</button>`).join("")||'<span class="muted">—</span>';
   const ownOpts=`<option value="">未指派</option>`+core.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
@@ -2289,6 +2292,7 @@ function openPerson(id){
       <div><small>可支援時間</small><b>${esc(p.avail||"—")}</b></div>
       <div><small>回報組長</small><b>${esc(pname(p.reportTo)||"—")}</b></div>
       <div><small>交接對象</small><b>${esc(pname(p.handoff)||p.handoffText||"—")}</b></div>
+      ${routeSpots(p.id).length?`<div style="grid-column:1/-1"><small>入場動線圖站位</small><b>${routeSpots(p.id).map(x=>`<a href="route/#${esc(x.fid)}">${esc(x.txt)}</a>`).join("、")}</b></div>`:""}
       ${areaTxt(p)?`<div style="grid-column:1/-1"><small>負責座位區</small><b>${esc(areaTxt(p))}</b></div>`:""}
     </div>
     <div><small class="muted" style="font-weight:700">當日工作</small>
@@ -3512,6 +3516,7 @@ setTab(SOLO?"roll":(location.hash.slice(1)||"guests"));
   ["guests","zones","rundown","staff","teams","media","tasks","press","outline","duty"].forEach(sub);
   mcp=await window.claude.use("mcp");startMediaWatch();
   db.doc("meta/event").onSnapshot(s=>{S.meta=s.exists?{...s.data()}:{};syncOff();S.loaded.add("meta");schedule();},()=>setSync("off","連線中斷，請重新整理"));
+  db.doc("route/state").onSnapshot(s=>{S.route=s.exists?{...s.data()}:null;schedule();},()=>{});
 })();
 })();
 </script>
