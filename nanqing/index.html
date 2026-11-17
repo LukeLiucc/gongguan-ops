@@ -3129,14 +3129,13 @@ function padsHtml(d){
    <div class="padlist">${P.map((ids,i)=>`<div><b>啟動台 ${i+1}</b>　${ids.map(id=>{const g=S.guests.find(q=>q.id===id)||{};return esc((g.name||"")+" "+(g.title||""));}).join("、")}</div>`).join("")}</div></section>`;
 }
 function launchHtml(d){
-  if(Array.isArray(d.pads)&&d.pads.length)return padsHtml(d);
-  const ids=d.launch||[];if(!ids.length)return "";
-  const mid=Math.floor(ids.length/2);
-  const cells=ids.map((id,i)=>{const g=S.guests.find(x=>x.id===id)||{};const unit=(g.unit||"").replace(/[（(].*$/,"").trim();
-    return `<div class="lc${id==="g001"?" mid":""}" draggable="${canWrite?"true":"false"}" data-lid="${esc(id)}" data-li="${i}"><div class="lp"><button type="button" class="lmv" data-lmv="-1" aria-label="往左移"${i===0?" disabled":""}>‹</button>左 ${i+1}<button type="button" class="lmv" data-lmv="1" aria-label="往右移"${i===ids.length-1?" disabled":""}>›</button></div>${g.photo?`<img src="${esc(imgSrc(g.photo))}" alt="">`:`<span class="li">${esc(initials(g))}</span>`}<b>${esc(g.name||"")}</b><span class="lt">${esc(g.title||"")}</span><span class="lu">${esc(unit)}</span>${g.seat?`<span class="ls">座位 ${esc(seatText(g))}</span>`:""}</div>`;}).join("");
-  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>面向舞台由左至右，共 ${ids.length} 人，市長站中間</span><span>拖拉卡片可調整順序，也可按 ‹ › 左右移動</span></div>
-   <div class="lstage">舞台／LED 大螢幕</div><div class="lrow" style="--n:${ids.length}">${cells}</div>
-   <div class="olr">主持人唱名後上台，手放在 LED 掌印台，倒數後一起按壓，主視覺點亮；先拍啟動代表合照，再依主持人引導拍主要貴賓合照。</div></section>`;
+  /* 站位只有一份資料：「啟動站位」分頁（meta.stage）。這裡唯讀顯示，避免兩邊各改各的 */
+  const l=stgList();if(!l.length)return "";
+  const cells=l.map((x,i)=>{const k=STG_KIND[x.kind]||STG_KIND.vip;
+    return `<div class="lc" style="border-top:5px solid ${k[2]}"><div class="lp">左 ${i+1}</div><span class="li" style="background:${k[1]};color:${k[3]}">${i+1}</span><b>${esc(x.name||"（未填）")}</b><span class="lu">${esc(x.title||"")}</span></div>`;}).join("");
+  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>面向舞台由左至右，共 ${l.length} 人，市長站中間</span><span>要調整請到 <a href="#stage"><b>「啟動站位」分頁</b></a>，這裡會自動同步</span></div>
+   <div class="lstage">舞台／LED 大螢幕</div><div class="lrow" style="--n:${l.length}">${cells}</div>
+   <div class="olr">主持人唱名後上台，手放在 LED 掌印台，倒數後一起按壓，主視覺點亮；先拍啟動代表合照，啟動後由司儀唱名，邀請立法委員、市議員等全體貴賓上台大合照。</div></section>`;
 }
 
 /* ================= 交辦事項 ================= */
