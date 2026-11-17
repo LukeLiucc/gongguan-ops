@@ -412,7 +412,7 @@ function touch(){
   clearTimeout(draftT);
   draftT=setTimeout(function(){try{localStorage.setItem(KEY+'-draft',JSON.stringify({baseRev:S.rev||0,state:S}));}catch(e){}},800);
 }
-function setStatus(){
+function setStatus(){if(MAYOR)return;
   var el=document.getElementById('status');if(!el)return;
   var t=ui.msg||(dirty?(artifact?'有未儲存的修改，按「儲存」後所有人才看得到':'修改暫存在這台電腦的瀏覽器'):'');
   el.textContent=t;el.className='status'+(dirty&&!ui.msg?' dirty':'');
@@ -573,12 +573,43 @@ function ovSvg(f,clean){
   o+=legendSvg(f);
   return o;
 }
-function renderOv(){var g=document.getElementById('ov');if(g)g.innerHTML=ovSvg(fl(),false);}
+function renderOv(){if(MAYOR){renderMayor();return;}var g=document.getElementById('ov');if(g)g.innerHTML=ovSvg(fl(),false);}
 function schedOv(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;renderOv();});}
+
+
+/* ---------- 市長動線專頁：route/?view=mayor，只畫長官貴賓（紅線）動線，不顯示工作人員 ---------- */
+var MAYOR=/[?&]view=mayor/.test(location.search);
+var MAYOR_STEPS=[
+  {f:'site',t:'下車',d:'座車由延平路一段抵達，在 B 棟大門前的路旁下車，由專人迎接，步行進「開幕會場入口」。'},
+  {f:'b1f',t:'B 棟 1F 搭貨梯',d:'由大門右側門進場，沿走道到貨梯，搭貨梯上 2F。'},
+  {f:'b2f',t:'B 棟 2F 進演藝廳',d:'出貨梯後由演藝廳右側入口進場，入座第一排貴賓席。'}
+];
+function mayorOv(f){
+  var o='<defs>';
+  S.cats.forEach(function(c){o+='<marker id="ar-'+c.id+'" viewBox="0 0 6 6" refX="4.6" refY="3" markerWidth="3.4" markerHeight="3.4" orient="auto"><path d="M0 0L6 3L0 6Z" fill="'+c.color+'"/></marker>';});
+  o+='</defs>';
+  S.routes.forEach(function(r){if(r.floor===f.id&&r.cat==='vip')o+=routeSvg(r,f,true);});
+  ['door','stair','elev','closed','label'].forEach(function(ty){items(f.id,ty).forEach(function(it){o+=itemSvg(it,f,true,0);});});
+  return o;
+}
+function renderMayor(){
+  var has=function(fid){return S.routes.some(function(r){return r.floor===fid&&r.cat==='vip';});};
+  var h='<header class="top"><div><a class="back" href="./">← 入場動線圖（全部樓層）</a><h1>市長動線</h1><p class="sub">'+esc(S.meta.sub||'')+'</p></div>';
+  h+='<div class="actions"><a class="btn" href="./#b1f">到入場動線圖調整</a></div></header>';
+  h+='<p class="cap" style="margin:0 0 14px">紅線是市長的行進路線：路旁下車 → B 棟大門 → 貨梯 → 2F 演藝廳右側入口。路線在「入場動線圖」的編輯模式用「長官貴賓」動線調整，這一頁會自動同步。</p>';
+  MAYOR_STEPS.forEach(function(st,i){
+    var f=S.floors.filter(function(x){return x.id===st.f;})[0];if(!f)return;
+    h+='<section style="margin-bottom:22px"><h2 style="margin:0 0 4px;font-size:20px"><span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#C8102E;color:#fff;font-weight:900;margin-right:10px">'+(i+1)+'</span>'+esc(st.t)+'<small style="font-weight:500;font-size:14px;margin-left:10px;opacity:.75">'+esc(f.name)+'</small></h2>';
+    h+='<p class="cap" style="margin:0 0 8px">'+esc(st.d)+(has(st.f)?'':'（這一層還沒有畫長官貴賓動線）')+'</p>';
+    h+='<div class="stagewrap" style="max-width:980px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+f.w+' '+f.h+'" role="img" aria-label="市長動線：'+esc(f.name)+'"><g>'+baseSvg(f)+'</g><g>'+mayorOv(f)+'</g></svg></div></section>';
+  });
+  root.className='view';root.innerHTML=h;document.title='南青開幕典禮市長動線';
+}
 
 /* ---------- 頁面 ---------- */
 function ce(){return isEdit()?' contenteditable="true" spellcheck="false"':'';}
 function render(){
+  if(MAYOR){renderMayor();return;}
   var f=fl(),ed=isEdit(),h='';
   root.className=ui.mode;
   h+='<header class="top"><div><a class="back" href="../">← 南青開幕典禮工作平台</a><h1 data-bind="meta.title"'+ce()+'>'+esc(S.meta.title)+'</h1><p class="sub" data-bind="meta.sub"'+ce()+'>'+esc(S.meta.sub)+'</p></div>';
@@ -604,7 +635,7 @@ function render(){
   root.innerHTML=h;
   renderOv();renderInsp();renderStaff();renderPhotos();setStatus();
 }
-function renderInsp(){
+function renderInsp(){if(MAYOR)return;
   var el=document.getElementById('insp');if(!el)return;
   var s=ui.sel,h='<h2>選取的物件</h2><div class="insp">';
   if(ui.multi.length>1){
@@ -643,7 +674,7 @@ function renderInsp(){
   }
   el.innerHTML=h+'</div>';
 }
-function renderStaff(){
+function renderStaff(){if(MAYOR)return;
   var el=document.getElementById('staff');if(!el)return;
   var f=fl(),ed=isEdit(),tot=S.items.filter(function(i){return i.type==='person';}).length;
   var h='<h2>'+esc(f.name)+' 人力配置<span data-bind="meta.time"'+ce()+'>'+esc(S.meta.time)+'</span></h2>';
@@ -668,7 +699,7 @@ function renderStaff(){
   h+='<button class="btn sm" data-act="addteam">新增組別</button></div>';
   el.innerHTML=h;
 }
-function renderPhotos(){
+function renderPhotos(){if(MAYOR)return;
   var el=document.getElementById('photos');if(!el)return;
   var f=fl(),ed=isEdit(),n=0,h='',any=false;
   items(f.id,'photo').forEach(function(p){
