@@ -1019,7 +1019,7 @@ const db={
     doc(id){return{
       async set(data){const {error}=await sb.from(T).upsert({col:NS+col,id,data,updated_at:new Date().toISOString()});if(error)fail(error);local(col,id,{...data});},
       async update(patch){const st0=stores[col];if(st0&&st0.loaded&&!st0.map.has(id))throw Object.assign(new Error("這筆資料已被刪除"),{code:"not_found"});const {error}=await sb.rpc("ops_merge",{p_col:NS+col,p_id:id,p_patch:patch});if(error)fail(error);const st=stores[col];if(st)local(col,id,{...(st.map.get(id)||{}),...patch});},
-      async delete(){const {error}=await sb.from(T).delete().eq("col",NS+col).eq("id",id);if(error)fail(error);local(col,id,null);}
+      async delete(){const st=stores[col];const {data,error}=await sb.from(T).delete().eq("col",NS+col).eq("id",id).select("id");if(error)fail(error);if(!(data&&data.length)&&st&&st.map.has(id))throw Object.assign(new Error("delete affected 0 rows"),{code:"not_deleted"});local(col,id,null);}
     };}
   };},
   doc(path){const [col,id]=path.split("/");return{
@@ -1172,7 +1172,7 @@ const sortedGuests=()=>[...S.guests].sort((a,b)=>(a.order??0)-(b.order??0));
 const initials=g=>{const n=(g.name||"").replace(/[（(].*$/,"").trim();return n?n.slice(0,1):(g.unit||"?").slice(0,1);};
 function zoneOfSeatMap(){const m={};for(const z of S.zones)for(const s of (z.seats||[]))m[s]=z.id;return m;}
 function toast(t){const el=document.createElement("div");el.className="toast";el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600);}
-function errMsg(e){const c=e&&e.code;if(c==="invalid_argument"||c==="permission_denied")return"沒有修改權限：請重新整理後再登入一次";if(c==="quota_exceeded")return"資料量已達上限";return"儲存失敗，請稍後再試";}
+function errMsg(e){const c=e&&e.code;if(c==="not_deleted")return"刪除失敗：資料庫沒有刪除這筆資料（可能沒有刪除權限），資料仍在";if(c==="invalid_argument"||c==="permission_denied")return"沒有修改權限：請重新整理後再登入一次";if(c==="quota_exceeded")return"資料量已達上限";return"儲存失敗，請稍後再試";}
 
 /* ---------- writes (one at a time per doc) ---------- */
 const queue={};
@@ -1181,7 +1181,7 @@ function serial(path,fn){const p=(queue[path]||Promise.resolve()).then(fn).catch
 function guard(){if(!db){toast("目前沒有連上共用資料，修改不會被保存");return false;}if(!canWrite){toast("你目前是檢視權限，無法修改");return false;}return true;}
 function upd(col,id,patch){if(!guard())return Promise.resolve();seatUndoNote(col,patch);return serial(col+"/"+id,()=>db.collection(col).doc(id).update(patch));}
 function put(col,id,data){if(!guard())return Promise.resolve();return serial(col+"/"+id,()=>db.collection(col).doc(id).set(data));}
-function del(col,id){if(!guard())return Promise.resolve();return serial(col+"/"+id,()=>db.collection(col).doc(id).delete());}
+function del(col,id){if(!guard())return Promise.resolve(false);let ok=false;return serial(col+"/"+id,async()=>{await db.collection(col).doc(id).delete();ok=true;}).then(()=>ok);}
 const newId=p=>p+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- derived ---------- */
@@ -2350,7 +2350,11 @@ function openPersonEdit(id){
     if(s){Object.assign(s,out);upd("staff",s.id,out);}else{const nid=newId("s");const ns={...out,count:1,groups:[],order:S.staff.reduce((a,x)=>Math.max(a,x.order||0),0)+10};S.staff.push({id:nid,...ns});put("staff",nid,ns);}
     closeModal();schedule();toast("已儲存分工");
   };
-  const dl=md.querySelector("#pDel");if(dl)dl.onclick=()=>confirmIn(dl,"確定刪除",()=>{S.zones.forEach(z=>{if(z.owner===s.id){z.owner="";upd("zones",z.id,{owner:""});}if(z.owner2===s.id){z.owner2="";upd("zones",z.id,{owner2:""});}});S.teams.forEach(t=>{if((t.lead||[]).includes(s.id)){t.lead=t.lead.filter(x=>x!==s.id);upd("teams",t.id,{lead:t.lead});}});S.staff=S.staff.filter(x=>x.id!==s.id);del("staff",s.id);closeModal();schedule();});
+  const dl=md.querySelector("#pDel");if(dl)dl.onclick=()=>confirmIn(dl,"確定刪除",async()=>{
+    if(dl.dataset.busy)return;dl.dataset.busy="1";dl.disabled=true;
+    const ok=await del("staff",s.id);/* 先刪人員本身；失敗時 del 已顯示錯誤，視窗保留、不動其他資料 */
+    if(!ok){if(dl.isConnected){delete dl.dataset.busy;dl.disabled=false;}return;}
+    S.zones.forEach(z=>{if(z.owner===s.id){z.owner="";upd("zones",z.id,{owner:""});}if(z.owner2===s.id){z.owner2="";upd("zones",z.id,{owner2:""});}});S.teams.forEach(t=>{if((t.lead||[]).includes(s.id)){t.lead=t.lead.filter(x=>x!==s.id);upd("teams",t.id,{lead:t.lead});}});S.staff=S.staff.filter(x=>x.id!==s.id);closeModal();schedule();toast("已刪除人員");});
 }
 function openTeam(id){
   const t=id?teamById(id):null;
