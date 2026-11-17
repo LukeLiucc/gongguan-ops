@@ -460,7 +460,7 @@ table.rt th{position:sticky;top:0;z-index:2;background:var(--surface-2);text-ali
 table.rt td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle;transition:background .3s}
 table.rt td.n,table.rt td.num{padding:0 8px;white-space:nowrap;color:var(--ink-2)}
 table.rt td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
-table.rt tr.no td{color:var(--ink-3)}table.rt tr.no .rt-in{color:var(--ink-3);text-decoration:line-through}
+table.rt tr.dupe td{background:#FFF1DC}table.rt tr.no td{color:var(--ink-3)}table.rt tr.no .rt-in{color:var(--ink-3);text-decoration:line-through}
 table.rt td.saved{background:var(--ok-soft)}
 body.rt-dragging,body.rt-dragging *{cursor:grabbing!important;user-select:none!important}
 .rt-ghost{position:fixed;z-index:80;pointer-events:none;background:var(--night);color:var(--night-ink);padding:6px 12px;border-radius:8px;font-size:13px;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 18px rgba(0,0,0,.25)}
@@ -2509,8 +2509,11 @@ function drawDuty(){
 
 
 /* ================= ROSTER TABLE ================= */
-const INV_G=[{k:"sb",label:"桃園市政府社會局邀約",val:"社會局"},{k:"ls",label:"聯新國際體育邀約",val:"聯新國際體育"}];
-function invKey(v){v=v||"";if(v.includes("社會局")||v==="主辦單位")return"sb";if(v.includes("聯新"))return"ls";return"other";}
+const INV_G=[{k:"sb",label:"桃園市政府社會局名單",val:"社會局"},{k:"yb",label:"聯新國際醫療集團院辦處名單",val:"院辦處"},{k:"ls",label:"聯新國際體育邀約",val:"聯新國際體育"}];
+function invKey(v){v=v||"";if(v.includes("院辦處"))return"yb";if(v.includes("社會局")||v==="主辦單位")return"sb";if(v.includes("聯新"))return"ls";return"other";}
+/* 兩份名單都有的人只存一筆；備註有「【重複】…院辦處名單都有」時，院辦處名單那組也要列出來 */
+function invDup(g){return /【重複】.*院辦處名單都有/.test(g.note||"");}
+function invIn(g,k){return invKey(g.inviter)===k||(k==="yb"&&invDup(g));}
 function invLabel(v){const k=invKey(v);const g=INV_G.find(x=>x.k===k);return g?g.label:(v||"未填邀約單位");}
 function invGroups(){return [...INV_G,{k:"other",label:"其他／未填邀約單位",val:""}];}
 const RT_COLS=[["no","編號",56,0],["zone","座位區",150,0],["seat","座位",70,0],["category","分類",130,1],["unit","單位／機關",220,1],["name","姓名",100,1],["title","職稱",130,1],["inviter","邀約單位",110,1],["status","出席狀態",104,2],["proxy","代理人",90,1],["email","Email",190,1],["contact","其他聯絡方式",170,1],["note","備註",240,1]];
@@ -2538,7 +2541,7 @@ function rtDrop(dragId,targetId,after){
 }
 function rtFiltered(){
   const q=(UI.rtQ||"").trim().toLowerCase();
-  return rtRows().filter(g=>(!UI.rtZone||(UI.rtZone==="__none"?!zoneById(g.zone):g.zone===UI.rtZone))&&(!UI.rtSt||(g.status||"未回覆")===UI.rtSt)&&(!UI.rtInv||invKey(g.inviter)===UI.rtInv)&&(!UI.rtNoMail||(!g.email&&g.status!=="不出席"))&&(!UI.rtUnit||unitKey(g)===UI.rtUnit)&&(!q||[g.name,g.unit,g.title,g.note,g.category,g.email].join(" ").toLowerCase().includes(q)));
+  return rtRows().filter(g=>(!UI.rtZone||(UI.rtZone==="__none"?!zoneById(g.zone):g.zone===UI.rtZone))&&(!UI.rtSt||(g.status||"未回覆")===UI.rtSt)&&(!UI.rtInv||invIn(g,UI.rtInv))&&(!UI.rtNoMail||(!g.email&&g.status!=="不出席"))&&(!UI.rtUnit||unitKey(g)===UI.rtUnit)&&(!q||[g.name,g.unit,g.title,g.note,g.category,g.email].join(" ").toLowerCase().includes(q)));
 }
 function renderRoster(){
   if(!rtInit){rtInit=true;
@@ -2605,13 +2608,13 @@ function drawRoster2(){
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#rtTable")){UI.rtPending=true;return;}
   const all=S.guests.filter(g=>g.zone!=="z-media"&&g.category!=="媒體"),list=rtFiltered();
   const cnt=(arr,s)=>arr.filter(g=>(g.status||"未回覆")===s).length;
-  const grps=invGroups().map(G=>({...G,all:all.filter(g=>invKey(g.inviter)===G.k),rows:list.filter(g=>invKey(g.inviter)===G.k)})).filter(G=>G.all.length);
+  const grps=invGroups().map(G=>({...G,all:all.filter(g=>invIn(g,G.k)),rows:list.filter(g=>invIn(g,G.k))})).filter(G=>G.all.length);
   $("#rtGsum").innerHTML=grps.map(G=>`<button type="button" data-k="${G.k}" aria-pressed="${UI.rtInv===G.k}">${esc(G.label)}<b class="num">${G.all.length}</b></button>`).join("");
   $("#rtSum").innerHTML=`<span><b class="num">${all.length}</b> 位貴賓</span>`+STATUS.map(s=>`<span class="st-${esc(s)}"><b class="num">${cnt(all,s)}</b> ${esc(s)}</span>`).join("")+`<span><b class="num">${all.filter(g=>g.email).length}</b> 有 mail</span>`+(list.length!==all.length?`<span class="muted">篩選後 ${list.length} 位</span>`:"");
   const ro=!canWrite?" readonly":"";const span=RT_COLS.length+(canWrite?1:0);
   const head=`<thead><tr>${canWrite?'<th style="min-width:104px"><label class="rt-ckl"><input type="checkbox" id="rtSelAll" aria-label="全選目前顯示的貴賓"> 全選</label></th>':""}${RT_COLS.map(([k,l,w])=>`<th style="min-width:${w}px">${esc(l)}</th>`).join("")}</tr></thead>`;
   const row=(g,i)=>{const z=zoneById(g.zone);const st=g.status||"未回覆";
-    return `<tr class="${st==="不出席"?"no":""}" data-id="${esc(g.id)}">`+(canWrite?`<td class="del"><input type="checkbox" class="rt-ck" data-id="${esc(g.id)}"${RT_SEL.has(g.id)?" checked":""} aria-label="勾選 ${esc(g.name||g.unit||"這位貴賓")}"> <button type="button" class="rt-del" data-id="${esc(g.id)}" aria-label="刪除 ${esc(g.name||g.unit||"這位貴賓")}">刪除</button></td>`:"")+RT_COLS.map(([k,l,w,ed])=>{
+    return `<tr class="${st==="不出席"?"no":""}${invDup(g)?" dupe":""}" data-id="${esc(g.id)}">`+(canWrite?`<td class="del"><input type="checkbox" class="rt-ck" data-id="${esc(g.id)}"${RT_SEL.has(g.id)?" checked":""} aria-label="勾選 ${esc(g.name||g.unit||"這位貴賓")}"> <button type="button" class="rt-del" data-id="${esc(g.id)}" aria-label="刪除 ${esc(g.name||g.unit||"這位貴賓")}">刪除</button></td>`:"")+RT_COLS.map(([k,l,w,ed])=>{
       if(k==="no")return `<td class="n num${canWrite?" rt-drag":""}"${canWrite?` title="按住整列上下拖曳調整順序"`:""}>${canWrite?'<span class="grip" aria-hidden="true">⋮⋮</span>':""}${i+1}</td>`;
       if(k==="zone"){if(!canWrite)return `<td><span class="rt-z"><i style="background:${z?esc(z.color):"var(--ink-3)"}"></i>${esc(z?z.name:"未分區")}</span></td>`;
         return `<td><span class="rt-zs"><i style="background:${z?esc(z.color):"var(--ink-3)"}"></i><select class="rt-in" data-id="${esc(g.id)}" data-f="zone" aria-label="座位區">${sortedZones().map(x=>`<option value="${esc(x.id)}"${x.id===g.zone?" selected":""}>${esc(x.name)}</option>`).join("")}<option value=""${z?"":" selected"}>未分區</option></select></span></td>`;}
@@ -2625,7 +2628,7 @@ function drawRoster2(){
       const v=g[k]||"";
       return `<td><input class="rt-in" data-id="${esc(g.id)}" data-f="${k}" id="rt-${esc(g.id)}-${k}" value="${esc(v)}" title="${esc(v)}" aria-label="${esc(l)}"${ro}${k==="email"?' type="email"':""}></td>`;
     }).join("")+`</tr>`;};
-  const body=grps.filter(G=>G.rows.length).map(G=>`<tr class="rt-g"><td colspan="${span}"><span class="rt-gh"><b>${esc(G.label)}</b><span>${G.rows.length} 位${G.rows.length!==G.all.length?`（全組 ${G.all.length} 位）`:""}</span>${STATUS.map(s=>`<span class="st-${esc(s)}">${esc(s)} ${cnt(G.rows,s)}</span>`).join("")}${canWrite&&G.all.some(g=>g.rtOrder!=null)?`<button type="button" class="rt-reset" data-reset="${G.k}">恢復依座位排序</button>`:""}</span></td></tr>`+G.rows.map(row).join("")).join("");
+  const body=grps.filter(G=>G.rows.length).map(G=>`<tr class="rt-g"><td colspan="${span}"><span class="rt-gh"><b>${esc(G.label)}</b><span>${G.rows.length} 位${G.rows.length!==G.all.length?`（全組 ${G.all.length} 位）`:""}</span>${G.rows.some(invDup)?`<span style="background:#FFF1DC;border-radius:6px;padding:0 8px">底色標示＝與另一份名單重複 ${G.rows.filter(invDup).length} 位</span>`:""}${STATUS.map(s=>`<span class="st-${esc(s)}">${esc(s)} ${cnt(G.rows,s)}</span>`).join("")}${canWrite&&G.all.some(g=>g.rtOrder!=null)?`<button type="button" class="rt-reset" data-reset="${G.k}">恢復依座位排序</button>`:""}</span></td></tr>`+G.rows.map(row).join("")).join("");
   setTimeout(rtSelUI,0);
   $("#rtTable").innerHTML=head+`<tbody id="rtBody">${body||`<tr><td colspan="${span}" class="muted" style="padding:16px">沒有符合條件的貴賓</td></tr>`}</tbody>`;
 }
@@ -2677,7 +2680,7 @@ async function exportXlsx(){
   const zs=sortedZones();
   const cols=["編號","座位區","座位","分類","單位／機關","姓名","職稱","出席狀態","代理人","帶位人員","備註"];
   const R=rtRows();
-  const grps=invGroups().map(G=>({...G,gs:R.filter(g=>invKey(g.inviter)===G.k)})).filter(G=>G.gs.length);
+  const grps=invGroups().map(G=>({...G,gs:R.filter(g=>invIn(g,G.k))})).filter(G=>G.gs.length);
   const d0=new Date();
   const aoa=[[`桃園市南區青少年活動中心開幕營運啟動典禮｜貴賓名單（${d0.getMonth()+1}/${d0.getDate()} 匯出，共 ${R.length} 位）`],[]];
   const merges=[{s:{r:0,c:0},e:{r:0,c:cols.length-1}}];
