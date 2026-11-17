@@ -1379,7 +1379,7 @@ window.addEventListener("hashchange",()=>setTab(location.hash.slice(1)));
 
 /* ================= 啟動站位（存在 meta/event 的 stage 欄位） ================= */
 const STG_KIND={gov:["市長、社會局","#FBD9C9","#C2410C","#9A3412"],ls:["聯新國際","#E3F1D3","#3E8A16","#2F6B10"],kid:["兒少代表","#F9D3E3","#BE185D","#9D174D"],vip:["貴賓","#DCE7FB","#1673D1","#1259A8"]};
-const STG_DEF=[["許詩典","聯新國際醫療集團醫療機構事業群 執行長","ls"],["簡伯毅","聯新國際醫療集團運動休閒事業群 執行長","ls"],["饒瑞瑛","聯新國際體育股份有限公司 董事長","ls"],["張煥禎","聯新國際醫療集團 創辦人","ls"],["張善政","桃園市 市長","gov"],["陳寶民","桃園市政府社會局 局長","gov"],["兒少代表","社會局推薦 1 位","kid"],["貴賓","社會局安排","vip"],["貴賓","社會局安排","vip"]];
+const STG_DEF=[["許詩典","聯新國際醫療集團醫療機構事業群 執行長","ls"],["簡伯毅","聯新國際醫療集團運動休閒事業群 執行長","ls"],["饒瑞瑛","聯新國際體育股份有限公司 董事長","ls"],["張煥禎","聯新國際醫療集團 創辦人","ls"],["張善政","桃園市 市長","gov"],["陳寶民","桃園市政府社會局 局長","gov"],["兒少代表","社會局推薦 1 位","kid"],["局處首長","社會局確認到場名單","vip"],["局處首長","社會局確認到場名單","vip"]];
 function stgDefault(){return STG_DEF.map((r,i)=>({id:"p"+(i+1),name:r[0],title:r[1],kind:r[2]}));}
 function stgList(){const l=S.meta&&S.meta.stage;return Array.isArray(l)&&l.length?l.map(x=>({...x})):stgDefault();}
 function stgSave(l,msg,redraw){if(!guard())return;S.meta.stage=l;upd("meta","event",{stage:l});if(redraw!==false)renderStage(true);if(msg)toast(msg);}
@@ -1390,7 +1390,7 @@ function renderStage(force){
   const ae=document.activeElement;if(force!==true&&ae&&box.contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return;
   const l=stgList(),n=l.length,cnt={};l.forEach(x=>{const k=STG_KIND[x.kind]?x.kind:"vip";cnt[k]=(cnt[k]||0)+1;});
   const side=(10-n*0.9)/2,ro=canWrite?"":" disabled";
-  box.innerHTML=`<div class="stg-head"><div><h2>啟動代表站位</h2><p class="muted">面向舞台由左到右。拖曳卡片或按 ← → 換位置；姓名、職稱直接點進去改，改完自動儲存，所有人同步看到。</p></div>
+  box.innerHTML=`<div class="stg-head"><div><h2>啟動代表站位</h2><p class="muted">啟動儀式固定這幾位上台；立法委員、市議員等其他貴賓，啟動後由司儀唱名上台大合照。面向舞台由左到右。拖曳卡片或按 ← → 換位置；姓名、職稱直接點進去改，改完自動儲存，所有人同步看到。</p></div>
     <div class="stg-act">${canWrite?'<button type="button" class="btn pri" id="stgAdd">＋ 新增一位</button>':""}<button type="button" class="btn" id="stgCopy">複製站位文字</button>${canWrite?'<button type="button" class="btn" id="stgReset">還原成簡報版本</button>':""}</div></div>
   <div class="stg-sum"><span>共 <b class="num">${n}</b> 位</span>${Object.keys(STG_KIND).filter(k=>cnt[k]).map(k=>`<span class="stg-chip" style="--b:${STG_KIND[k][1]};--l:${STG_KIND[k][2]}">${esc(STG_KIND[k][0])} ${cnt[k]} 位</span>`).join("")}<span class="muted">舞台總寬約 10 m，每人站位 0.9 m，${side>=0?"兩側各留約 "+(Math.floor(side*10)/10).toFixed(1)+" m":"已超過舞台寬度 "+(-side*2).toFixed(1)+" m，請減少人數"}</span></div>
   <div class="stg-led">LED 主視覺｜青春主場 DREAM BIG+</div>
