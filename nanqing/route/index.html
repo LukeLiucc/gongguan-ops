@@ -580,8 +580,8 @@ function schedOv(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;rend
 /* ---------- 市長動線專頁：route/?view=mayor，只畫長官貴賓（紅線）動線，不顯示工作人員 ---------- */
 var MAYOR=/[?&]view=mayor/.test(location.search);
 var MAYOR_STEPS=[
-  {f:'site',t:'下車',d:'座車由延平路一段抵達，在 B 棟大門前的路旁下車，由專人迎接，步行進「開幕會場入口」。'},
-  {f:'b1f',t:'B 棟 1F 搭貨梯',d:'由大門右側門進場，沿走道到貨梯，搭貨梯上 2F。'},
+  {f:'site',t:'座車進地下停車場',d:'座車由延平路一段轉進 B 棟東側車道，直接開下地下停車場，不在路旁下車。'},
+  {f:'parking',t:'地下停車場搭貨梯',d:'座車開到貨梯口，市長下車由專人迎接，搭貨梯直上 2F，不經過 1F。'},
   {f:'b2f',t:'B 棟 2F 進演藝廳',d:'出貨梯後由演藝廳右側入口進場，入座第一排貴賓席。'}
 ];
 function mayorOv(f){
@@ -595,8 +595,8 @@ function mayorOv(f){
 function renderMayor(){
   var has=function(fid){return S.routes.some(function(r){return r.floor===fid&&r.cat==='vip';});};
   var h='<header class="top"><div><a class="back" href="./">← 入場動線圖（全部樓層）</a><h1>市長動線</h1><p class="sub">'+esc(S.meta.sub||'')+'</p></div>';
-  h+='<div class="actions"><a class="btn" href="./#b1f">到入場動線圖調整</a></div></header>';
-  h+='<p class="cap" style="margin:0 0 14px">紅線是市長的行進路線：路旁下車 → B 棟大門 → 貨梯 → 2F 演藝廳右側入口。路線在「入場動線圖」的編輯模式用「長官貴賓」動線調整，這一頁會自動同步。</p>';
+  h+='<div class="actions"><a class="btn" href="./#parking">到入場動線圖調整</a></div></header>';
+  h+='<p class="cap" style="margin:0 0 14px">紅線是市長的行進路線：座車進地下停車場 → 貨梯口下車 → 搭貨梯直上 2F → 演藝廳右側入口。路線在「入場動線圖」的編輯模式用「長官貴賓」動線調整，這一頁會自動同步。</p>';
   MAYOR_STEPS.forEach(function(st,i){
     var f=S.floors.filter(function(x){return x.id===st.f;})[0];if(!f)return;
     h+='<section style="margin-bottom:22px"><h2 style="margin:0 0 4px;font-size:20px"><span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#C8102E;color:#fff;font-weight:900;margin-right:10px">'+(i+1)+'</span>'+esc(st.t)+'<small style="font-weight:500;font-size:14px;margin-left:10px;opacity:.75">'+esc(f.name)+'</small></h2>';
