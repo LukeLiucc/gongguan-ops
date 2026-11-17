@@ -83,6 +83,22 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.55}
 .chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;font-weight:500;cursor:pointer;color:var(--ink-2)}
 .chk input{accent-color:var(--accent);width:16px;height:16px}
 
+
+/* 啟動站位 */
+.stg-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.stg-head h2{margin:0 0 4px}.stg-act{display:flex;gap:8px;flex-wrap:wrap}
+.stg-sum{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:15px}
+.stg-chip{background:var(--b);border:2px solid var(--l);border-radius:999px;padding:2px 10px;font-weight:700;font-size:13px;color:#1F2A3A}
+.stg-led{background:linear-gradient(90deg,#0E3A7B 0%,#1673D1 60%,#3E8A16 100%);color:#fff;font-weight:900;font-size:20px;text-align:center;border-radius:12px;padding:18px;margin-bottom:14px}
+.stg-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:stretch}
+.stg-card{flex:1 0 132px;min-width:132px;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--l);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.stg-card[draggable=true]{cursor:grab}.stg-card.drag{opacity:.4}.stg-card.over{outline:3px dashed var(--l);outline-offset:2px}
+.stg-no{align-self:center;width:52px;height:52px;border-radius:10px;background:var(--b);border:3px solid var(--l);color:var(--t);font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center}
+.stg-in{width:100%;border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit;font-size:13px;background:var(--surface);color:inherit;box-sizing:border-box}
+.stg-in.name{font-weight:900;font-size:17px;text-align:center}
+textarea.stg-in{resize:vertical;min-height:62px;line-height:1.35;text-align:center}
+.stg-btns{display:flex;gap:4px;justify-content:center}.stg-btns button{white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 6px;font-size:13px;font-weight:700;cursor:pointer;color:inherit}
+.stg-foot{text-align:center;margin-top:6px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;padding:1px 9px;border-radius:20px;white-space:nowrap;line-height:1.6}
 .pill.ok{background:var(--ok-soft);color:var(--ok)}
@@ -677,6 +693,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <a href="#roll" data-tab="roll">唱名清單</a>
     <a href="#flow" data-tab="flow">行程細流</a>
     <a href="#seats" data-tab="seats">座位分區</a>
+    <a href="#stage" data-tab="stage">啟動站位</a>
     <a href="#press" data-tab="press">新聞稿</a>
     <a href="#staff" data-tab="staff">人力分工</a>
     <a href="#howto" data-tab="howto">帶位作法</a>
@@ -866,6 +883,8 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   </section>
 
   <!-- 人力分工（人力盤點＋分工表） -->
+  <section class="pane" id="p-stage" hidden><div id="stageBox"></div></section>
+
   <section class="pane" id="p-staff" hidden>
     <div class="bar"><div class="ttl2" style="margin:0"><h2>人員編組</h2><span class="hint">聯新國際體育工作人員｜點姓名看個人工作卡，可直接修改時段與工作</span></div><span class="sp"></span><button class="btn" id="tAdd" type="button">＋ 新增組別</button></div>
     <div class="chips" id="tStat"></div>
@@ -1342,20 +1361,62 @@ function renderAll(){
   {const el=document.getElementById("ctTasks");if(el){const open=S.tasks.filter(t=>t.status!=="已完成").length;el.textContent=S.loaded.has("tasks")?open:"–";}}
   if(S.meta.name&&document.activeElement!==$("#evName"))$("#evName").textContent=S.meta.name;
   if(S.meta.sub&&document.activeElement!==$("#evSub"))$("#evSub").textContent=S.meta.sub;
-  ({roll:renderRoll,tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia}[UI.tab]||renderGuests)();
+  ({roll:renderRoll,tasks:renderTasks,press:renderPress,overview:renderOverview,flow:renderFlow,guests:renderGuests,seats:renderSeats,staff:()=>{renderStaff();renderDuty();},site:renderSite,duty:renderDuty,howto:renderHowto,roster:renderRoster,media:renderMedia,stage:renderStage}[UI.tab]||renderGuests)();
 }
 
 /* ---------- tabs ---------- */
 const HIDE_TABS=window.OPS_HIDE||[];
 document.querySelectorAll("nav.tabs a").forEach(a=>{if(HIDE_TABS.includes(a.dataset.tab))a.remove();});
 function setTab(t){if(/[?&]view=roll/.test(location.search))t="roll";if(HIDE_TABS.includes(t)||t==="tasks")t="guests";if(t!=="seats"){const sb=document.getElementById("selbar");if(sb)sb.remove();}
-  if(!["tasks","guests","roster","media","roll","flow","seats","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
+  if(!["tasks","guests","roster","media","roll","flow","seats","stage","press","staff","howto"].includes(t))t=t==="duty"?"staff":"guests";
   UI.tab=t;
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===t)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   document.querySelectorAll("section.pane").forEach(p=>p.hidden=p.id!=="p-"+t);
   renderAll();
 }
 window.addEventListener("hashchange",()=>setTab(location.hash.slice(1)));
+
+
+/* ================= 啟動站位（存在 meta/event 的 stage 欄位） ================= */
+const STG_KIND={gov:["市長、社會局","#FBD9C9","#C2410C","#9A3412"],ls:["聯新國際","#E3F1D3","#3E8A16","#2F6B10"],kid:["兒少代表","#F9D3E3","#BE185D","#9D174D"],vip:["貴賓","#DCE7FB","#1673D1","#1259A8"]};
+const STG_DEF=[["許詩典","聯新國際醫療集團醫療機構事業群 執行長","ls"],["簡伯毅","聯新國際醫療集團運動休閒事業群 執行長","ls"],["饒瑞瑛","聯新國際體育股份有限公司 董事長","ls"],["張煥禎","聯新國際醫療集團 創辦人","ls"],["張善政","桃園市 市長","gov"],["陳寶民","桃園市政府社會局 局長","gov"],["兒少代表","社會局推薦 1 位","kid"],["貴賓","社會局安排","vip"],["貴賓","社會局安排","vip"]];
+function stgDefault(){return STG_DEF.map((r,i)=>({id:"p"+(i+1),name:r[0],title:r[1],kind:r[2]}));}
+function stgList(){const l=S.meta&&S.meta.stage;return Array.isArray(l)&&l.length?l.map(x=>({...x})):stgDefault();}
+function stgSave(l,msg,redraw){if(!guard())return;S.meta.stage=l;upd("meta","event",{stage:l});if(redraw!==false)renderStage(true);if(msg)toast(msg);}
+function stgText(){const l=stgList();return "啟動代表站位（面向舞台由左到右，共 "+l.length+" 位）\n"+l.map((x,i)=>(i+1)+". "+(x.name||"（未填）")+(x.title?"｜"+x.title:"")).join("\n");}
+let STG_DRAG=null;
+function renderStage(force){
+  const box=$("#stageBox");if(!box)return;
+  const ae=document.activeElement;if(force!==true&&ae&&box.contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return;
+  const l=stgList(),n=l.length,cnt={};l.forEach(x=>{const k=STG_KIND[x.kind]?x.kind:"vip";cnt[k]=(cnt[k]||0)+1;});
+  const side=(10-n*0.9)/2,ro=canWrite?"":" disabled";
+  box.innerHTML=`<div class="stg-head"><div><h2>啟動代表站位</h2><p class="muted">面向舞台由左到右。拖曳卡片或按 ← → 換位置；姓名、職稱直接點進去改，改完自動儲存，所有人同步看到。</p></div>
+    <div class="stg-act">${canWrite?'<button type="button" class="btn pri" id="stgAdd">＋ 新增一位</button>':""}<button type="button" class="btn" id="stgCopy">複製站位文字</button>${canWrite?'<button type="button" class="btn" id="stgReset">還原成簡報版本</button>':""}</div></div>
+  <div class="stg-sum"><span>共 <b class="num">${n}</b> 位</span>${Object.keys(STG_KIND).filter(k=>cnt[k]).map(k=>`<span class="stg-chip" style="--b:${STG_KIND[k][1]};--l:${STG_KIND[k][2]}">${esc(STG_KIND[k][0])} ${cnt[k]} 位</span>`).join("")}<span class="muted">舞台總寬約 10 m，每人站位 0.9 m，${side>=0?"兩側各留約 "+(Math.floor(side*10)/10).toFixed(1)+" m":"已超過舞台寬度 "+(-side*2).toFixed(1)+" m，請減少人數"}</span></div>
+  <div class="stg-led">LED 主視覺｜青春主場 DREAM BIG+</div>
+  <div class="stg-row" id="stgRow">${l.map((x,i)=>{const k=STG_KIND[x.kind]||STG_KIND.vip;return `<div class="stg-card" draggable="${canWrite?"true":"false"}" data-i="${i}" style="--b:${k[1]};--l:${k[2]};--t:${k[3]}">
+    <div class="stg-no num">${i+1}</div>
+    <input class="stg-in name" data-i="${i}" data-f="name" value="${esc(x.name)}" placeholder="姓名" aria-label="第 ${i+1} 位姓名"${ro}>
+    <textarea class="stg-in" data-i="${i}" data-f="title" placeholder="單位 職稱" aria-label="第 ${i+1} 位單位職稱"${ro}>${esc(x.title)}</textarea>
+    <select class="stg-in" data-i="${i}" data-f="kind" aria-label="第 ${i+1} 位類別"${ro}>${Object.keys(STG_KIND).map(kk=>`<option value="${kk}"${kk===(STG_KIND[x.kind]?x.kind:"vip")?" selected":""}>${esc(STG_KIND[kk][0])}</option>`).join("")}</select>
+    ${canWrite?`<div class="stg-btns"><button type="button" data-mv="-1" data-i="${i}" aria-label="往左移"${i===0?" disabled":""}>←</button><button type="button" data-mv="1" data-i="${i}" aria-label="往右移"${i===n-1?" disabled":""}>→</button><button type="button" data-del="${i}">刪除</button></div>`:""}
+  </div>`;}).join("")}</div>
+  <p class="muted stg-foot">↓ 觀眾席</p>`;
+  const move=(a,b)=>{const L=stgList();if(b<0||b>=L.length||a===b)return;const [x]=L.splice(a,1);L.splice(b,0,x);stgSave(L);};
+  box.querySelectorAll(".stg-in").forEach(el=>el.addEventListener("change",()=>{const L=stgList(),i=+el.dataset.i,f=el.dataset.f;if(!L[i])return;const v=f==="kind"?el.value:el.value.trim();if((L[i][f]||"")===v)return;L[i][f]=v;stgSave(L,"已儲存",f==="kind");}));
+  box.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>move(+b.dataset.i,+b.dataset.i+(+b.dataset.mv)));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>confirmIn(b,"確定刪除",()=>{const L=stgList();L.splice(+b.dataset.del,1);stgSave(L,"已刪除，其餘順位自動遞補");}));
+  const add=$("#stgAdd");if(add)add.onclick=()=>{const L=stgList();L.push({id:newId("p"),name:"",title:"",kind:"vip"});stgSave(L,"已新增在最右邊，可再拖到要的位置");};
+  const rs=$("#stgReset");if(rs)rs.onclick=()=>confirmIn(rs,"確定還原？",()=>stgSave(stgDefault(),"已還原成簡報版本（9 位）"));
+  $("#stgCopy").onclick=()=>{const t=stgText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("已複製站位文字"),()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("已複製站位文字");}catch(e){toast("複製失敗，請手動選取");}ta.remove();});};
+  if(canWrite)box.querySelectorAll(".stg-card").forEach(c=>{
+    c.addEventListener("dragstart",e=>{if(/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target.tagName||""))&&e.target!==c){e.preventDefault();return;}STG_DRAG=+c.dataset.i;c.classList.add("drag");try{e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",String(STG_DRAG));}catch(_){}});
+    c.addEventListener("dragend",()=>{STG_DRAG=null;box.querySelectorAll(".stg-card").forEach(x=>x.classList.remove("drag","over"));});
+    c.addEventListener("dragover",e=>{if(STG_DRAG===null)return;e.preventDefault();c.classList.add("over");});
+    c.addEventListener("dragleave",()=>c.classList.remove("over"));
+    c.addEventListener("drop",e=>{if(STG_DRAG===null)return;e.preventDefault();const a=STG_DRAG;STG_DRAG=null;move(a,+c.dataset.i);});
+  });
+}
 
 /* ================= OVERVIEW ================= */
 function renderOverview(){
