@@ -869,6 +869,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <button class="btn" id="smWide" type="button">16:9 座位圖</button>
       <button class="btn" id="smXls" type="button">下載 Excel</button>
       <button class="btn pri" id="smUsher" type="button">帶位座位表 PDF</button>
+      <button class="btn" id="smImp" type="button" title="上傳演藝廳座位表 Excel，照表上的分區和指定座位更新">匯入座位表 Excel</button><input type="file" id="smImpFile" accept=".xlsx,.xls" hidden>
       <button class="btn" id="zAdd" type="button">＋ 新增座位區</button>
       <button class="btn" id="smLayout" type="button">版面設定</button>
     </div>
@@ -1309,7 +1310,7 @@ function seatUndoDo(){
   const sn=seatUndo.pop();if(!sn){toast("沒有可以復原的步驟");return;}
   seatUndoing=true;
   S.guests.forEach(g=>{const o=sn.g[g.id];if(!o)return;const p={};if((g.seat||"")!==o[0])p.seat=o[0];if((g.zone||"")!==o[1])p.zone=o[1];if(Object.keys(p).length){Object.assign(g,p);upd("guests",g.id,p);}});
-  S.zones.forEach(z=>{const o=sn.z[z.id];if(o===undefined)return;if((z.seats||[]).join(",")!==o){z.seats=o?o.split(","):[];upd("zones",z.id,{seats:z.seats});}});
+  S.zones.forEach(z=>{const o=sn.z[z.id];if(o===undefined){if((z.seats||[]).length){z.seats=[];upd("zones",z.id,{seats:[]});}return;}if((z.seats||[]).join(",")!==o){z.seats=o?o.split(","):[];upd("zones",z.id,{seats:z.seats});}});
   seatUndoing=false;UI.selGuest=null;toast(seatUndo.length?`已復原，還可以再復原 ${seatUndo.length} 步`:"已復原");renderAll();
 }
 function nqSeatOk(sid){const z=zoneById(zoneOfSeatMap()[sid]);
@@ -1860,6 +1861,7 @@ function initSeats(){
     UI.selGuest=null;schedule();});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&UI.selGuest&&UI.seatMode==="seat"){UI.selGuest=null;renderSeats();}});
   $("#zAdd").onclick=()=>openZone(null);
+  $("#smImp").onclick=()=>{if(!canWrite){toast("你目前是檢視權限");return;}$("#smImpFile").click();};$("#smImpFile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)seatChartImport(f);};
   const H=$("#hall");
   H.addEventListener("pointerdown",e=>{const b=e.target.closest(".st[data-s]");if(!b||UI.seatMode!=="paint")return;if(!canWrite){toast("你目前是檢視權限");return;}e.preventDefault();
     const zm=zoneOfSeatMap();const sid=b.dataset.s;const erase=UI.brush==="__erase"||zm[sid]===UI.brush;
@@ -2948,6 +2950,112 @@ function importSeat(list){
     else placed+=asNewZone(unit,group);
   }
   return placed;
+}
+
+/* ================= 座位表 Excel 匯入 =================
+   讀「演藝廳座位表」那種版面：每一排一列座號（第一格是排號），下一列寫這一排的分區名稱或指定貴賓。
+   一律用「排號＋座號」對位，不看畫面左右，所以 Excel 怎麼畫都不會排反。 */
+const SC_SKIP=/走道|樓梯|舞台|入口|出口|控制室|音控/;
+const SC_FIX=[[/聯新體育/g,"聯新國際體育"],[/聯新醫療/g,"聯新國際醫療"],[/聯興/g,"聯新"]];
+function scParse(ws){
+  const ref=XLSX.utils.decode_range(ws["!ref"]||"A1");const merges=ws["!merges"]||[];const R1=Math.min(ref.e.r,600),C1=Math.min(ref.e.c,120);
+  const val=(r,c)=>{const x=ws[XLSX.utils.encode_cell({r,c})];if(!x||x.v==null)return null;const s=String(x.v).trim();return s===""?null:s;};
+  const mOf=(r,c)=>merges.find(m=>r>=m.s.r&&r<=m.e.r&&c>=m.s.c&&c<=m.e.c);
+  const srows=[];
+  for(let r=ref.s.r;r<=R1;r++){const nums=[];for(let c=ref.s.c;c<=C1;c++){const v=val(r,c);if(v&&/^\d+(\.0+)?$/.test(v))nums.push([c,Math.round(+v)]);}
+    if(nums.length<12)continue;const row=nums[0][1];if(row<1||row>ROWS)continue;
+    const seats=[];let blk=0,prev=null;
+    nums.slice(1).forEach(([c,n])=>{const m=mOf(r,c);const c1=m?m.e.c:c;if(prev!==null&&c>prev+1)blk++;prev=c1;const id=seatFromLabel(row+"-"+n);if(id)seats.push({c0:c,c1,n,id,blk});});
+    srows.push({r,row,seats});}
+  const zones=[],people=[],nameRows=new Set(),zoneRows=new Set();
+  srows.forEach((sr,i)=>{const end=Math.min(i+1<srows.length?srows[i+1].r-1:sr.r+2,sr.r+3);const cells=[];
+    for(let r=sr.r+1;r<=end;r++)for(let c=ref.s.c;c<=C1;c++){const v=val(r,c);if(!v||/^\d+(\.0+)?$/.test(v)||SC_SKIP.test(v))continue;const m=mOf(r,c);if(m&&(m.s.r!==r||m.s.c!==c))continue;cells.push({c0:c,c1:m?m.e.c:c,merged:!!(m&&m.e.c>c),t:v});}
+    if(!cells.length)return;
+    const isPerson=t=>{const n=nkey(t.split(/\n/)[0].trim().split(/\s+/)[0]);return !!n&&S.guests.some(g=>nkey(g.name)===n);};
+    const asNames=cells.length>=4||(cells.some(c=>isPerson(c.t))&&!cells.some(c=>/\d/.test(c.t)));
+    if(asNames){nameRows.add(sr.row);
+      cells.forEach(c=>{const st=sr.seats.find(s=>s.c0<=c.c1&&s.c1>=c.c0);if(!st)return;const L=c.t.split(/\n/).map(x=>x.trim()).filter(Boolean);const m0=L[0].match(/^(\S+)\s+(.+)$/);
+        const p={row:sr.row,n:st.n,seat:st.id,name:m0?m0[1]:L[0],title:m0?m0[2]:"",unit:"",principal:"",raw:L.join(" ")};
+        L.slice(1).forEach((ln,k)=>{const pm=/代理/.test(ln)&&ln.match(/^(.+?)\s*[-－—–]\s*(.+)$/);if(pm){p.principal=pm[1].trim();return;}if(k===L.length-2)p.title=p.title||ln;else p.unit=p.unit||ln;});
+        people.push(p);});
+      return;}
+    zoneRows.add(sr.row);
+    cells.forEach(c=>{let t=c.t;SC_FIX.forEach(([a,b])=>t=t.replace(a,b));const nums=t.match(/\d+/g);const cnt=nums?+nums[nums.length-1]:0;
+      const parts=t.replace(/\d+\s*\/\s*\d+|\d+/g," ").split(/[\n\/・、\s]+/).map(x=>x.trim()).filter(Boolean);if(!parts.length)return;
+      const st=sr.seats.find(s=>s.c0<=c.c1&&s.c1>=c.c0)||sr.seats.find(s=>s.c0>=c.c0);if(!st)return;
+      const key=parts.join("・")+"|"+st.blk;let z=zones.find(x=>x.key===key&&x.rows.some(q=>Math.abs(q.sr.row-sr.row)<=1));
+      if(!z){z={key,name:parts.join("・"),parts,blk:st.blk,rows:[],cnt:0,mc0:null,mc1:null,c0:c.c0};zones.push(z);}
+      z.rows.push({sr});if(cnt)z.cnt=Math.max(z.cnt,cnt);z.c0=Math.min(z.c0,c.c0);if(c.merged){z.mc0=z.mc0===null?c.c0:Math.min(z.mc0,c.c0);z.mc1=z.mc1===null?c.c1:Math.max(z.mc1,c.c1);}});
+  });
+  zones.forEach(z=>{z.seats=[];const per=z.cnt&&z.rows.length?Math.round(z.cnt/z.rows.length):0;
+    z.rows.forEach(({sr})=>{let b=sr.seats.filter(s=>s.blk===z.blk&&s.c1>=z.c0);if(z.mc1!==null)b=b.filter(s=>s.c0<=z.mc1);else if(per)b=b.slice(0,per);z.seats.push(...b.map(s=>s.id));});
+    z.rowList=[...new Set(z.rows.map(q=>q.sr.row))].sort((a,b)=>a-b);delete z.rows;});
+  const seen={};people.forEach(p=>{const k=nkey(p.principal||p.name);if(seen[k]){p.dup=seen[k];}else seen[k]=p.row+"-"+p.n;});
+  return {zones:zones.filter(z=>z.seats.length),people,nameRows:[...nameRows].sort((a,b)=>a-b),zoneRows:[...zoneRows].sort((a,b)=>a-b),rowCount:srows.length};
+}
+function scGuess(z){const ex=S.zones.find(x=>nkey(x.name.split("｜").pop())===nkey(z.name));if(ex)return ex.id;
+  const hit=S.zones.filter(x=>z.parts.some(p=>p.length>=2&&x.name.includes(p)));return hit.length===1?hit[0].id:"";}
+function scRowGuess(row){const zm=zoneOfSeatMap();const cnt={};for(let c=1;c<=24;c++){const id=zm[row+"-"+c];if(id)cnt[id]=(cnt[id]||0)+1;}const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:"";}
+async function seatChartImport(file){
+  if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再試");return;}
+  let P;try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});P=null;for(const n of wb.SheetNames){const q=scParse(wb.Sheets[n]);if(q.rowCount>=8&&(!P||q.rowCount>P.rowCount))P=q;}}catch(e){toast("讀不到這個檔案，請確認是 Excel 檔");return;}
+  if(!P||(!P.zones.length&&!P.people.length)){toast("這份 Excel 找不到座位表（需要每排一列座號，下一列寫分區或姓名）");return;}
+  P.zones.forEach(z=>z.target=scGuess(z));const rowZone={};P.nameRows.forEach(r=>rowZone[r]=scRowGuess(r));
+  P.people.forEach(p=>{const k=nkey(p.principal||p.name);const g=S.guests.find(x=>nkey(x.name)===k);p.gid=g?g.id:"";});
+  const zsel=(v,first)=>`<option value="">${first}</option>`+[...S.zones].sort((a,b)=>(a.order||0)-(b.order||0)).map(z=>`<option value="${esc(z.id)}"${z.id===v?" selected":""}>${esc(z.name)}</option>`).join("");
+  const rtxt=l=>l.length===1?`第 ${l[0]} 排`:`第 ${l[0]}–${l[l.length-1]} 排`;
+  const dupN=P.people.filter(p=>p.dup).length,newN=P.people.filter(p=>!p.gid&&!p.dup).length;
+  const md=modal(`<h3>匯入座位表 Excel</h3>
+    <p class="muted">用「排號＋座號」對位，跟 Excel 畫面左右無關。套用後可以按「復原上一步」退回。</p>
+    ${P.zones.length?`<h4 style="margin:14px 0 6px">分區（${P.zones.length} 區）</h4><table class="pi-tb"><thead><tr><th>座位表寫的</th><th>範圍</th><th>席次</th><th>對應到工作檯的座位區</th></tr></thead><tbody>${P.zones.map((z,i)=>`<tr><td><b>${esc(z.name)}</b></td><td>${rtxt(z.rowList)}</td><td class="num">${z.seats.length}</td><td><select class="sel" data-sz="${i}" style="width:100%">${zsel(z.target,"新增座位區「"+esc(z.name)+"」")}</select></td></tr>`).join("")}</tbody></table>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><input type="checkbox" id="scClear" checked><span>${rtxt(P.zoneRows)}裡座位表沒標示的位子，從舊的座位區收回成空位（其他排不動）</span></label>`:""}
+    ${P.people.length?`<h4 style="margin:16px 0 6px">指定座位（${P.people.length} 位${newN?`，其中 ${newN} 位名單沒有、會新增`:""}${dupN?`，${dupN} 位重複出現不排`:""}）</h4>
+    ${P.nameRows.map(r=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0">第 ${r} 排整排歸到<select class="sel" data-rz="${r}" style="flex:1">${zsel(rowZone[r],"不變更分區")}</select></label>`).join("")}
+    <p class="muted" style="margin:4px 0">這幾排以座位表為準：表上沒寫到的人會先從這幾排移出（還在名單，只是變成未排座位）。</p>
+    <table class="pi-tb"><thead><tr><th>座位</th><th>姓名</th><th>狀態</th></tr></thead><tbody>${P.people.map(p=>`<tr><td class="num">${p.row}-${p.n}</td><td>${esc(p.raw)}</td><td>${p.dup?`<span style="color:var(--warn)">重複（已排在 ${esc(p.dup)}），這格先空著</span>`:p.gid?(p.principal?"代理出席，排在 "+esc(p.principal)+" 名下":"名單已有"):`<span style="color:var(--warn)">名單沒有，新增</span>`}</td></tr>`).join("")}</tbody></table>`:""}
+    <div class="mdact" style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" id="scNo">取消</button><button class="btn pri" type="button" id="scGo">套用到座位圖</button></div>`,"wide");
+  md.querySelector("#scNo").onclick=closeModal;
+  md.querySelector("#scGo").onclick=async()=>{
+    md.querySelectorAll("[data-sz]").forEach(s=>P.zones[+s.dataset.sz].target=s.value);md.querySelectorAll("[data-rz]").forEach(s=>rowZone[+s.dataset.rz]=s.value);
+    const clear=!!(md.querySelector("#scClear")&&md.querySelector("#scClear").checked);md.querySelector("#scGo").disabled=true;
+    const r=await scApply(P,rowZone,clear);closeModal();renderAll();toast(`已套用座位表：${r.z} 個分區、${r.p} 位指定座位${r.out?`；${r.out} 位原本坐在這些位子的人改成未排座位`:""}`);
+  };
+}
+async function scApply(P,rowZone,clear){
+  const rowOf=s=>+String(s).split("-")[0];const before={};S.zones.forEach(z=>before[z.id]=(z.seats||[]).join(","));
+  // 1. 新座位區
+  const used=new Set(S.zones.map(z=>z.color));let ord=Math.max(0,...S.zones.map(z=>+z.order||0));const fresh=[];
+  for(const z of P.zones){if(z.target&&zoneById(z.target))continue;const same=P.zones.find(x=>x!==z&&x.newId&&x.name===z.name);if(same){z.target=same.newId;continue;}
+    const color=PALETTE.find(c=>!used.has(c))||PALETTE[S.zones.length%PALETTE.length];used.add(color);ord+=5;const id=newId("z");
+    const code=z.rowList.length===1?ROW_LETTER[z.rowList[0]]:ROW_LETTER[z.rowList[0]]+"–"+ROW_LETTER[z.rowList[z.rowList.length-1]];
+    const d={name:z.name,code,color,order:ord,owner:"",owner2:"",ratio:10,est:0,note:"",desc:"",seats:[]};S.zones.push({id,...d});fresh.push(id);z.target=id;z.newId=id;}
+  // 2. 座位歸屬
+  const own={};P.zones.forEach(z=>z.seats.forEach(s=>own[s]=z.target));
+  const nameRows=new Set(P.nameRows),zoneRows=new Set(P.zoneRows);
+  P.nameRows.forEach(r=>{const zid=rowZone[r];if(!zid)return;for(let c=1;c<=24;c++){const s=r+"-"+c;if(!VOID.has(s))own[s]=zid;}});
+  S.zones.forEach(z=>{let seats=(z.seats||[]).filter(s=>{if(own[s])return false;const r=rowOf(s);if(clear&&zoneRows.has(r))return false;return true;});
+    Object.keys(own).forEach(s=>{if(own[s]===z.id)seats.push(s);});z.seats=[...new Set(seats)].sort((a,b)=>seatKey(a)-seatKey(b));});
+  // 3. 貴賓座位
+  const zm=zoneOfSeatMap();const chg={};const set=(g,p)=>{Object.assign(g,p);chg[g.id]=Object.assign(chg[g.id]||{},p);};
+  const keep=new Set();let o=Math.max(0,...S.guests.map(g=>+g.order||0));const made=[];
+  const plan=P.people.filter(p=>!p.dup);const planSeats=new Set(plan.map(p=>p.seat));
+  plan.forEach(p=>{let g=p.gid&&S.guests.find(x=>x.id===p.gid);
+    if(!g){o+=10;const id=newId("g");const zid=rowZone[p.row]||zm[p.seat]||"";g={id,address:"",arrived:false,assist:"",category:"",inviter:"",name:p.name,title:p.title,unit:p.unit,note:p.principal?"代理 "+p.principal+" 出席":"",photo:"",proxy:"",seat:p.seat,source:"座位表匯入",status:"出席",zone:zid,order:o};S.guests.push(g);made.push(g);keep.add(id);return;}
+    keep.add(g.id);const patch={};if((g.seat||"")!==p.seat)patch.seat=p.seat;const zid=rowZone[p.row];if(zid&&g.zone!==zid)patch.zone=zid;
+    if(p.principal){const px=(p.name+" "+p.title).trim();if(g.proxy!==px)patch.proxy=px;if(g.status!=="代理出席")patch.status="代理出席";}
+    if(Object.keys(patch).length)set(g,patch);});
+  let out=0;
+  S.guests.forEach(g=>{if(!g.seat||keep.has(g.id))return;const r=rowOf(g.seat);
+    if(planSeats.has(g.seat)||nameRows.has(r)||(zoneRows.has(r)&&(zm[g.seat]||"")!==(g.zone||""))){set(g,{seat:""});out++;}});
+  // 4. 寫回（先記一筆復原點）
+  const zs=S.zones.filter(z=>!fresh.includes(z.id)&&before[z.id]!==(z.seats||[]).join(","));
+  const jobs=[];
+  zs.forEach(z=>jobs.push(upd("zones",z.id,{seats:z.seats})));
+  Object.entries(chg).forEach(([id,p])=>jobs.push(upd("guests",id,p)));
+  fresh.forEach(id=>{const {id:_i,...d}=zoneById(id);jobs.push(put("zones",id,d));});
+  made.forEach(g=>{const {id,...d}=g;jobs.push(put("guests",id,d));});
+  await Promise.all(jobs);
+  return {z:P.zones.length,p:plan.length,out};
 }
 
 /* ================= Excel 匯入比對 ================= */
