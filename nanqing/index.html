@@ -3268,28 +3268,31 @@ function attGroups(){
 }
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
 /* ================= 唱名清單 ================= */
-const RC_CATS=["市長","主辦單位","民意代表","市府局處首長","區公所","中央部會","社會局委員","兒少代表","聯新國際醫療集團","其他貴賓"];
-const RC_LSTOP=["張煥禎","簡伯毅","許詩典","饒瑞瑛","許俊麒"];
+const RC_CATS=["市長","府級長官","中央部會","主辦單位","民意代表","市府局處首長","里長","法人團體","公司行號","聯新國際醫療集團"];
+const RC_LSTOP=["張煥禎","饒瑞瑛","簡伯毅","許詩典","許俊麒"];
 const RC_WSD=[];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
-function rcDefaultCat(e){const g=e.g0,u=e.unit||"";
-  if(g&&RC_CATS.includes(g.category))return g.category;
+// 分類邏輯比照公館：市長 → 府級長官 → 主辦單位 → 民意代表 → 市府局處首長 → 里長 → 法人團體 → 公司行號 → 聯新國際醫療集團（最後）
+function rcDefaultCat(e){const g=e.g0,u=e.unit||"",t=e.title||"";
   if(g&&g.name==="張善政")return "市長";
-  if(/桃園市政府社會局/.test(u))return "主辦單位";
+  if(u==="桃園市政府")return "府級長官";
+  if(/^桃園市政府社會局/.test(u))return "主辦單位";
+  if(/聯新國際體育股份有限公司/.test(u)||(g&&RC_LSTOP.includes(g.name)))return "聯新國際醫療集團";
   if(/議會|立法院/.test(u))return "民意代表";
-  if(/區公所/.test(u))return "區公所";
-  if(/^桃園市政府|^桃園市立/.test(u))return "市府局處首長";
-  if(/^運動部|^教育部|^衛生福利部/.test(u))return "中央部會";
-  if(/兒少代表/.test(u))return "兒少代表";
-  if(/聯新/.test(u)||(g&&RC_LSTOP.includes(g.name)))return "聯新國際醫療集團";
-  return "其他貴賓";}
+  if(/^(運動部|教育部|衛生福利部|行政院|內政部)/.test(u))return "中央部會";
+  if(/里長/.test(t)||/里$/.test(u)||/里辦公處/.test(u))return "里長";
+  if(/^聯新/.test(u))return "聯新國際醫療集團";
+  if(/學校|高中|國中|國小|大學|幼兒園/.test(u))return "法人團體";
+  if(/^桃園市政府|區公所/.test(u))return "市府局處首長";
+  if(/協會|委員會|總會|基金會|策進會|促進會|聯盟|學會|公會|工會|農會|兒少代表|中心|團|社$/.test(u)||/委員|兒少代表/.test(t))return "法人團體";
+  return "公司行號";}
 const RC_HOST=["桃園市政府社會局","聯新國際體育股份有限公司"];
 // 姓名筆劃（依教育部國字標準字體筆畫；查不到的字排在最後）
 const RC_STROKE={"游":12,"竹":6,"萍":12,"臺":14,"北":5,"市":5,"政":9,"蔡":15,"家":10,"福":14,"中":4,"華":11,"奧":13,"林":8,"陳":11,"俊":9,"安":6,"詩":13,"應":17,"曉":16,"薇":17,"議":20,"范":9,"煥":13,"英":9,"自":6,"來":8,"蔣":15,"萬":13,"大":3,"魯":15,"閣":14,"實":14,"饒":21,"瑞":13,"瑛":12,"聯":17,"新":13,"國":11,"際":14,"李":7,"淳":11,"琳":12,"義":13,"昌":8,"炳":9,"甫":7,"徐":10,"弘":5,"庭":9,"振":10,"淑":11,"芳":8,"馬":10,"志":7,"誠":13,"民":5,"謝":17,"洲":9,"鴻":17,"道":13,"蘇":20,"彥":9,"銘":14,"永":5,"德":15,"馮":12,"元":4,"愷":13,"雁":12,"社":7,"團":14,"法":8,"人":2,"碧":14,"雪":11,"楊":13,"沛":7,"峰":10,"開":12,"心":4,"高":10,"爾":14,"琮":12,"閔":12,"恒":9,"典":8,"摩":15,"托":6,"邱":8,"冠":9,"鐿":21,"固":8,"工":3,"程":12,"趙":14,"聚":14,"營":16,"造":11,"黃":12,"舒":12,"楓":13,"財":10,"小":3,"龍":16,"承":8,"水":4,"電":13,"胡":9,"良":7,"友":4,"科":9,"技":7,"文":4,"晉":10,"通":11,"建":8,"河":8,"品":9,"生":5,"活":9,"封":9,"屏":9,"盧":16,"昭":9,"廖":14,"聿":6,"偉":11,"周":8,"鎮":18,"宇":6,"時":10,"報":12,"辰":7,"三":3,"立":5,"聞":14,"歐":15,"智":12,"婁":11,"靖":13,"平":5,"合":6,"賽":17,"車":7,"貞":9,"楨":13,"壹":12,"蘋":20,"鄭":15,"裕":12,"峯":10,"季":8,"芸":8,"視":11,"光":6,"榮":14,"欣":8,"愛":13,"達":13,"體":22,"張":11,"丁":2,"凱":12,"東":8,"森":12,"棟":12,"宏":7,"翰":16,"央":5,"訊":10,"名":6,"賢":15,"緯":15,"育":8,"堯":12,"許":11,"王":4,"由":5,"劉":15,"柏":9,"九":2,"吳":7,"寶":20,"燕":16,"蓉":14,"曹":11,"松":8,"清":11,"經":13,"濟":17,"日":4,"莊":11,"棨":12,"椉":12,"思":9,"納":10,"捷":11,"龎":18,"維":14,"方":4,"越":12,"琦":12,"慧":15,"公":4,"共":6,"又":2,"綱":14,"祥":11,"南":9,"祖":10,"士":3,"俐":9,"利":7,"希":7,"婷":12,"藍":18,"于":3,"洺":9,"欉":22,"麒":19,"溫":13,"紹":11,"頌":13,"珠":10,"全":6,"怡":8,"源":13,"鈦":12,"境":14,"運":13,"動":11,"孫":10,"武":8,"芊":7,"瑜":13,"明":8,"儒":16,"鼎":12,"鉉":13,"泓":8,"商":11,"顏":18,"佳":8,"苡":8,"芹":8,"信":9,"超":12,"灣":25,"致":10,"富":12,"股":8,"耀":20,"懋":17,"翁":10,"展":10,"簡":18,"伯":7,"毅":15,"余":7,"錦":16,"亮":9,"郭":11,"巖":22,"夫":4,"蒼":14,"鷹":24,"玲":9,"賜":15,"爵":17,"倚":10,"葉":13,"繼":20,"仁":4,"美":9,"廣":14,"告":7,"賴":16,"鈺":13,"定":8,"乾":11,"汪":7,"玗":7,"若":9,"錚":14,"然":12,"瓊":18,"真":10,"理":11,"刊":5,"叔":8,"霖":16,"台":5,"輝":15,"孔":4,"憲":16,"娟":10,"芝":7,"伶":7,"儂":15,"睿":14,"築":16,"室":9,"內":4,"璇":15,"豪":14,"杰":8,"倫":10,"能":10,"剛":10,"軒":10,"允":4,"棠":12,"兆":6,"盈":9,"銀":14,"行":6,"貴":12,"賓":14,"宗":8,"雄":12};
 function rcStrokeKey(t){return String(t||"").replace(/[（(].*$/,"").replace(/\s/g,"").split("").map(c=>RC_STROKE[c]||(/[A-Za-z0-9]/.test(c)?0:60));}
 function rcCmpStroke(a,b){const ka=rcStrokeKey(a),kb=rcStrokeKey(b);const ca=String(a||"").replace(/\s/g,""),cb=String(b||"").replace(/\s/g,"");for(let i=0;i<Math.max(ka.length,kb.length);i++){const x=ka[i]??-1,y=kb[i]??-1;if(x!==y)return x-y;if(ca[i]!==cb[i])return (ca[i]||"").localeCompare(cb[i]||"","zh-Hant-u-co-stroke");}return String(a).localeCompare(String(b),"zh-Hant");}
 function rcEntries(){
-  const gs=S.guests.filter(g=>g.zone&&g.zone!=="z-media"&&g.status!=="不出席");const out=[];const grp={};
+  const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.status!=="不出席"&&(g.seat||g.status==="出席"||g.status==="代理出席"));const out=[];const grp={};
   gs.forEach(g=>{const unnamed=!g.name||g.name==="單位代表";const emba=/EMBA/.test(g.unit||"");
     if(unnamed||emba){const k="u:"+(g.unit||"");(grp[k]=grp[k]||[]).push(g);}else out.push({key:g.id,ids:[g.id],g0:g,unit:g.unit||"",title:g.title||"",label:(g.name||"")+(g.title?" "+g.title:""),seat:g.seat});});
   Object.entries(grp).forEach(([k,list])=>{const g0=list[0];const emba=/EMBA/.test(g0.unit||"");const names=list.filter(x=>x.name&&x.name!=="單位代表").map(x=>x.name);
@@ -3308,7 +3311,7 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   const byStroke=(a,b)=>{const na=nm(a),nb=nm(b);if(!na!==!nb)return na?-1:1;return na?rcCmpStroke(na,nb):rcCmpStroke(rcUnit(a.unit),rcUnit(b.unit));};
   const arrK=e=>{const t=rcArr(e);return t===null?1e16:t;};
   const gOrd=e=>{let o=1e9;(e.ids||[]).forEach(id=>{const g=S.guests.find(x=>x.id===id);if(g&&(g.order??1e9)<o)o=g.order??1e9;});return o;};
-  RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>c==="民意代表"?(arrK(a)-arrK(b)||gOrd(a)-gOrd(b)):(a.o??1e9)-(b.o??1e9)||(c==="聯新國際醫療集團"?(lst(a)-lst(b)||gOrd(a)-gOrd(b)):(c==="社會局委員"||c==="兒少代表"||c==="其他貴賓")?byStroke(a,b):gOrd(a)-gOrd(b))));
+  RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>c==="民意代表"?(arrK(a)-arrK(b)||byStroke(a,b)):(a.o??1e9)-(b.o??1e9)||(c==="府級長官"||c==="主辦單位"||c==="市長"?rank(a)-rank(b):c==="聯新國際醫療集團"?(lst(a)-lst(b)||byStroke(a,b)):byStroke(a,b))));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
 let rcInit=false,rcDrag=null;
@@ -3316,11 +3319,11 @@ function renderRoll(){
   const byCat=rcState();let n=0;const nums={};
   RC_CATS.forEach(c=>{byCat[c].forEach(e=>{nums[e.key]=++n;});});
   const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
-  $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜依貴賓名單自動產生（已分區、未標不出席者），新增貴賓會自動加入；媒體不列入`;
+  $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜只列已排座位或已回覆出席（含代理出席）的貴賓，新增或改出席狀態會自動更新；媒體不列入`;
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
-    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="市長"?"桃園市長":c==="主辦單位"?"桃園市政府社會局｜依職級":c==="民意代表"?"先到先唱｜依報到時間自動排序，未報到者議長、副議長、平鎮區在前":c==="聯新國際醫療集團"?"依貴賓名單順序":(c==="社會局委員"||c==="兒少代表"||c==="其他貴賓")?"依姓名筆劃排序":"依貴賓名單順序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
+    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="市長"?"桃園市長":c==="府級長官"?"副市長、秘書長等":c==="主辦單位"?"桃園市政府社會局":c==="民意代表"?"先到先唱｜依報到時間自動排序，未報到者依姓名筆劃":c==="聯新國際醫療集團"?"創辦人、董事長、執行長在前，其餘依姓名筆劃":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
       <span class="no">${nums[e.key]}</span><span class="gr" draggable="${canWrite?"true":"false"}" title="按住這裡拖拉排序">⋮⋮</span>
-      <div class="tx"><input class="rcin l" data-rcf="label" value="${esc(e.label)}" aria-label="姓名職稱（唱名用）"><input class="rcin u" data-rcf="unit" value="${esc(e.text)}" aria-label="單位（唱名用）"><span>${e.sub?esc(e.sub)+"｜":""}${e.seat?"座位 "+esc(seatLabel(e.seat)):""}${e.edited?`｜已改字 <button type="button" class="rcundo" data-rcundo>還原</button>`:""}</span>${c==="民意代表"?(()=>{const t=rcArr(e);const k=t===null?0:list.filter(x=>rcArr(x)!==null).indexOf(e)+1;const hm=t&&t<9e15?new Date(t).toTimeString().slice(0,5):"";return `<span class="rcarr${t===null?"":" on"}">${t===null?"未報到":`第 ${k} 位報到${hm?"｜"+hm:""}`} <button type="button" class="rcundo" data-rcarr>${t===null?"按這裡報到":"取消報到"}</button></span>`;})():""}</div>
+      <div class="tx"><input class="rcin l" data-rcf="label" value="${esc(e.label)}" aria-label="姓名職稱（唱名用）"><input class="rcin u" data-rcf="unit" value="${esc(e.text)}" aria-label="單位（唱名用）"><span>${e.sub?esc(e.sub)+"｜":""}${(()=>{const g=e.g0||S.guests.find(x=>x.id===e.ids[0]);const z=g&&zoneById(g.zone);const arr=e.ids.some(id=>{const x=S.guests.find(y=>y.id===id);return x&&x.arrived;});return [z?"報到區："+esc(z.name):"未分區",e.seat?"座位 "+esc(seatLabel(e.seat)):"未排座位",g?esc(g.status||"未回覆")+(g.status==="代理出席"&&g.proxy?"（"+esc(g.proxy)+"）":""):"",arr?"已報到":""].filter(Boolean).join("｜");})()}${e.edited?`｜已改字 <button type="button" class="rcundo" data-rcundo>還原</button>`:""}</span>${c==="民意代表"?(()=>{const t=rcArr(e);const k=t===null?0:list.filter(x=>rcArr(x)!==null).indexOf(e)+1;const hm=t&&t<9e15?new Date(t).toTimeString().slice(0,5):"";return `<span class="rcarr${t===null?"":" on"}">${t===null?"未報到":`第 ${k} 位報到${hm?"｜"+hm:""}`} <button type="button" class="rcundo" data-rcarr>${t===null?"按這裡報到":"取消報到"}</button></span>`;})():""}</div>
       <div class="mv"><button type="button" data-rcmv="-1" aria-label="上移"${i===0||c==="民意代表"?" disabled":""}>▲</button><button type="button" data-rcmv="1" aria-label="下移"${i===list.length-1||c==="民意代表"?" disabled":""}>▼</button></div>
       <div class="mv"><select class="sel" data-rccat aria-label="分類">${RC_CATS.map(x=>`<option${x===c?" selected":""}>${esc(x)}</option>`).join("")}</select><button type="button" class="rcdel" data-rcdel title="刪除（不唱名）" aria-label="刪除">✕</button></div></div>`).join("")||`<div class="muted" style="font-size:13px;padding:4px 10px">（拖到這裡）</div>`}</div>`;}).join("")
     +(byCat.__del.length?`<details class="rcdeld"><summary>已刪除 ${byCat.__del.length} 項（不唱名，按「還原」可加回）</summary>${byCat.__del.map(e=>`<div class="rcrow del" data-key="${esc(e.key)}" data-cat="__del"><span class="no">—</span><span></span><div class="tx"><b>${esc(e.label)}</b><span>${esc(e.text)}</span></div><span></span><button type="button" class="btn sm" data-rcback>還原</button></div>`).join("")}</details>`:"");
