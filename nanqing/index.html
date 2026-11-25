@@ -749,7 +749,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <!-- 交辦事項 -->
   <section class="pane" id="p-roll" hidden>
     <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，點文字可直接改唱名用字，右邊下拉選單可換分類，✕ 刪除；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
-      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcSign" type="button" title="依報到區分頁，每列有簽到格、座位、唱名分類與順序">簽到確認表 Excel</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
+      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcSignP" type="button" title="大字、依唱名分類，順序和編號跟主持人唱名稿完全一樣">列印簽到確認表</button><button class="btn" id="rcSign" type="button" title="依報到區分頁，每列有簽到格、座位、唱名分類與順序">簽到表 Excel</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
     <div class="rcsum" id="rcSum"></div>
     <div id="rcList"></div>
   </section>
@@ -3315,6 +3315,26 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>c==="民意代表"?(arrK(a)-arrK(b)||byStroke(a,b)):(a.o??1e9)-(b.o??1e9)||(c==="府級長官"||c==="主辦單位"||c==="市長"?rank(a)-rank(b):c==="聯新國際醫療集團"?(lst(a)-lst(b)||byStroke(a,b)):byStroke(a,b))));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
+// 列印用簽到確認表：分類、順序、編號跟主持人唱名稿完全一樣，報到桌勾完直接對編號
+function rcSignPrint(){
+  const byCat=rcState();let n=0;const now=new Date();const pad=x=>String(x).padStart(2,"0");let total=0;RC_CATS.forEach(c=>total+=byCat[c].length);
+  const secs=RC_CATS.filter(c=>byCat[c].length).map(c=>{const list=byCat[c];
+    return `<section><h2>${esc(c)}<span>${list.length} 位</span></h2><table><thead><tr><th class="ck">到</th><th class="no">編號</th><th>姓名・職稱</th><th class="zn">報到區／座位</th><th class="nt">代理／備註</th></tr></thead><tbody>${list.map(e=>{n++;const gs=e.ids.map(id=>S.guests.find(x=>x.id===id)).filter(Boolean);const g=gs[0]||{};const z=zoneById(g.zone);const arr=gs.some(x=>x.arrived);
+      return `<tr><td class="ck"><i>${arr?"✓":""}</i></td><td class="no">${n}</td><td><b>${esc(e.label)}</b><small>${esc(e.text||"")}${e.sub?"｜"+esc(e.sub):""}</small></td><td class="zn"><b>${e.seat?esc(seatLabel(e.seat)):"—"}</b><small>${z?esc(z.name.split("｜").pop()):"未分區"}</small></td><td class="nt">${g.status==="代理出席"?"代理："+esc(g.proxy||"")+"":""}</td></tr>`;}).join("")}</tbody></table></section>`;}).join("");
+  const html=`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>南青開幕典禮_簽到確認表_${now.getMonth()+1}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}</title><style>
+@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
+h1{font-size:26px;margin:0 0 4px}.sub{font-size:15px;color:#444;margin:0 0 14px}
+section{margin-bottom:18px}h2{font-size:26px;margin:0;padding:8px 14px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span{font-size:17px;font-weight:500}
+table{width:100%;border-collapse:collapse}thead{display:table-header-group}th{font-size:13px;text-align:left;padding:4px 8px;border-bottom:2px solid #111;color:#333}
+td{padding:7px 8px;border-bottom:1px solid #999;vertical-align:middle}tr{break-inside:avoid}
+td b{font-size:23px;font-weight:800;display:block;line-height:1.25}td small{font-size:14px;color:#333;display:block;line-height:1.3}
+.ck{width:46px;text-align:center}.ck i{display:inline-flex;width:30px;height:30px;border:2.5px solid #111;border-radius:4px;font-style:normal;font-size:24px;font-weight:800;align-items:center;justify-content:center}
+td.no{font-size:24px;font-weight:800}.no{width:54px;text-align:center}th.nt{font-size:13px;font-weight:700}.zn{width:170px}.zn b{font-size:21px}.nt{width:170px;font-size:16px;font-weight:700}
+.bar{margin:0 0 14px}.bar button{font-size:18px;padding:10px 22px;font-weight:700}@media print{.bar{display:none}body{padding:0}}
+</style></head><body><div class="bar"><button onclick="window.print()">列印／存成 PDF</button></div>
+<h1>簽到確認表｜桃園市南區青少年活動中心開幕營運啟動典禮</h1><p class="sub">2026/11/26（四）｜共 ${total} 位｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版｜分類、順序、編號與主持人唱名稿相同：貴賓到場就在方框打勾，開場前把沒打勾的編號報給舞台組，在唱名稿上劃掉</p>${secs}</body></html>`;
+  const w=window.open("","_blank");if(!w){toast("瀏覽器擋住了新視窗，請允許彈出視窗後再按一次");return;}w.document.open();w.document.write(html);w.document.close();
+}
 // 簽到確認表：同一批唱名對象，依報到區排，方便報到桌勾到場、舞台組對唱名順序
 async function rcSignXlsx(){
   if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再試");return;}
@@ -3340,6 +3360,8 @@ function renderRoll(){
   RC_CATS.forEach(c=>{byCat[c].forEach(e=>{nums[e.key]=++n;});});
   const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
   $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜只列已排座位或已回覆出席（含代理出席）的貴賓，新增或改出席狀態會自動更新；媒體不列入`;
+  {const miss=[],ok=[];RC_CATS.forEach(c=>byCat[c].forEach(e=>(e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;})?ok:miss).push(nums[e.key])));
+   $("#rcSum").innerHTML+=`<div style="margin-top:6px;font-size:15px"><b>已報到 ${ok.length} 位｜未報到 ${miss.length} 位</b>${ok.length&&miss.length?`　唱名稿上要劃掉的編號：<b style="font-size:17px;letter-spacing:.5px">${miss.join("、")}</b>`:""}</div>`;}
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
     return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="市長"?"桃園市長":c==="府級長官"?"副市長、秘書長等":c==="主辦單位"?"桃園市政府社會局":c==="民意代表"?"先到先唱｜依報到時間自動排序，未報到者依姓名筆劃":c==="聯新國際醫療集團"?"創辦人、董事長、執行長在前，其餘依姓名筆劃":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
       <span class="no">${nums[e.key]}</span><span class="gr" draggable="${canWrite?"true":"false"}" title="按住這裡拖拉排序">⋮⋮</span>
@@ -3365,7 +3387,7 @@ function renderRoll(){
     rcSave(bc);rcDrag=null;renderRoll();});
   $("#rcReset").onclick=ev=>confirmIn(ev.currentTarget,"確定依預設重排",()=>{S.meta.rcMap={};upd("meta","event",{rcMap:{}});renderRoll();});
   $("#rcPrint").onclick=ev=>rcPrint(ev.currentTarget);
-  $("#rcSign").onclick=rcSignXlsx;
+  $("#rcSign").onclick=rcSignXlsx;$("#rcSignP").onclick=rcSignPrint;
   $("#rcStroke").onclick=ev=>confirmIn(ev.currentTarget,"確定依筆劃重排",()=>{const m=Object.assign({},S.meta.rcMap||{});Object.keys(m).forEach(k=>{m[k]={c:m[k].c};});S.meta.rcMap=m;upd("meta","event",{rcMap:m});renderRoll();toast("已依姓名筆劃重排");});
 }
 async function rcPrint(btn){
