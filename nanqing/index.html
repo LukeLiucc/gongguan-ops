@@ -3269,6 +3269,7 @@ function attGroups(){
 function attSorted(list){const zo={};sortedZones().forEach((z,i)=>zo[z.id]=i);return [...list].sort((a,b)=>(zo[a.zone]??99)-(zo[b.zone]??99)||seatKey(a.seat)-seatKey(b.seat));}
 /* ================= 唱名清單 ================= */
 const RC_CATS=["市長","府級長官","中央部會","主辦單位","民意代表","市府局處首長","里長","法人團體","公司行號","聯新國際醫療集團"];
+const RC_LABEL={"里長":"里長・社區發展協會"};const rcLab=c=>RC_LABEL[c]||c;
 const RC_LSTOP=["張煥禎","饒瑞瑛","簡伯毅","許詩典","許俊麒"];
 const RC_WSD=[];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
@@ -3279,9 +3280,9 @@ function rcDefaultCat(e){const g=e.g0,u=e.unit||"",t=e.title||"";
   if(/^桃園市政府社會局/.test(u))return "主辦單位";
   if(/聯新國際體育股份有限公司/.test(u)||(g&&RC_LSTOP.includes(g.name)))return "聯新國際醫療集團";
   if(/議會|立法院/.test(u))return "民意代表";
-  {const z=g&&zoneById(g.zone);const zn=z?z.name:"";if(/聯新國際醫療集團/.test(zn))return "聯新國際醫療集團";if(/里長/.test(zn)&&!/社區協會/.test(zn))return "里長";}
+  {const z=g&&zoneById(g.zone);const zn=z?z.name:"";if(/聯新國際醫療集團/.test(zn))return "聯新國際醫療集團";if(/里長/.test(zn)||/社區協會/.test(zn))return "里長";}
   if(/^(運動部|教育部|衛生福利部|行政院|內政部)/.test(u))return "中央部會";
-  if(/里長/.test(t)||/里$/.test(u)||/里辦公處/.test(u))return "里長";
+  if(/里長/.test(t)||/里$/.test(u)||/里辦公處/.test(u)||/社區發展協會/.test(u))return "里長";
   if(/^聯新/.test(u))return "聯新國際醫療集團";
   if(/學校|高中|國中|國小|大學|幼兒園/.test(u))return "法人團體";
   if(/^桃園市政府|區公所/.test(u))return "市府局處首長";
@@ -3316,13 +3317,13 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
 // 報到桌分類：報到組分三桌，每桌一份名單
-const RC_DESKS=[["gov","A｜市府長官暨民意代表","副市長、主辦機關、局處首長、立法委員、議長暨市議員"],["ls","B｜聯新國際醫療集團暨協力廠商","集團與各事業群主管、協力廠商代表"],["org","C｜里長暨機關團體","里長、運動場館、體育運動組織、社區發展協會、學校、兒少代表"]];
+const RC_DESKS=[["gov","A｜市府長官暨民意代表","副市長、主辦機關、局處首長、立法委員、議長暨市議員"],["ls","B｜聯新國際醫療集團暨協力廠商","集團與各事業群主管、協力廠商代表"],["org","C｜里長暨機關團體","里長、社區發展協會、運動場館、體育運動組織、學校、兒少代表"]];
 const RC_DESK_CATS={gov:["市長","府級長官","中央部會","主辦單位","市府局處首長","民意代表"],ls:["聯新國際醫療集團","公司行號"],org:["里長","法人團體"]};
-const RC_CAT_FORMAL={"市長":"市長","府級長官":"市府長官","中央部會":"中央機關","主辦單位":"主辦機關","市府局處首長":"市府局處首長","民意代表":"民意代表","聯新國際醫療集團":"聯新國際醫療集團","公司行號":"協力廠商","里長":"里長","法人團體":"機關團體"};
+const RC_CAT_FORMAL={"市長":"市長","府級長官":"市府長官","中央部會":"中央機關","主辦單位":"主辦機關","市府局處首長":"市府局處首長","民意代表":"民意代表","聯新國際醫療集團":"聯新國際醫療集團","公司行號":"協力廠商","里長":"里長暨社區發展協會","法人團體":"機關團體"};
 function rcDeskOf(cat){return Object.keys(RC_DESK_CATS).find(k=>RC_DESK_CATS[k].includes(cat))||"org";}
 function rcSubOf(cat,g,z){const u=g.unit||"",t=g.title||"",zn=z?z.name:"";
   if(cat==="民意代表")return /立法/.test(u+t)?"立法委員":"議長暨市議員";
-  if(cat==="里長")return /平鎮/.test(u+zn)?"平鎮區里長":/中壢/.test(u+zn)?"中壢區里長":"里長";
+  if(cat==="里長"){if(/社區發展協會/.test(u)&&!/里長/.test(t))return "社區發展協會";return /平鎮/.test(u+zn)?"平鎮區里長":/中壢/.test(u+zn)?"中壢區里長":"里長";}
   if(cat==="聯新國際醫療集團"){if(/聯新國際體育/.test(u))return "聯新國際體育股份有限公司";if(/聯新國際醫院/.test(u))return "聯新國際醫院";if(/基金會/.test(u))return "聯新文教基金會";
     const m=u.replace(/^聯新國際醫療集團\s*/,"").trim();return m?"聯新國際醫療集團 "+m.replace(/健康生態系.*/,"健康生態"):"聯新國際醫療集團";}
   if(cat==="法人團體"){if(/兒少/.test(u+t))return "兒少代表";if(/社區/.test(u))return "社區發展協會";if(/大學|高中|國中|國小|學校|中學/.test(u))return "學校";
@@ -3360,7 +3361,7 @@ h3{font-size:19px;margin:10px 0 2px;padding:2px 10px;border-bottom:2px solid #11
 function rcSignPrint(){
   const byCat=rcState();let n=0;const now=new Date();const pad=x=>String(x).padStart(2,"0");let total=0;RC_CATS.forEach(c=>total+=byCat[c].length);
   const secs=RC_CATS.filter(c=>byCat[c].length).map(c=>{const list=byCat[c];
-    return `<section><h2>${esc(c)}<span>${list.length} 位</span></h2><table><thead><tr><th class="ck">到</th><th class="no">編號</th><th>姓名・職稱</th><th class="zn">報到區／座位</th><th class="nt">代理／備註</th></tr></thead><tbody>${list.map(e=>{n++;const gs=e.ids.map(id=>S.guests.find(x=>x.id===id)).filter(Boolean);const g=gs[0]||{};const z=zoneById(g.zone);const arr=gs.some(x=>x.arrived);
+    return `<section><h2>${esc(rcLab(c))}<span>${list.length} 位</span></h2><table><thead><tr><th class="ck">到</th><th class="no">編號</th><th>姓名・職稱</th><th class="zn">報到區／座位</th><th class="nt">代理／備註</th></tr></thead><tbody>${list.map(e=>{n++;const gs=e.ids.map(id=>S.guests.find(x=>x.id===id)).filter(Boolean);const g=gs[0]||{};const z=zoneById(g.zone);const arr=gs.some(x=>x.arrived);
       return `<tr><td class="ck"><i>${arr?"✓":""}</i></td><td class="no">${n}</td><td><b>${esc(e.label)}</b><small>${esc(e.text||"")}${e.sub?"｜"+esc(e.sub):""}</small></td><td class="zn"><b>${e.seat?esc(seatLabel(e.seat)):"—"}</b><small>${z?esc(z.name.split("｜").pop()):"未分區"}</small></td><td class="nt">${g.status==="代理出席"?"代理："+esc(g.proxy||"")+"":""}</td></tr>`;}).join("")}</tbody></table></section>`;}).join("");
   const html=`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>南青開幕典禮_簽到確認表_${now.getMonth()+1}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}</title><style>
 @page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
@@ -3404,11 +3405,11 @@ function renderRoll(){
   {const miss=[],ok=[];RC_CATS.forEach(c=>byCat[c].forEach(e=>(e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;})?ok:miss).push(nums[e.key])));
    $("#rcSum").innerHTML+=`<div style="margin-top:6px;font-size:15px"><b>已報到 ${ok.length} 位｜未報到 ${miss.length} 位</b>${ok.length&&miss.length?`　唱名稿上要劃掉的編號：<b style="font-size:17px;letter-spacing:.5px">${miss.join("、")}</b>`:""}</div>`;}
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
-    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(c)}<span class="n">${list.length} 項｜${c==="市長"?"桃園市長":c==="府級長官"?"副市長、秘書長等":c==="主辦單位"?"桃園市政府社會局":c==="民意代表"?"先到先唱｜依報到時間自動排序，未報到者依姓名筆劃":c==="聯新國際醫療集團"?"創辦人、董事長、執行長在前，其餘依姓名筆劃":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
+    return `<div class="rccat" data-cat="${esc(c)}"><h3>${esc(rcLab(c))}<span class="n">${list.length} 項｜${c==="市長"?"桃園市長":c==="府級長官"?"副市長、秘書長等":c==="主辦單位"?"桃園市政府社會局":c==="民意代表"?"先到先唱｜依報到時間自動排序，未報到者依姓名筆劃":c==="聯新國際醫療集團"?"創辦人、董事長、執行長在前，其餘依姓名筆劃":"依姓名筆劃排序"}</span></h3>${list.map((e,i)=>`<div class="rcrow" data-key="${esc(e.key)}" data-cat="${esc(c)}">
       <span class="no">${nums[e.key]}</span><span class="gr" draggable="${canWrite?"true":"false"}" title="按住這裡拖拉排序">⋮⋮</span>
       <div class="tx"><input class="rcin l" data-rcf="label" value="${esc(e.label)}" aria-label="姓名職稱（唱名用）"><input class="rcin u" data-rcf="unit" value="${esc(e.text)}" aria-label="單位（唱名用）"><span>${e.sub?esc(e.sub)+"｜":""}${(()=>{const g=e.g0||S.guests.find(x=>x.id===e.ids[0]);const z=g&&zoneById(g.zone);const arr=e.ids.some(id=>{const x=S.guests.find(y=>y.id===id);return x&&x.arrived;});return [z?"報到區："+esc(z.name):"未分區",e.seat?"座位 "+esc(seatLabel(e.seat)):"未排座位",g?esc(g.status||"未回覆")+(g.status==="代理出席"&&g.proxy?"（"+esc(g.proxy)+"）":""):"",arr?"已報到":""].filter(Boolean).join("｜");})()}${e.edited?`｜已改字 <button type="button" class="rcundo" data-rcundo>還原</button>`:""}</span>${c==="民意代表"?(()=>{const t=rcArr(e);const k=t===null?0:list.filter(x=>rcArr(x)!==null).indexOf(e)+1;const hm=t&&t<9e15?new Date(t).toTimeString().slice(0,5):"";return `<span class="rcarr${t===null?"":" on"}">${t===null?"未報到":`第 ${k} 位報到${hm?"｜"+hm:""}`} <button type="button" class="rcundo" data-rcarr>${t===null?"按這裡報到":"取消報到"}</button></span>`;})():""}</div>
       <div class="mv"><button type="button" data-rcmv="-1" aria-label="上移"${i===0||c==="民意代表"?" disabled":""}>▲</button><button type="button" data-rcmv="1" aria-label="下移"${i===list.length-1||c==="民意代表"?" disabled":""}>▼</button></div>
-      <div class="mv"><select class="sel" data-rccat aria-label="分類">${RC_CATS.map(x=>`<option${x===c?" selected":""}>${esc(x)}</option>`).join("")}</select><button type="button" class="rcdel" data-rcdel title="刪除（不唱名）" aria-label="刪除">✕</button></div></div>`).join("")||`<div class="muted" style="font-size:13px;padding:4px 10px">（拖到這裡）</div>`}</div>`;}).join("")
+      <div class="mv"><select class="sel" data-rccat aria-label="分類">${RC_CATS.map(x=>`<option value="${esc(x)}"${x===c?" selected":""}>${esc(rcLab(x))}</option>`).join("")}</select><button type="button" class="rcdel" data-rcdel title="刪除（不唱名）" aria-label="刪除">✕</button></div></div>`).join("")||`<div class="muted" style="font-size:13px;padding:4px 10px">（拖到這裡）</div>`}</div>`;}).join("")
     +(byCat.__del.length?`<details class="rcdeld"><summary>已刪除 ${byCat.__del.length} 項（不唱名，按「還原」可加回）</summary>${byCat.__del.map(e=>`<div class="rcrow del" data-key="${esc(e.key)}" data-cat="__del"><span class="no">—</span><span></span><div class="tx"><b>${esc(e.label)}</b><span>${esc(e.text)}</span></div><span></span><button type="button" class="btn sm" data-rcback>還原</button></div>`).join("")}</details>`:"");
   if(rcInit)return;rcInit=true;
   const L=$("#rcList");
@@ -3436,7 +3437,7 @@ async function rcPrint(btn){
   try{await loadJsPDF();const byCat=rcState();const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
     const F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';const PW=1240,PH=1754,M=80,RH=74;
     const now=new Date();const pad=x=>String(x).padStart(2,"0");
-    const rows=[];let n=0;RC_CATS.forEach(c=>{if(!byCat[c].length)return;rows.push({h:c});byCat[c].forEach(e=>rows.push({n:++n,e}));});
+    const rows=[];let n=0;RC_CATS.forEach(c=>{if(!byCat[c].length)return;rows.push({h:rcLab(c)});byCat[c].forEach(e=>rows.push({n:++n,e}));});
     const fit=(x,t,w)=>{if(x.measureText(t).width<=w)return t;let s=t;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…";};
     let page=null,x=null,y=0,pg=0;const newPage=()=>{if(page){pdf.addImage(page.toDataURL("image/jpeg",0.92),"JPEG",0,0,210,297);pdf.addPage("a4","portrait");}page=document.createElement("canvas");page.width=PW;page.height=PH;x=page.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,PW,PH);pg++;
       x.fillStyle="#111827";x.font=`800 40px ${F}`;x.fillText("唱名稿｜桃園市南區青少年活動中心開幕營運啟動典禮",M,M+30);x.fillStyle="#6B7280";x.font=`400 20px ${F}`;x.fillText(`2026/11/26（四）｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版本｜第 ${pg} 頁`,M,M+66);y=M+110;};
