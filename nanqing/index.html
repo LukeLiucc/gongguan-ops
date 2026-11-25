@@ -3293,7 +3293,7 @@ const RC_STROKE={"游":12,"竹":6,"萍":12,"臺":14,"北":5,"市":5,"政":9,"蔡
 function rcStrokeKey(t){return String(t||"").replace(/[（(].*$/,"").replace(/\s/g,"").split("").map(c=>RC_STROKE[c]||(/[A-Za-z0-9]/.test(c)?0:60));}
 function rcCmpStroke(a,b){const ka=rcStrokeKey(a),kb=rcStrokeKey(b);const ca=String(a||"").replace(/\s/g,""),cb=String(b||"").replace(/\s/g,"");for(let i=0;i<Math.max(ka.length,kb.length);i++){const x=ka[i]??-1,y=kb[i]??-1;if(x!==y)return x-y;if(ca[i]!==cb[i])return (ca[i]||"").localeCompare(cb[i]||"","zh-Hant-u-co-stroke");}return String(a).localeCompare(String(b),"zh-Hant");}
 function rcEntries(){
-  const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.status!=="不出席"&&(g.seat||g.status==="出席"||g.status==="代理出席"));const out=[];const grp={};
+  const gs=S.guests.filter(g=>g.zone!=="z-media"&&(g.status==="出席"||g.status==="代理出席"));const out=[];const grp={};
   gs.forEach(g=>{const unnamed=!g.name||g.name==="單位代表";const emba=/EMBA/.test(g.unit||"");
     if(unnamed||emba){const k="u:"+(g.unit||"");(grp[k]=grp[k]||[]).push(g);}else out.push({key:g.id,ids:[g.id],g0:g,unit:g.unit||"",title:g.title||"",label:(g.name||"")+(g.title?" "+g.title:""),seat:g.seat});});
   Object.entries(grp).forEach(([k,list])=>{const g0=list[0];const emba=/EMBA/.test(g0.unit||"");const names=list.filter(x=>x.name&&x.name!=="單位代表").map(x=>x.name);
@@ -3330,7 +3330,7 @@ function rcSubOf(cat,g,z){const u=g.unit||"",t=g.title||"",zn=z?z.name:"";
 function rcDeskPrint(){
   const byCat=rcState();const nums={};let n=0;RC_CATS.forEach(c=>byCat[c].forEach(e=>{n++;e.ids.forEach(id=>nums[id]=n);}));
   const now=new Date();const pad=x=>String(x).padStart(2,"0");
-  const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.status!=="不出席"&&(g.seat||g.status==="出席"||g.status==="代理出席"));
+  const gs=S.guests.filter(g=>g.zone!=="z-media"&&(g.status==="出席"||g.status==="代理出席"));
   const rows=gs.map(g=>{const cat=rcDefaultCat({g0:g,unit:g.unit||"",title:g.title||""});const z=zoneById(g.zone);return {g,cat,desk:rcDeskOf(cat),z,sub:rcSubOf(cat,g,z)};});
   const short=u=>String(u||"").replace(/^桃園市(政府)?/,"").replace(/股份有限公司|有限公司/g,"").replace(/^聯新國際醫療集團\s*/,"").replace(/辦公處|辦公室處|辦公室$/,"").trim();
   const cell=({g,z,cat,sub})=>{const extra=[g.status==="代理出席"&&g.proxy?"代理："+g.proxy:"",(g.note||"").split(/\n/).filter(x=>/人|同|代理/.test(x)&&!/重複|選舉區|列兩筆/.test(x)).join(" ")].filter(Boolean).join("｜");
@@ -3398,7 +3398,7 @@ function renderRoll(){
   const byCat=rcState();let n=0;const nums={};
   RC_CATS.forEach(c=>{byCat[c].forEach(e=>{nums[e.key]=++n;});});
   const arrived=e=>e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;});
-  $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜只列已排座位或已回覆出席（含代理出席）的貴賓，新增或改出席狀態會自動更新；媒體不列入`;
+  $("#rcSum").innerHTML=`唱名共 <b>${n}</b> 項${byCat.__del.length?`（已刪除 ${byCat.__del.length} 項，在最下面可以還原）`:""}｜只列出席狀態是「出席」或「代理出席」的貴賓，未回覆、不出席的不列；改出席狀態會自動更新；媒體不列入`;
   {const miss=[],ok=[];RC_CATS.forEach(c=>byCat[c].forEach(e=>(e.ids.some(id=>{const g=S.guests.find(x=>x.id===id);return g&&g.arrived;})?ok:miss).push(nums[e.key])));
    $("#rcSum").innerHTML+=`<div style="margin-top:6px;font-size:15px"><b>已報到 ${ok.length} 位｜未報到 ${miss.length} 位</b>${ok.length&&miss.length?`　唱名稿上要劃掉的編號：<b style="font-size:17px;letter-spacing:.5px">${miss.join("、")}</b>`:""}</div>`;}
   $("#rcList").innerHTML=RC_CATS.map(c=>{const list=byCat[c];
