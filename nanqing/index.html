@@ -468,11 +468,11 @@ table.duty tr.grp td{background:var(--night);color:var(--night-ink);font-weight:
 
 
 /* roster table */
-.rt-sum{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--ink-2);margin:4px 0 10px}
-.rt-sum b{color:var(--ink);font-size:16px;margin-right:2px}
+.rt-sum{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:16px;color:var(--ink-2);margin:4px 0 10px}
+.rt-sum b{color:var(--ink);font-size:19px;margin-right:2px}
 .rt-wrap{overflow:auto;max-height:calc(100vh - 230px);border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
-table.rt{border-collapse:separate;border-spacing:0;font-size:13.5px;width:max-content;min-width:100%}
-table.rt th{position:sticky;top:0;z-index:2;background:var(--surface-2);text-align:left;font-weight:700;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+table.rt{border-collapse:separate;border-spacing:0;font-size:16.5px;width:max-content;min-width:100%}
+table.rt th{position:sticky;top:0;z-index:2;background:var(--surface-2);text-align:left;font-weight:700;font-size:15px;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 table.rt td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle;transition:background .3s}
 table.rt td.n,table.rt td.num{padding:0 8px;white-space:nowrap;color:var(--ink-2)}
 table.rt td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
@@ -486,13 +486,13 @@ table.rt tr.drop-b td{box-shadow:inset 0 3px 0 var(--accent)}table.rt tr.drop-a 
 table.rt tr.moved td{background:var(--accent-soft)}
 .rt-reset{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 10px;font:inherit;font-size:12.5px;color:var(--ink-2);cursor:pointer}
 table.rt tr.rt-g td{position:static;background:var(--surface-2);border-right:0;padding:0}
-table.rt tr.rt-g .rt-gh{position:sticky;left:0;display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 12px 10px;font-size:13.5px;color:var(--ink-2)}
-table.rt tr.rt-g .rt-gh b{font-size:16px;color:var(--ink);font-weight:800}
+table.rt tr.rt-g .rt-gh{position:sticky;left:0;display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:14px 12px 12px;font-size:15.5px;color:var(--ink-2)}
+table.rt tr.rt-g .rt-gh b{font-size:20px;color:var(--ink);font-weight:800}
 .rt-gsum{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
-.rt-gsum button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:inherit;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.rt-gsum button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;color:var(--ink-2);cursor:pointer}
 .rt-gsum button b{color:var(--ink);margin-left:4px}
 .rt-gsum button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.rt-gsum button[aria-pressed="true"] b{color:#fff}
-.rt-in{width:100%;border:0;background:transparent;padding:7px 8px;font:inherit;color:var(--ink);min-height:34px}
+.rt-in{width:100%;border:0;background:transparent;padding:9px 8px;font:inherit;color:var(--ink);min-height:42px}
 .rt-in:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
 .rt-in[readonly]{cursor:default}
 select.rt-in{cursor:pointer;font-weight:700}
@@ -2580,7 +2580,7 @@ function invDup(g){return /【重複】.*院辦處名單都有/.test(g.note||"")
 function invIn(g,k){return invKey(g.inviter)===k||(k==="yb"&&invDup(g));}
 function invLabel(v){const k=invKey(v);const g=INV_G.find(x=>x.k===k);return g?g.label:(v||"未填邀約單位");}
 function invGroups(){return [...INV_G,{k:"other",label:"其他／未填邀約單位",val:""}];}
-const RT_COLS=[["no","編號",56,0],["zone","座位區",150,0],["seat","座位",70,0],["category","分類",130,1],["unit","單位／機關",220,1],["name","姓名",100,1],["title","職稱",130,1],["inviter","邀約單位",110,1],["status","出席狀態",104,2],["proxy","代理人",90,1],["email","Email",190,1],["contact","其他聯絡方式",170,1],["note","備註",240,1]];
+const RT_COLS=[["no","編號",68,0],["zone","座位區",183,0],["seat","座位",85,0],["category","分類",159,1],["unit","單位／機關",268,1],["name","姓名",122,1],["title","職稱",159,1],["inviter","邀約單位",134,1],["status","出席狀態",127,2],["proxy","代理人",110,1],["email","Email",232,1],["contact","其他聯絡方式",207,1],["note","備註",293,1]];
 let rtInit=false;
 function rtRows(){
   const zs=sortedZones();const zi=id=>{const k=zs.findIndex(z=>z.id===id);return k<0?99:k;};
@@ -3345,11 +3345,11 @@ function rcDeskPrint(){
   const html=`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>南青開幕典禮_報到桌簽到表_${now.getMonth()+1}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}</title><style>
 @page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
 section.desk{break-after:page;margin-bottom:36px}h1{font-size:30px;margin:0;padding:10px 16px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:baseline;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1 span{font-size:20px}
-.sub{font-size:13.5px;color:#333;margin:6px 0 8px}h2{font-size:21px;margin:12px 0 4px;padding:4px 12px;background:#D1D5DB;border-left:10px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span,h3 span{font-size:14px;font-weight:500}
-h3{font-size:16px;margin:8px 0 2px;padding:2px 10px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid}
+.sub{font-size:15px;color:#333;margin:6px 0 8px}h2{font-size:24px;margin:12px 0 4px;padding:4px 12px;background:#D1D5DB;border-left:10px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span,h3 span{font-size:14px;font-weight:500}
+h3{font-size:19px;margin:10px 0 2px;padding:2px 10px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}.c{display:flex;gap:8px;align-items:flex-start;padding:6px 2px;border-bottom:1px solid #9CA3AF;break-inside:avoid}
 .c i{flex:none;display:inline-flex;width:24px;height:24px;border:2.5px solid #111;border-radius:4px;font-style:normal;font-size:19px;font-weight:800;align-items:center;justify-content:center;margin-top:2px}
-.c b{font-size:20px;font-weight:800;line-height:1.2;display:block}.c em{font-style:normal;font-size:14px;font-weight:600;margin-left:6px}.c small{display:block;font-size:12.5px;color:#333;line-height:1.3}.c small.x{font-weight:700;color:#000}
+.c b{font-size:23px;font-weight:800;line-height:1.2;display:block}.c em{font-style:normal;font-size:16px;font-weight:600;margin-left:6px}.c small{display:block;font-size:14.5px;color:#222;line-height:1.3}.c small.x{font-weight:700;color:#000}
 .bar{margin:0 0 14px}.bar button{font-size:18px;padding:10px 22px;font-weight:700}@media print{.bar{display:none}body{padding:0}}
 </style></head><body><div class="bar"><button onclick="window.print()">列印／存成 PDF</button>（每一桌自動換頁；同性質的排在同一小段）</div>${secs}</body></html>`;
   const w=window.open("","_blank");if(!w){toast("瀏覽器擋住了新視窗，請允許彈出視窗後再按一次");return;}w.document.open();w.document.write(html);w.document.close();
