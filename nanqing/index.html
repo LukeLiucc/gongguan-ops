@@ -749,7 +749,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <!-- 交辦事項 -->
   <section class="pane" id="p-roll" hidden>
     <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，點文字可直接改唱名用字，右邊下拉選單可換分類，✕ 刪除；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
-      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcSignP" type="button" title="大字、依唱名分類，順序和編號跟主持人唱名稿完全一樣">列印簽到確認表</button><button class="btn" id="rcSign" type="button" title="依報到區分頁，每列有簽到格、座位、唱名分類與順序">簽到表 Excel</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
+      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcDeskP" type="button" title="依報到桌分三份：政府・民意代表／聯新國際醫療集團／企業・團體，每桌一份、各自換頁">列印報到桌簽到表</button><button class="btn pri" id="rcSignP" type="button" title="大字、依唱名分類，順序和編號跟主持人唱名稿完全一樣">列印簽到確認表</button><button class="btn" id="rcSign" type="button" title="依報到區分頁，每列有簽到格、座位、唱名分類與順序">簽到表 Excel</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
     <div class="rcsum" id="rcSum"></div>
     <div id="rcList"></div>
   </section>
@@ -3315,6 +3315,31 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>c==="民意代表"?(arrK(a)-arrK(b)||byStroke(a,b)):(a.o??1e9)-(b.o??1e9)||(c==="府級長官"||c==="主辦單位"||c==="市長"?rank(a)-rank(b):c==="聯新國際醫療集團"?(lst(a)-lst(b)||byStroke(a,b)):byStroke(a,b))));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
+// 報到桌分類：報到組分三桌，每桌一份名單
+const RC_DESKS=[["gov","政府・民意代表","副市長、局處首長、立法委員、議員、里長"],["ls","聯新國際醫療集團","集團與各事業群主管"],["biz","企業・團體","協力廠商、運動中心、協會、學校、兒少代表"]];
+function rcDeskOf(cat){return ["市長","府級長官","中央部會","主辦單位","民意代表","市府局處首長","里長"].includes(cat)?"gov":cat==="聯新國際醫療集團"?"ls":"biz";}
+function rcDeskPrint(){
+  const byCat=rcState();const nums={};let n=0;RC_CATS.forEach(c=>byCat[c].forEach(e=>{n++;e.ids.forEach(id=>nums[id]=n);}));
+  const now=new Date();const pad=x=>String(x).padStart(2,"0");
+  const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.status!=="不出席"&&(g.seat||g.status==="出席"||g.status==="代理出席"));
+  const rows=gs.map(g=>{const cat=rcDefaultCat({g0:g,unit:g.unit||"",title:g.title||""});const z=zoneById(g.zone);return {g,cat,desk:rcDeskOf(cat),z};});
+  const secs=RC_DESKS.map(([k,nm,sub])=>{const list=rows.filter(r=>r.desk===k);if(!list.length)return "";
+    const cats=RC_CATS.filter(c=>list.some(r=>r.cat===c));
+    return `<section class="desk"><h1>報到桌｜${esc(nm)}<span>${list.length} 位</span></h1><p class="sub">${esc(sub)}｜2026/11/26（四）09:30 起｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版｜到場在方框打勾；「唱名」欄有編號的，開場前把沒打勾的編號報給舞台組</p>`+cats.map(c=>{const l=list.filter(r=>r.cat===c).sort((a,b)=>rcCmpStroke(a.g.name||a.g.unit||"",b.g.name||b.g.unit||""));
+      return `<h2>${esc(c)}<span>${l.length} 位</span></h2><table><thead><tr><th class="ck">到</th><th>姓名・職稱</th><th class="zn">座位／報到區</th><th class="no">唱名</th><th class="nt">代理／同行／備註</th></tr></thead><tbody>${l.map(({g,z})=>`<tr><td class="ck"><i>${g.arrived?"✓":""}</i></td><td><b>${esc((g.name||"單位代表")+(g.title?" "+g.title:""))}</b><small>${esc(g.unit||"")}</small></td><td class="zn"><b>${g.seat?esc(seatLabel(g.seat)):"—"}</b><small>${z?esc(z.name.split("｜").pop()):"未分區"}</small></td><td class="no">${nums[g.id]||"—"}</td><td class="nt">${[g.status==="代理出席"&&g.proxy?"代理："+esc(g.proxy):"",esc(g.note||"")].filter(Boolean).join("<br>")}</td></tr>`).join("")}</tbody></table>`;}).join("")+`</section>`;}).join("");
+  const html=`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>南青開幕典禮_報到桌簽到表_${now.getMonth()+1}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}</title><style>
+@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
+section.desk{break-after:page;margin-bottom:40px}h1{font-size:34px;margin:0 0 4px;padding:12px 16px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:baseline;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1 span{font-size:22px}
+.sub{font-size:14px;color:#444;margin:6px 0 12px}h2{font-size:24px;margin:16px 0 0;padding:6px 12px;background:#E5E7EB;border-left:10px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span{font-size:16px;font-weight:500}
+table{width:100%;border-collapse:collapse}thead{display:table-header-group}th{font-size:13px;text-align:left;padding:4px 8px;border-bottom:2px solid #111;color:#333}
+td{padding:7px 8px;border-bottom:1px solid #999;vertical-align:middle}tr{break-inside:avoid}
+td b{font-size:23px;font-weight:800;display:block;line-height:1.25}td small{font-size:14px;color:#333;display:block;line-height:1.3}
+.ck{width:46px;text-align:center}.ck i{display:inline-flex;width:30px;height:30px;border:2.5px solid #111;border-radius:4px;font-style:normal;font-size:24px;font-weight:800;align-items:center;justify-content:center}
+td.no{font-size:22px;font-weight:800}.no{width:60px;text-align:center}.zn{width:160px}.zn b{font-size:21px}td.nt{font-size:15px;font-weight:700}.nt{width:190px}
+.bar{margin:0 0 14px}.bar button{font-size:18px;padding:10px 22px;font-weight:700}@media print{.bar{display:none}body{padding:0}}
+</style></head><body><div class="bar"><button onclick="window.print()">列印／存成 PDF</button>（每一桌會自動換頁）</div>${secs}</body></html>`;
+  const w=window.open("","_blank");if(!w){toast("瀏覽器擋住了新視窗，請允許彈出視窗後再按一次");return;}w.document.open();w.document.write(html);w.document.close();
+}
 // 列印用簽到確認表：分類、順序、編號跟主持人唱名稿完全一樣，報到桌勾完直接對編號
 function rcSignPrint(){
   const byCat=rcState();let n=0;const now=new Date();const pad=x=>String(x).padStart(2,"0");let total=0;RC_CATS.forEach(c=>total+=byCat[c].length);
@@ -3387,7 +3412,7 @@ function renderRoll(){
     rcSave(bc);rcDrag=null;renderRoll();});
   $("#rcReset").onclick=ev=>confirmIn(ev.currentTarget,"確定依預設重排",()=>{S.meta.rcMap={};upd("meta","event",{rcMap:{}});renderRoll();});
   $("#rcPrint").onclick=ev=>rcPrint(ev.currentTarget);
-  $("#rcSign").onclick=rcSignXlsx;$("#rcSignP").onclick=rcSignPrint;
+  $("#rcSign").onclick=rcSignXlsx;$("#rcSignP").onclick=rcSignPrint;$("#rcDeskP").onclick=rcDeskPrint;
   $("#rcStroke").onclick=ev=>confirmIn(ev.currentTarget,"確定依筆劃重排",()=>{const m=Object.assign({},S.meta.rcMap||{});Object.keys(m).forEach(k=>{m[k]={c:m[k].c};});S.meta.rcMap=m;upd("meta","event",{rcMap:m});renderRoll();toast("已依姓名筆劃重排");});
 }
 async function rcPrint(btn){
