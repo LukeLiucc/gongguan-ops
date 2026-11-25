@@ -749,7 +749,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
   <!-- 交辦事項 -->
   <section class="pane" id="p-roll" hidden>
     <div class="bar"><div class="ttl2" style="margin:0"><h2>唱名清單</h2><span class="hint">拖拉或按 ▲▼ 調整順序，點文字可直接改唱名用字，右邊下拉選單可換分類，✕ 刪除；排好後按「列印唱名稿」，當天沒到的用筆劃掉</span></div><span class="sp"></span>
-      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
+      <button class="btn" id="rcStroke" type="button">依筆劃重排</button><button class="btn" id="rcReset" type="button">依預設重排</button><button class="btn pri" id="rcSign" type="button" title="依報到區分頁，每列有簽到格、座位、唱名分類與順序">簽到確認表 Excel</button><button class="btn pri" id="rcPrint" type="button">列印唱名稿 PDF</button></div>
     <div class="rcsum" id="rcSum"></div>
     <div id="rcList"></div>
   </section>
@@ -3315,6 +3315,25 @@ function rcState(){const m=S.meta.rcMap||{};const es=rcEntries();const byCat={__
   RC_CATS.concat("__del").forEach(c=>byCat[c].sort((a,b)=>c==="民意代表"?(arrK(a)-arrK(b)||byStroke(a,b)):(a.o??1e9)-(b.o??1e9)||(c==="府級長官"||c==="主辦單位"||c==="市長"?rank(a)-rank(b):c==="聯新國際醫療集團"?(lst(a)-lst(b)||byStroke(a,b)):byStroke(a,b))));
   return byCat;}
 function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||[]).forEach((e,i)=>{m[e.key]={c,o:i};}));S.meta.rcMap=m;upd("meta","event",{rcMap:m});}
+// 簽到確認表：同一批唱名對象，依報到區排，方便報到桌勾到場、舞台組對唱名順序
+async function rcSignXlsx(){
+  if(!window.XLSX){toast("Excel 元件還沒載入，請稍候再試");return;}
+  const byCat=rcState();let n=0;const rows=[];
+  RC_CATS.forEach(c=>byCat[c].forEach(e=>{n++;const gs=e.ids.map(id=>S.guests.find(x=>x.id===id)).filter(Boolean);const g=gs[0]||{};const z=zoneById(g.zone);
+    const name=e.g0?(g.name||""):e.label;const title=e.g0?(g.title||""):(e.sub||"");
+    rows.push({no:n,cat:c,zone:z?z.name:"未分區",zo:z?(+z.order||0):9e9,seat:e.seat?seatLabel(e.seat):"",sk:e.seat?seatKey(e.seat):9e9,name,title,unit:e.text||g.unit||"",say:(e.text?e.text+" ":"")+e.label,status:g.status||"未回覆",proxy:g.status==="代理出席"?(g.proxy||""):"",arr:gs.some(x=>x.arrived)?"已到":""});}));
+  const H=["簽到","報到區","座位","姓名","職稱","單位／機關","出席狀態","代理人","唱名分類","唱名順序","唱名用字","備註"];
+  const line=r=>[r.arr||"□",r.zone,r.seat,r.name,r.title,r.unit,r.status,r.proxy,r.cat,r.no,r.say,""];
+  const W=[6,26,8,12,16,40,10,16,18,8,52,16];
+  const wb=XLSX.utils.book_new();const add=(nm,list)=>{const ws=XLSX.utils.aoa_to_sheet([H,...list.map(line)]);ws["!cols"]=W.map(w=>({wch:w}));ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:list.length,c:H.length-1}})};XLSX.utils.book_append_sheet(wb,ws,nm);};
+  const byZone=[...rows].sort((a,b)=>a.zo-b.zo||a.sk-b.sk||a.no-b.no);
+  add("依報到區",byZone);add("依唱名順序",rows);
+  {const miss=rows.filter(r=>!r.arr);const ws=XLSX.utils.aoa_to_sheet([["下載當下還沒報到的人｜主持人唱名稿上照「唱名順序」編號劃掉"],["唱名順序","唱名分類","唱名用字","報到區","座位"],...miss.map(r=>[r.no,r.cat,r.say,r.zone,r.seat])]);ws["!cols"]=[{wch:8},{wch:18},{wch:52},{wch:26},{wch:8}];XLSX.utils.book_append_sheet(wb,ws,"未到場（劃掉用）");}
+  const sum=[["報到區","應到","已到"]];const zm={};byZone.forEach(r=>{const o=zm[r.zone]=zm[r.zone]||[0,0];o[0]++;if(r.arr)o[1]++;});Object.entries(zm).forEach(([k,v])=>sum.push([k,v[0],v[1]]));sum.push(["合計",rows.length,rows.filter(r=>r.arr).length]);
+  {const ws=XLSX.utils.aoa_to_sheet(sum);ws["!cols"]=[{wch:30},{wch:8},{wch:8}];XLSX.utils.book_append_sheet(wb,ws,"各區人數");}
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});const d=new Date();const stamp=`${d.getMonth()+1}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
+  try{await downloads.save({filename:`南青開幕典禮_簽到確認表_${stamp}.xlsx`,data:new Blob([buf])});}catch(err){if(!(err&&err.code==="declined"))toast("下載沒有完成");}
+}
 let rcInit=false,rcDrag=null;
 function renderRoll(){
   const byCat=rcState();let n=0;const nums={};
@@ -3346,6 +3365,7 @@ function renderRoll(){
     rcSave(bc);rcDrag=null;renderRoll();});
   $("#rcReset").onclick=ev=>confirmIn(ev.currentTarget,"確定依預設重排",()=>{S.meta.rcMap={};upd("meta","event",{rcMap:{}});renderRoll();});
   $("#rcPrint").onclick=ev=>rcPrint(ev.currentTarget);
+  $("#rcSign").onclick=rcSignXlsx;
   $("#rcStroke").onclick=ev=>confirmIn(ev.currentTarget,"確定依筆劃重排",()=>{const m=Object.assign({},S.meta.rcMap||{});Object.keys(m).forEach(k=>{m[k]={c:m[k].c};});S.meta.rcMap=m;upd("meta","event",{rcMap:m});renderRoll();toast("已依姓名筆劃重排");});
 }
 async function rcPrint(btn){
