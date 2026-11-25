@@ -1357,7 +1357,16 @@ function nqMigrate3(){
   }
   S.meta.seedV=3;upd("meta","event",{seedV:3});
 }
-function renderAll(){
+let nqRc1125=false;
+function nqRollFix1125(){
+  if(nqRc1125||!db||!canWrite||!S.loaded.has("meta")||!S.loaded.has("guests")||!S.meta.name||!S.guests.length)return;nqRc1125=true;
+  if(S.meta.rcFix1125)return;
+  const id=n=>{const g=S.guests.find(x=>x.name===n&&x.zone!=="z-media");return g&&g.id;};const m={...(S.meta.rcMap||{})};
+  const xu=id("許俊麒"),su=id("蘇俊賓"),qiu=id("邱奕勝"),lin=id("林頌凱");
+  if(xu)m[xu]={c:"__del",o:99};if(su)m[su]={c:"府級長官",o:0};if(qiu)m[qiu]={c:"府級長官",o:1};if(lin)m[lin]={c:"聯新國際醫療集團",o:50};
+  S.meta.rcMap=m;S.meta.rcFix1125=1;upd("meta","event",{rcMap:m,rcFix1125:1});
+}
+function renderAll(){nqRollFix1125();
   nqMigrate();if(nqMig)nqMigrate3();if(nqMig3)nqMigrate4();nqFixNames();
   clearTimeout(zcT);zcT=setTimeout(syncZoneCodes,1500);
   
