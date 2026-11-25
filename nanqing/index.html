@@ -3280,7 +3280,7 @@ function rcDefaultCat(e){const g=e.g0,u=e.unit||"",t=e.title||"";
   if(/^桃園市政府社會局/.test(u))return "主辦單位";
   if(/聯新國際體育股份有限公司/.test(u)||(g&&RC_LSTOP.includes(g.name)))return "聯新國際醫療集團";
   if(/議會|立法院/.test(u))return "民意代表";
-  {const z=g&&zoneById(g.zone);const zn=z?z.name:"";if(/聯新國際醫療集團/.test(zn))return "聯新國際醫療集團";if(/里長/.test(zn)||/社區協會/.test(zn))return "里長";}
+  {const z=g&&zoneById(g.zone);const zn=z?z.name:"";if(/聯新國際醫療集團/.test(zn))return "聯新國際醫療集團";if(/里長/.test(zn)&&!/社區協會/.test(zn))return "里長";}
   if(/^(運動部|教育部|衛生福利部|行政院|內政部)/.test(u))return "中央部會";
   if(/里長/.test(t)||/里$/.test(u)||/里辦公處/.test(u)||/社區發展協會/.test(u))return "里長";
   if(/^聯新/.test(u))return "聯新國際醫療集團";
