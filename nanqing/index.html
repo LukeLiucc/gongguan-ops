@@ -3318,26 +3318,40 @@ function rcSave(byCat){const m={};RC_CATS.concat("__del").forEach(c=>(byCat[c]||
 // 報到桌分類：報到組分三桌，每桌一份名單
 const RC_DESKS=[["gov","政府・民意代表","副市長、局處首長、立法委員、議員、里長"],["ls","聯新國際醫療集團","集團與各事業群主管"],["biz","企業・團體","協力廠商、運動中心、協會、學校、兒少代表"]];
 function rcDeskOf(cat){return ["市長","府級長官","中央部會","主辦單位","民意代表","市府局處首長","里長"].includes(cat)?"gov":cat==="聯新國際醫療集團"?"ls":"biz";}
+function rcSubOf(cat,g,z){const u=g.unit||"",t=g.title||"",zn=z?z.name:"";
+  if(cat==="民意代表")return /立法/.test(u+t)?"立法委員":"議長・市議員";
+  if(cat==="里長")return /平鎮/.test(u+zn)?"平鎮區里長":/中壢/.test(u+zn)?"中壢區里長":"里長";
+  if(cat==="聯新國際醫療集團"){if(/聯新國際體育/.test(u))return "聯新國際體育股份有限公司";if(/聯新國際醫院/.test(u))return "聯新國際醫院";if(/基金會/.test(u))return "聯新文教基金會";
+    const m=u.replace(/^聯新國際醫療集團\s*/,"").trim();return m?"聯新國際醫療集團 "+m.replace(/健康生態系.*/,"健康生態"):"聯新國際醫療集團";}
+  if(cat==="法人團體"){if(/兒少/.test(u+t))return "兒少代表";if(/社區/.test(u))return "社區發展協會";if(/大學|高中|國中|國小|學校|中學/.test(u))return "學校";
+    if(/運動中心|運動館|活動中心|親子館|場館|基金會/.test(u))return "運動中心・場館同業";if(/擊劍|虛擬|體育|運動/.test(u))return "體育運動組織";return "其他團體";}
+  if(cat==="公司行號")return "協力廠商";
+  return cat;}
 function rcDeskPrint(){
   const byCat=rcState();const nums={};let n=0;RC_CATS.forEach(c=>byCat[c].forEach(e=>{n++;e.ids.forEach(id=>nums[id]=n);}));
   const now=new Date();const pad=x=>String(x).padStart(2,"0");
   const gs=S.guests.filter(g=>g.zone!=="z-media"&&g.status!=="不出席"&&(g.seat||g.status==="出席"||g.status==="代理出席"));
-  const rows=gs.map(g=>{const cat=rcDefaultCat({g0:g,unit:g.unit||"",title:g.title||""});const z=zoneById(g.zone);return {g,cat,desk:rcDeskOf(cat),z};});
+  const rows=gs.map(g=>{const cat=rcDefaultCat({g0:g,unit:g.unit||"",title:g.title||""});const z=zoneById(g.zone);return {g,cat,desk:rcDeskOf(cat),z,sub:rcSubOf(cat,g,z)};});
+  const short=u=>String(u||"").replace(/^桃園市(政府)?/,"").replace(/股份有限公司|有限公司/g,"").replace(/^聯新國際醫療集團\s*/,"").replace(/辦公處|辦公室處|辦公室$/,"").trim();
+  const cell=({g,z,cat,sub})=>{const extra=[g.status==="代理出席"&&g.proxy?"代理："+g.proxy:"",(g.note||"").split(/\n/).filter(x=>/人|同|代理/.test(x)&&!/重複|選舉區|列兩筆/.test(x)).join(" ")].filter(Boolean).join("｜");
+    const showU=!(cat==="民意代表"||sub===g.unit);
+    return `<div class="c"><i>${g.arrived?"✓":""}</i><div><b>${esc(g.name||"單位代表")}<em>${esc(g.title||"")}</em></b><small>${[showU?esc(short(g.unit)):"",g.seat?"座位 "+esc(seatLabel(g.seat)):"",nums[g.id]?"唱名 "+nums[g.id]:"不唱名"].filter(Boolean).join("｜")}</small>${extra?`<small class="x">${esc(extra)}</small>`:""}</div></div>`;};
   const secs=RC_DESKS.map(([k,nm,sub])=>{const list=rows.filter(r=>r.desk===k);if(!list.length)return "";
     const cats=RC_CATS.filter(c=>list.some(r=>r.cat===c));
-    return `<section class="desk"><h1>報到桌｜${esc(nm)}<span>${list.length} 位</span></h1><p class="sub">${esc(sub)}｜2026/11/26（四）09:30 起｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版｜到場在方框打勾；「唱名」欄有編號的，開場前把沒打勾的編號報給舞台組</p>`+cats.map(c=>{const l=list.filter(r=>r.cat===c).sort((a,b)=>rcCmpStroke(a.g.name||a.g.unit||"",b.g.name||b.g.unit||""));
-      return `<h2>${esc(c)}<span>${l.length} 位</span></h2><table><thead><tr><th class="ck">到</th><th>姓名・職稱</th><th class="zn">座位／報到區</th><th class="no">唱名</th><th class="nt">代理／同行／備註</th></tr></thead><tbody>${l.map(({g,z})=>`<tr><td class="ck"><i>${g.arrived?"✓":""}</i></td><td><b>${esc((g.name||"單位代表")+(g.title?" "+g.title:""))}</b><small>${esc(g.unit||"")}</small></td><td class="zn"><b>${g.seat?esc(seatLabel(g.seat)):"—"}</b><small>${z?esc(z.name.split("｜").pop()):"未分區"}</small></td><td class="no">${nums[g.id]||"—"}</td><td class="nt">${[g.status==="代理出席"&&g.proxy?"代理："+esc(g.proxy):"",esc(g.note||"")].filter(Boolean).join("<br>")}</td></tr>`).join("")}</tbody></table>`;}).join("")+`</section>`;}).join("");
+    const sum=cats.map(c=>`${esc(c)} ${list.filter(r=>r.cat===c).length}`).join("　");
+    return `<section class="desk"><h1>報到桌｜${esc(nm)}<span>${list.length} 位</span></h1><p class="sub">${sum}｜${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())} 版｜到場在方框打勾；開場前把沒打勾的「唱名」編號報給舞台組</p>`+cats.map(c=>{const l=list.filter(r=>r.cat===c);const subs=[...new Set(l.map(r=>r.sub))].sort((a,b)=>l.filter(r=>r.sub===b).length-l.filter(r=>r.sub===a).length);
+      return `<h2>${esc(c)}<span>${l.length} 位</span></h2>`+subs.map(s=>{const ll=l.filter(r=>r.sub===s).sort((a,b)=>rcCmpStroke(a.g.name||a.g.unit||"",b.g.name||b.g.unit||""));
+        return `${subs.length>1||s!==c?`<h3>${esc(s)}<span>${ll.length} 位</span></h3>`:""}<div class="grid">${ll.map(cell).join("")}</div>`;}).join("");}).join("")+`</section>`;}).join("");
   const html=`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>南青開幕典禮_報到桌簽到表_${now.getMonth()+1}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}</title><style>
-@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
-section.desk{break-after:page;margin-bottom:40px}h1{font-size:34px;margin:0 0 4px;padding:12px 16px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:baseline;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1 span{font-size:22px}
-.sub{font-size:14px;color:#444;margin:6px 0 12px}h2{font-size:24px;margin:16px 0 0;padding:6px 12px;background:#E5E7EB;border-left:10px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span{font-size:16px;font-weight:500}
-table{width:100%;border-collapse:collapse}thead{display:table-header-group}th{font-size:13px;text-align:left;padding:4px 8px;border-bottom:2px solid #111;color:#333}
-td{padding:7px 8px;border-bottom:1px solid #999;vertical-align:middle}tr{break-inside:avoid}
-td b{font-size:23px;font-weight:800;display:block;line-height:1.25}td small{font-size:14px;color:#333;display:block;line-height:1.3}
-.ck{width:46px;text-align:center}.ck i{display:inline-flex;width:30px;height:30px;border:2.5px solid #111;border-radius:4px;font-style:normal;font-size:24px;font-weight:800;align-items:center;justify-content:center}
-td.no{font-size:22px;font-weight:800}.no{width:60px;text-align:center}.zn{width:160px}.zn b{font-size:21px}td.nt{font-size:15px;font-weight:700}.nt{width:190px}
+@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#111;margin:0;padding:16px}
+section.desk{break-after:page;margin-bottom:36px}h1{font-size:30px;margin:0;padding:10px 16px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:baseline;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1 span{font-size:20px}
+.sub{font-size:13.5px;color:#333;margin:6px 0 8px}h2{font-size:21px;margin:12px 0 4px;padding:4px 12px;background:#D1D5DB;border-left:10px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2 span,h3 span{font-size:14px;font-weight:500}
+h3{font-size:16px;margin:8px 0 2px;padding:2px 10px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline;break-after:avoid}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}.c{display:flex;gap:8px;align-items:flex-start;padding:6px 2px;border-bottom:1px solid #9CA3AF;break-inside:avoid}
+.c i{flex:none;display:inline-flex;width:24px;height:24px;border:2.5px solid #111;border-radius:4px;font-style:normal;font-size:19px;font-weight:800;align-items:center;justify-content:center;margin-top:2px}
+.c b{font-size:20px;font-weight:800;line-height:1.2;display:block}.c em{font-style:normal;font-size:14px;font-weight:600;margin-left:6px}.c small{display:block;font-size:12.5px;color:#333;line-height:1.3}.c small.x{font-weight:700;color:#000}
 .bar{margin:0 0 14px}.bar button{font-size:18px;padding:10px 22px;font-weight:700}@media print{.bar{display:none}body{padding:0}}
-</style></head><body><div class="bar"><button onclick="window.print()">列印／存成 PDF</button>（每一桌會自動換頁）</div>${secs}</body></html>`;
+</style></head><body><div class="bar"><button onclick="window.print()">列印／存成 PDF</button>（每一桌自動換頁；同性質的排在同一小段）</div>${secs}</body></html>`;
   const w=window.open("","_blank");if(!w){toast("瀏覽器擋住了新視窗，請允許彈出視窗後再按一次");return;}w.document.open();w.document.write(html);w.document.close();
 }
 // 列印用簽到確認表：分類、順序、編號跟主持人唱名稿完全一樣，報到桌勾完直接對編號
