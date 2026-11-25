@@ -522,7 +522,7 @@ table.rt th:first-child{left:0;z-index:3}
 .att td.n{white-space:nowrap;font-weight:700}
 @media (max-width:720px){.tk{grid-template-columns:1fr}.tk .row2{grid-template-columns:1fr}.att .hide-m{display:none}}
 
-/* 市長行程大綱 */
+/* 副市長行程大綱 */
 .olcard{padding:18px 18px 14px;margin-bottom:18px}
 .olcard h2{margin:0 0 4px;font-size:18px}
 .olcard .olm{display:flex;gap:6px 18px;flex-wrap:wrap;color:var(--ink-2);font-size:14px;margin-bottom:12px}
@@ -698,7 +698,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
     <a href="#staff" data-tab="staff">人力分工</a>
     <a href="#howto" data-tab="howto">帶位作法</a>
     <a href="route/">入場動線圖</a>
-    <a href="route/?view=mayor">市長動線</a>
+    <a href="route/?view=mayor">副市長動線</a>
     <a href="tour/">導覽地圖</a>
   </div>
 </nav>
@@ -956,7 +956,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       </section>
     </div>
 
-    <div class="ttl2" style="margin-top:22px"><h2>當天流程</h2><span class="hint">09:15 開放報到，09:31 主持人開場，09:40 市長到場</span></div>
+    <div class="ttl2" style="margin-top:22px"><h2>當天流程</h2><span class="hint">09:15 開放報到，09:31 主持人開場，09:40 副市長到場</span></div>
     <div class="ho-flow">
       <div class="card ho-step"><span class="t">報到桌</span><h4>確認身分、發座位卡</h4><p>報到組 Alice、簡愛確認身分與出席；蔡秀蓁簽到、發伴手禮與座位卡。座位卡顏色就是要去的座位區，同色舉牌人員就在桌旁。</p></div>
       <div class="card ho-step"><span class="t">舉牌帶位</span><h4>同色區塊牌接人</h4><p>每區一人在報到桌旁舉該區區塊牌，貴賓拿到座位卡後走向同色牌子，由該區人員帶進場。</p></div>
@@ -1380,8 +1380,8 @@ window.addEventListener("hashchange",()=>setTab(location.hash.slice(1)));
 
 
 /* ================= 啟動站位（存在 meta/event 的 stage 欄位） ================= */
-const STG_KIND={gov:["市長、社會局","#FBD9C9","#C2410C","#9A3412"],ls:["聯新國際","#E3F1D3","#3E8A16","#2F6B10"],kid:["兒少代表","#F9D3E3","#BE185D","#9D174D"],vip:["貴賓","#DCE7FB","#1673D1","#1259A8"]};
-const STG_DEF=[["許詩典","聯新國際醫療集團醫療機構事業群 執行長","ls"],["簡伯毅","聯新國際醫療集團運動休閒事業群 執行長","ls"],["饒瑞瑛","聯新國際體育股份有限公司 董事長","ls"],["張煥禎","聯新國際醫療集團 創辦人","ls"],["張善政","桃園市 市長","gov"],["陳寶民","桃園市政府社會局 局長","gov"],["兒少代表","社會局推薦 1 位","kid"],["局處首長","社會局確認到場名單","vip"],["局處首長","社會局確認到場名單","vip"]];
+const STG_KIND={gov:["副市長、社會局","#FBD9C9","#C2410C","#9A3412"],ls:["聯新國際","#E3F1D3","#3E8A16","#2F6B10"],kid:["兒少代表","#F9D3E3","#BE185D","#9D174D"],vip:["貴賓","#DCE7FB","#1673D1","#1259A8"]};
+const STG_DEF=[["許詩典","聯新國際醫療集團醫療機構事業群 執行長","ls"],["簡伯毅","聯新國際醫療集團運動休閒事業群 執行長","ls"],["饒瑞瑛","聯新國際體育股份有限公司 董事長","ls"],["張煥禎","聯新國際醫療集團 創辦人","ls"],["蘇俊賓","桃園市 副市長","gov"],["陳寶民","桃園市政府社會局 局長","gov"],["兒少代表","社會局推薦 1 位","kid"],["局處首長","社會局確認到場名單","vip"],["局處首長","社會局確認到場名單","vip"]];
 function stgDefault(){return STG_DEF.map((r,i)=>({id:"p"+(i+1),name:r[0],title:r[1],kind:r[2]}));}
 function stgList(){const l=S.meta&&S.meta.stage;return Array.isArray(l)&&l.length?l.map(x=>({...x})):stgDefault();}
 function stgSave(l,msg,redraw){if(!guard())return;S.meta.stage=l;upd("meta","event",{stage:l});if(redraw!==false)renderStage(true);if(msg)toast(msg);}
@@ -2240,8 +2240,8 @@ function openZone(id){
       <label>每位帶位負責幾人<input class="inp num" id="zRatio" type="number" min="1" value="${+d.ratio||15}"></label>
       <label>未指名預估人數（如媒體）<input class="inp num" id="zEst" type="number" min="0" value="${+d.est||0}"></label>
       <label>席數<input class="inp" value="${(d.seats||[]).length} 席（在座位圖上畫區調整）" disabled></label>
-      <label class="full">座位圖註記（顯示在座位區標籤上）<input class="inp" id="zNote" value="${esc(d.note||"")}" placeholder="例：市長、啟動代表"></label>
-      <label class="full">說明<input class="inp" id="zDesc" value="${esc(d.desc)}" placeholder="例：市長、局處首長、啟動代表"></label>
+      <label class="full">座位圖註記（顯示在座位區標籤上）<input class="inp" id="zNote" value="${esc(d.note||"")}" placeholder="例：副市長、啟動代表"></label>
+      <label class="full">說明<input class="inp" id="zDesc" value="${esc(d.desc)}" placeholder="例：副市長、局處首長、啟動代表"></label>
       <label class="chk full"><input type="checkbox" id="zArea"${d.area?" checked":""}> 分區入座：只劃一塊區域，不排個人座位（貴賓席、民意代表以外的區建議勾選）</label>
     </div>
     <div class="ft">${z?`<button class="btn danger l" type="button" id="zDel">刪除座位區</button>`:""}<button class="btn" type="button" data-close>取消</button><button class="btn pri" type="button" id="zSave">儲存</button></div>`);
@@ -2456,14 +2456,14 @@ function renderSite(){
     renderTour();
   }
 }
-// 市長導覽：每層樓平面圖＋路線（座標為平面圖像素）
+// 副市長導覽：每層樓平面圖＋路線（座標為平面圖像素）
 const TOUR=[];
 function renderTour(){
   $("#tour").innerHTML=TOUR.map(F=>{
     const pins=F.stops.map(([n,x,y,[tx,ty],tm,title])=>`<circle class="tpin" cx="${x}" cy="${y}" r="22"/><text class="tpint" x="${x}" y="${y+10}" text-anchor="middle">${n}</text><text class="ttag" x="${tx}" y="${ty}">${esc(title.replace(/^\dF /,""))}</text>`).join("");
     const [sx,sy]=F.start;
     return `<div class="card floor"><h3>${F.f} ${esc(F.name)}<span>${F.time}｜${F.min}</span></h3>
-    <svg viewBox="0 0 ${F.w} ${F.h}" role="img" aria-label="${F.f}市長導覽路線">
+    <svg viewBox="0 0 ${F.w} ${F.h}" role="img" aria-label="${F.f}副市長導覽路線">
       <image href="${F.img}" x="0" y="0" width="${F.w}" height="${F.h}"/>
       <path class="tback" d="${F.back}"/><path class="troute" d="${F.route}"/>
       <rect class="tstart" x="${sx-34}" y="${sy-22}" width="68" height="44" rx="10"/><text class="tpint" x="${sx}" y="${sy+10}" text-anchor="middle" style="font-size:24px">電梯</text>
@@ -3210,8 +3210,8 @@ function openPasteImport(){
   };
 }
 
-/* ================= 市長行程大綱 ================= */
-const OL_SEED={"title": "「桃園市南區青少年活動中心開幕營運啟動典禮」市長行程", "date": "115 年 11 月 26 日（星期四）", "time": "上午 10 時 00 分至 11 時 00 分", "place": "桃園市南區青少年活動中心（B 棟 2F 演藝廳及館內）", "rows": [{"t": "10:00–10:30", "p": "B 棟 2F 演藝廳", "h": "開幕營運啟動典禮", "li": ["主持人開場", "場館介紹影片", "開場表演（SOQ 舞團）", "長官貴賓介紹、致詞", "啟動儀式、大合照"]}, {"t": "10:30–10:35", "p": "演藝廳舞台前", "h": "媒體聯訪", "li": []}, {"t": "10:35–11:00", "p": "南區青少年活動中心", "h": "市長館內參訪", "li": ["10:35–10:37 演藝廳走樓梯至 B 棟 1F", "10:37–10:42 B 棟 1F AI 運動檢測", "10:42–10:44 搭電梯至 A 棟 B1", "10:44–10:49 A 棟 B1 游泳池", "10:49–10:51 A 棟 1F 飛輪教室、練團室（途經）", "10:51–10:56 A 棟 4F 皮拉提斯／擊劍教室", "10:56–11:00 A 棟 5F 樓頂花園，賦歸"]}], "remark": "長官抵達時間依桃園市政府社會局通知調整。", "launch": ["g147", "g146", "g019", "g036", "g001", "g002", "g149", "g020", "g148", "g150"]};
+/* ================= 副市長行程大綱 ================= */
+const OL_SEED={"title": "「桃園市南區青少年活動中心開幕營運啟動典禮」副市長行程", "date": "115 年 11 月 26 日（星期四）", "time": "上午 10 時 00 分至 11 時 00 分", "place": "桃園市南區青少年活動中心（B 棟 2F 演藝廳及館內）", "rows": [{"t": "10:00–10:30", "p": "B 棟 2F 演藝廳", "h": "開幕營運啟動典禮", "li": ["主持人開場", "場館介紹影片", "開場表演（SOQ 舞團）", "長官貴賓介紹、致詞", "啟動儀式、大合照"]}, {"t": "10:30–10:35", "p": "演藝廳舞台前", "h": "媒體聯訪", "li": []}, {"t": "10:35–11:00", "p": "南區青少年活動中心", "h": "副市長館內參訪", "li": ["10:35–10:37 演藝廳走樓梯至 B 棟 1F", "10:37–10:42 B 棟 1F AI 運動檢測", "10:42–10:44 搭電梯至 A 棟 B1", "10:44–10:49 A 棟 B1 游泳池", "10:49–10:51 A 棟 1F 飛輪教室、練團室（途經）", "10:51–10:56 A 棟 4F 皮拉提斯／擊劍教室", "10:56–11:00 A 棟 5F 樓頂花園，賦歸"]}], "remark": "長官抵達時間依桃園市政府社會局通知調整。", "launch": ["g147", "g146", "g019", "g036", "g001", "g002", "g149", "g020", "g148", "g150"]};
 let olSeeded=false;
 function renderOutline(){
   if(S.loaded.has("outline")&&!olSeeded){olSeeded=true;if(!S.outline.find(x=>x.id==="main")){S.outline.push({id:"main",...OL_SEED});put("outline","main",OL_SEED);}}
@@ -3250,7 +3250,7 @@ function launchHtml(d){
   const l=stgList();if(!l.length)return "";
   const cells=l.map((x,i)=>{const k=STG_KIND[x.kind]||STG_KIND.vip;
     return `<div class="lc" style="border-top:5px solid ${k[2]}"><div class="lp">左 ${i+1}</div><span class="li" style="background:${k[1]};color:${k[3]}">${i+1}</span><b>${esc(x.name||"（未填）")}</b><span class="lu">${esc(x.title||"")}</span></div>`;}).join("");
-  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>面向舞台由左至右，共 ${l.length} 人，市長站中間</span><span>要調整請到 <a href="#stage"><b>「啟動站位」分頁</b></a>，這裡會自動同步</span></div>
+  return `<section class="card olcard"><h2>科技啟動儀式站位</h2><div class="olm"><span>面向舞台由左至右，共 ${l.length} 人，副市長站中間</span><span>要調整請到 <a href="#stage"><b>「啟動站位」分頁</b></a>，這裡會自動同步</span></div>
    <div class="lstage">舞台／LED 大螢幕</div><div class="lrow" style="--n:${l.length}">${cells}</div>
    <div class="olr">主持人唱名後上台，手放在 LED 掌印台，倒數後一起按壓，主視覺點亮；先拍啟動代表合照，啟動後由司儀唱名，邀請立法委員、市議員等全體貴賓上台大合照。</div></section>`;
 }
@@ -3272,7 +3272,7 @@ const RC_CATS=["市長","府級長官","中央部會","主辦單位","民意代�
 const RC_LSTOP=["張煥禎","饒瑞瑛","簡伯毅","許詩典","許俊麒"];
 const RC_WSD=[];
 function rcUnit(u){u=String(u||"").trim();return /(運動中心|運動館|游泳池|籃球館|園區|網球)/.test(u)?u.replace(/（[^）]*）/g,"").trim():u;}
-// 分類邏輯比照公館：市長 → 府級長官 → 主辦單位 → 民意代表 → 市府局處首長 → 里長 → 法人團體 → 公司行號 → 聯新國際醫療集團（最後）
+// 分類邏輯比照公館：副市長 → 府級長官 → 主辦單位 → 民意代表 → 市府局處首長 → 里長 → 法人團體 → 公司行號 → 聯新國際醫療集團（最後）
 function rcDefaultCat(e){const g=e.g0,u=e.unit||"",t=e.title||"";
   if(g&&g.name==="張善政")return "市長";
   if(u==="桃園市政府")return "府級長官";
