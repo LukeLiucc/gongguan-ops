@@ -607,6 +607,8 @@ header.top [data-ce]:hover{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px
 .zr p{margin:6px 0 0;font-size:13px}
 .zbox.focus{border-width:4px;box-shadow:0 0 0 4px color-mix(in srgb,var(--zc) 30%,transparent)}.zbox.dimz{opacity:.3}
 body.showseat #zroster{display:none!important}
+.st.boxsel{outline:3px solid #fff;outline-offset:-3px;filter:brightness(1.5)}
+.boxz{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.boxzb{display:flex;align-items:center;gap:8px;justify-content:flex-start;font-size:16px;padding:12px;text-align:left}.boxzb small{margin-left:auto;opacity:.7}.boxnew{display:flex;gap:8px;margin:4px 0 12px}.boxnew .inp{flex:1;font-size:16px}
 .zbox.area{background:color-mix(in srgb,var(--zc) 22%,transparent);z-index:3}
 .zbox.area .zlab{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);max-width:96%;max-height:96%;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;font-size:17px;line-height:1.25;text-align:center;padding:6px 10px;border-radius:8px;box-shadow:0 2px 8px rgba(15,27,43,.18)}
 .zbox.area .zlab .zcnt{display:block;margin:3px 0 0}
@@ -853,7 +855,7 @@ table.rt td.rt-drag{white-space:nowrap;min-width:64px}
       <div class="seg" role="group" aria-label="模式">
         <button type="button" id="smSeat" aria-pressed="true">排座位</button>
         <button type="button" id="smMulti" aria-pressed="false">多選搬移</button>
-        <button type="button" id="smPaint" aria-pressed="false">畫分區</button>
+        <button type="button" id="smPaint" aria-pressed="false">框選分區</button>
         <button type="button" id="smBlock" aria-pressed="false">標不可排</button>
       </div>
       <button class="btn" type="button" id="smUndo" disabled title="復原上一步（Ctrl+Z）">↶ 復原上一步</button>
@@ -1864,10 +1866,9 @@ function initSeats(){
   $("#smImp").onclick=()=>{if(!canWrite){toast("你目前是檢視權限");return;}$("#smImpFile").click();};$("#smImpFile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)seatChartImport(f);};
   const H=$("#hall");
   H.addEventListener("pointerdown",e=>{const b=e.target.closest(".st[data-s]");if(!b||UI.seatMode!=="paint")return;if(!canWrite){toast("你目前是檢視權限");return;}e.preventDefault();
-    const zm=zoneOfSeatMap();const sid=b.dataset.s;const erase=UI.brush==="__erase"||zm[sid]===UI.brush;
-    painting={erase,map:zm,touched:new Set()};paintSeat(sid,b);});
-  H.addEventListener("pointerover",e=>{if(!painting)return;const b=e.target.closest(".st[data-s]");if(b)paintSeat(b.dataset.s,b);});
-  window.addEventListener("pointerup",()=>{if(painting)commitPaint();});
+    boxSel={a:b.dataset.s,b:b.dataset.s};boxMark();});
+  H.addEventListener("pointerover",e=>{if(!boxSel)return;const b=e.target.closest(".st[data-s]");if(b&&b.dataset.s!==boxSel.b){boxSel.b=b.dataset.s;boxMark();}});
+  window.addEventListener("pointerup",()=>{if(boxSel){const ids=boxMark();boxSel=null;if(ids.length)boxAsk(ids);}});
   H.addEventListener("click",e=>{const b=e.target.closest(".st[data-s]");if(!b||UI.seatMode!=="seat")return;seatClick(b.dataset.s);});
   H.addEventListener("click",e=>{const b=e.target.closest("[data-blk]");if(!b||UI.seatMode!=="block")return;toggleBlock(b.dataset.blk);});
   H.addEventListener("click",e=>{if(UI.seatMode!=="multi")return;const rl=e.target.closest(".rl[data-row]");if(rl){msRow(+rl.dataset.row);return;}const b=e.target.closest(".st[data-s]");if(b)msClick(b.dataset.s,e.shiftKey);});
@@ -1893,16 +1894,30 @@ function initSeats(){
     else if(act==="zf"){UI.seatZone=a.dataset.z;renderSeats();}
   });
 }
-function paintSeat(sid,btn){
-  if(painting.touched.has(sid))return;painting.touched.add(sid);
-  if(painting.erase)delete painting.map[sid];else painting.map[sid]=UI.brush;
-  const z=zoneById(painting.map[sid]);btn.classList.toggle("z",!!z);btn.style.setProperty("--zc",z?z.color:"");
+let boxSel=null;
+function boxMark(){
+  const [r0,c0]=boxSel.a.split("-").map(Number),[r1,c1]=boxSel.b.split("-").map(Number);const ids=[];
+  document.querySelectorAll("#hall .st[data-s]").forEach(el=>{const [r,c]=el.dataset.s.split("-").map(Number);const on=r>=Math.min(r0,r1)&&r<=Math.max(r0,r1)&&c>=Math.min(c0,c1)&&c<=Math.max(c0,c1);el.classList.toggle("boxsel",on);if(on)ids.push(el.dataset.s);});
+  return ids;
 }
-function commitPaint(){
-  const m=painting.map;painting=null;
-  for(const z of S.zones){const ns=Object.keys(m).filter(s=>m[s]===z.id).sort((a,b)=>seatKey(a)-seatKey(b));const old=[...(z.seats||[])].sort((a,b)=>seatKey(a)-seatKey(b));
-    if(ns.join()!==old.join()){z.seats=ns;upd("zones",z.id,{seats:ns});}}
-  schedule();
+function boxClear(){document.querySelectorAll("#hall .st.boxsel").forEach(el=>el.classList.remove("boxsel"));}
+function boxAsk(ids){
+  const rows=[...new Set(ids.map(x=>+x.split("-")[0]))].sort((a,b)=>a-b);const rl=ROW_LETTER[rows[0]]+(rows.length>1?"–"+ROW_LETTER[rows[rows.length-1]]:"");
+  const md=modal(`<h3>框選了 ${ids.length} 席（第 ${esc(String(rl))} 排），這是哪一區？</h3>
+    <div class="boxz">${sortedZones().map(z=>`<button type="button" class="btn boxzb" data-bz="${esc(z.id)}"><i class="zdot" style="background:${esc(z.color)}"></i>${esc(z.name)}<small>${(z.seats||[]).length} 席</small></button>`).join("")}</div>
+    <div class="boxnew"><input class="inp" id="bzName" placeholder="新的一區：直接打區名，例如 社工團體"><button class="btn pri" type="button" id="bzAdd">新增這一區</button></div>
+    <div class="ft"><button class="btn l" type="button" id="bzErase">清掉這幾席的分區</button><button class="btn" type="button" data-close>取消</button></div>`);
+  const apply=zid=>{const set=new Set(ids);
+    for(const z of S.zones){let ns=(z.seats||[]).filter(x=>!set.has(x));if(z.id===zid)ns=ns.concat(ids);ns=[...new Set(ns)].sort((a,b)=>seatKey(a)-seatKey(b));
+      if(ns.join()!==[...(z.seats||[])].sort((a,b)=>seatKey(a)-seatKey(b)).join()){z.seats=ns;upd("zones",z.id,{seats:ns});}}
+    closeModal();boxClear();schedule();};
+  md.querySelectorAll("[data-bz]").forEach(b=>b.onclick=()=>apply(b.dataset.bz));
+  md.querySelector("#bzErase").onclick=()=>apply("");
+  const add=()=>{const name=md.querySelector("#bzName").value.trim();if(!name){toast("先打區名");return;}
+    const nid=newId("z");const nz={name,color:PALETTE[S.zones.length%PALETTE.length],owner:"",owner2:"",ratio:15,est:0,desc:"",area:true,seats:[],order:(S.zones.reduce((a,x)=>Math.max(a,x.order||0),0))+10};
+    S.zones.push({id:nid,...nz});put("zones",nid,nz);apply(nid);};
+  md.querySelector("#bzAdd").onclick=add;md.querySelector("#bzName").addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+  md.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",boxClear));
 }
 /* drag & drop seats */
 let sdrag=null, ignoreClickUntil=0;
@@ -2086,7 +2101,7 @@ function renderSeats(){
   $("#smSeat").setAttribute("aria-pressed",UI.seatMode==="seat");$("#smPaint").setAttribute("aria-pressed",UI.seatMode==="paint");$("#smBlock").setAttribute("aria-pressed",UI.seatMode==="block");$("#smMulti").setAttribute("aria-pressed",UI.seatMode==="multi");$("#smBlock").hidden=!canWrite;
   {const sq=(UI.seatQ||"").trim().toLowerCase();if(sq){const hs=S.guests.filter(g=>g.seat&&[g.name,g.unit,g.title,g.category].join(" ").toLowerCase().includes(sq)).sort((a,b)=>seatKey(a.seat)-seatKey(b.seat));const ns=S.guests.filter(g=>!g.seat&&g.zone!=="z-media"&&[g.name,g.unit,g.title].join(" ").toLowerCase().includes(sq));
     $("#smFound").innerHTML=`<b>找到 ${hs.length} 位</b>${hs.length?"："+hs.slice(0,30).map(g=>`<span class="fd">${esc(seatText(g))} ${esc(g.name||"單位代表")}</span>`).join(""):""}${ns.length?`<span class="fd warn">尚未排座位：${ns.map(g=>esc(g.name||g.unit)).join("、")}</span>`:""}`;$("#smFound").hidden=false;}else $("#smFound").hidden=true;}
-  $("#smHint").textContent=UI.seatMode==="multi"?"點貴賓加入／取消選取；點左邊排號選整排；Shift＋點選一段；選好按下方按鈕或方向鍵整批移動，擋到的人會一起往後推":UI.seatMode==="block"?"點座位標成不可排（會請你寫原因），再點一次取消；斜線格就是不可排的位子":UI.seatMode==="paint"?"選一個座位區後，在座位上點或拖曳來畫區；在同色座位上拖曳會清除":"點錯了按「復原上一步」或 Ctrl+Z；座位區的範圍只有「畫分區」才會變。拖曳換位（拖到畫面上下緣會自動捲動）；跨很多排時，點一下貴賓、捲到目標排再點座位，有人會互換";
+  $("#smHint").textContent=UI.seatMode==="multi"?"點貴賓加入／取消選取；點左邊排號選整排；Shift＋點選一段；選好按下方按鈕或方向鍵整批移動，擋到的人會一起往後推":UI.seatMode==="block"?"點座位標成不可排（會請你寫原因），再點一次取消；斜線格就是不可排的位子":UI.seatMode==="paint"?"在座位上從一角拖到另一角框出範圍（只要一席就點一下），放開後選這是哪一區，或直接打新區名；框錯了按「復原上一步」":"點錯了按「復原上一步」或 Ctrl+Z；座位區的範圍只有「畫分區」才會變。拖曳換位（拖到畫面上下緣會自動捲動）；跨很多排時，點一下貴賓、捲到目標排再點座位，有人會互換";
   const zm=zoneOfSeatMap();const occ={};const dup=new Set();
   for(const g of S.guests){if(!g.seat)continue;if(occ[g.seat])dup.add(g.seat);else occ[g.seat]=g;}
   let h=`<div class="stage" style="grid-row:1">${esc(LB().stage)}</div>`;
