@@ -235,7 +235,7 @@ table.t td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-sp
 .selbar b{color:#fff}
 .selbar button{border:0;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;font-size:13px}
 .zbox{position:relative;pointer-events:none;margin:-4px;border:2px solid var(--zc);border-radius:9px;z-index:2}
-.zlab{position:absolute;left:-2px;bottom:calc(100% + 2px);max-width:calc(100% + 4px);background:var(--zc);color:#fff;font-size:16px;font-weight:800;line-height:1.35;padding:3px 10px;border-radius:6px 6px 6px 0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.zlab{position:absolute;left:-2px;bottom:calc(100% + 2px);max-width:calc(100% + 4px);background:var(--zc);color:#fff;font-size:16px;font-weight:800;line-height:1.35;padding:3px 10px;border-radius:6px 6px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .zlab span{font-weight:500;opacity:.9}
 .hall.nolab .zbox{display:none}
 .mediaband{height:var(--sz);border-radius:7px;background:repeating-linear-gradient(135deg,color-mix(in srgb,#BE185D 22%,var(--surface)) 0 10px,color-mix(in srgb,#BE185D 12%,var(--surface)) 10px 20px);border:2px dashed #BE185D;color:#9D174D;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;letter-spacing:.04em}
@@ -608,7 +608,7 @@ header.top [data-ce]:hover{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px
 .zbox.focus{border-width:4px;box-shadow:0 0 0 4px color-mix(in srgb,var(--zc) 30%,transparent)}.zbox.dimz{opacity:.3}
 body.showseat #zroster{display:none!important}
 .zbox.area{background:color-mix(in srgb,var(--zc) 22%,transparent);z-index:3}
-.zbox.area .zlab{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);max-width:96%;font-size:18px;text-align:center;padding:8px 14px;border-radius:8px;box-shadow:0 2px 8px rgba(15,27,43,.18)}
+.zbox.area .zlab{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);max-width:96%;max-height:96%;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;font-size:17px;line-height:1.25;text-align:center;padding:6px 10px;border-radius:8px;box-shadow:0 2px 8px rgba(15,27,43,.18)}
 .zbox.area .zlab .zcnt{display:block;margin:3px 0 0}
 .zlab .zcnt{margin-left:6px;padding:0 6px;border-radius:9px;background:rgba(255,255,255,.25);font-weight:700}
 /* 新聞稿 */
