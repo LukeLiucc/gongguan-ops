@@ -1360,11 +1360,12 @@ function nqMigrate3(){
 let nqRc1125=false;
 function nqRollFix1125(){
   if(nqRc1125||!db||!canWrite||!S.loaded.has("meta")||!S.loaded.has("guests")||!S.meta.name||!S.guests.length)return;nqRc1125=true;
-  if(S.meta.rcFix1125)return;
+  if(S.meta.rcFix1126)return;
   const id=n=>{const g=S.guests.find(x=>x.name===n&&x.zone!=="z-media");return g&&g.id;};const m={...(S.meta.rcMap||{})};
   const xu=id("許俊麒"),su=id("蘇俊賓"),qiu=id("邱奕勝"),lin=id("林頌凱");
   if(xu)m[xu]={c:"__del",o:99};if(su)m[su]={c:"府級長官",o:0};if(qiu)m[qiu]={c:"府級長官",o:1};if(lin)m[lin]={c:"聯新國際醫療集團",o:50};
-  S.meta.rcMap=m;S.meta.rcFix1125=1;upd("meta","event",{rcMap:m,rcFix1125:1});
+  const t={...(S.meta.rcText||{})};if(lin){t[lin]={unit:"聯新國際醫療集團 聯新運醫",label:"林頌凱 總經理"};const g=S.guests.find(x=>x.id===lin);if(g.status!=="出席"&&g.status!=="代理出席"){g.status="出席";upd("guests",lin,{status:"出席"});}}
+  S.meta.rcMap=m;S.meta.rcText=t;S.meta.rcFix1126=1;upd("meta","event",{rcMap:m,rcText:t,rcFix1126:1});
 }
 function renderAll(){nqRollFix1125();
   nqMigrate();if(nqMig)nqMigrate3();if(nqMig3)nqMigrate4();nqFixNames();
